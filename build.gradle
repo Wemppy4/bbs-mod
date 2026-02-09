@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.6-SNAPSHOT'
+	id 'fabric-loom' version '1.15-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -26,6 +26,11 @@ repositories {
 		filter {
 			includeGroup "maven.modrinth"
 		}
+	}
+
+	maven {
+		name = "Gegy"
+		url = "https://maven.gegy.dev/"
 	}
 }
 

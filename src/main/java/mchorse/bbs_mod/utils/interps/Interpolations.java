@@ -5,6 +5,7 @@ import mchorse.bbs_mod.utils.interps.easings.Easings;
 import mchorse.bbs_mod.utils.interps.types.BaseInterp;
 import mchorse.bbs_mod.utils.interps.types.EasingInterp;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -109,6 +110,21 @@ public class Interpolations
         }
     };
 
+    public static final IInterp BSPLINE = new BaseInterp("bspline", GLFW.GLFW_KEY_J)
+    {
+        @Override
+        public double interpolate(InterpContext context)
+        {
+            double a0 = context.a0;
+            double b0 = context.b0;
+
+            if (context.isStart) a0 = 2 * context.a - context.b;
+            if (context.isEnd) b0 = 2 * context.b - context.a;
+
+            return Lerps.bSpline(a0, context.a, context.b, b0, context.x);
+        }
+    };
+
     static
     {
         MAP.put(LINEAR.getKey(), LINEAR);
@@ -147,6 +163,7 @@ public class Interpolations
         MAP.put(CUBIC.getKey(), CUBIC);
         MAP.put(HERMITE.getKey(), HERMITE);
         MAP.put(BEZIER.getKey(), BEZIER);
+        MAP.put(BSPLINE.getKey(), BSPLINE);
     }
 
     public static IInterp get(String name)

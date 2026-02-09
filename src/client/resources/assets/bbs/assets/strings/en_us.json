@@ -1083,6 +1083,7 @@
     "interpolations.circle_inout": "Circle In/out",
     "interpolations.circle_out": "Circle Out",
     "interpolations.constant": "Constant",
+    "interpolations.bspline": "B-Spline",
     "interpolations.cubic": "Cubic",
     "interpolations.cubic_in": "Cubic In",
     "interpolations.cubic_inout": "Cubic In/out",

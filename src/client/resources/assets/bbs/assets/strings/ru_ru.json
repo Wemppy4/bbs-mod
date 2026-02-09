@@ -1072,6 +1072,7 @@
     "interpolations.circle_inout": "Круговая In/Out",
     "interpolations.circle_out": "Круговая Out",
     "interpolations.constant": "Постоянная",
+    "interpolations.bspline": "B-Сплайн",
     "interpolations.cubic": "Кубическая",
     "interpolations.cubic_in": "Кубическая In",
     "interpolations.cubic_inout": "Кубическая In/Out",

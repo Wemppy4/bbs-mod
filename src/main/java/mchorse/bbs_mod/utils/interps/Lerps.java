@@ -39,6 +39,16 @@ public class Lerps
         return ((a * x + b) * x + c) * x + y1;
     }
 
+//    B-Spline interpolation
+    public static double bSpline(double y0, double y1, double y2, double y3, double x) {
+        double a = -y0 + 3 * y1 - 3 * y2 + y3;
+        double b = 3 * y0 - 6 * y1 + 3 * y2;
+        double c = -3 * y0 + 3 * y2;
+        double d = y0 + 4 * y1 + y2;
+
+        return (((a * x + b) * x + c) * x + d) / 6.0;
+    }
+
     /**
      * Cubic interpolation between y1 and y2. Taken from paul's website.
      *
