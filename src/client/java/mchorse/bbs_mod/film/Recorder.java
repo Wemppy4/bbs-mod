@@ -142,7 +142,7 @@ public class Recorder extends WorldFilmController
             this.inventory.fromPlayer(player);
 
             this.hp = player.getHealth();
-            this.hunger = player.getHungerManager().getSaturationLevel();
+            this.hunger = player.getHungerManager().getFoodLevel();
             this.xpLevel = player.experienceLevel;
             this.xpProgress = player.experienceProgress;
         }

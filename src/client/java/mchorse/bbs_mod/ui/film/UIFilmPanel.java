@@ -339,9 +339,9 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
                 UIOverlay.addOverlay(this.getContext(), panel);
             });
 
-            menu.action(Icons.LINE, UIKeys.FILM_REPLACE_INVENTORY, () ->
+            menu.action(Icons.GEAR, UIKeys.FILM_PLAYER_SETTINGS, () ->
             {
-                BaseValue.edit(this.getData().inventory, (inv) -> inv.fromPlayer(MinecraftClient.getInstance().player));
+                UIOverlay.addOverlay(this.getContext(), new UIFilmPlayerSettingsOverlayPanel(this.getData()), 280, 0.8F);
             });
         });
 

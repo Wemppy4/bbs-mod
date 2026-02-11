@@ -264,6 +264,13 @@ public class UIKeys
     public static final IKey FILM_RENDER_AUDIO = L10n.lang("bbs.ui.film.render_audio");
     public static final IKey FILM_RENDER_AUDIO_ERROR = L10n.lang("bbs.ui.film.render_audio.error");
     public static final IKey FILM_RENDER_AUDIO_SUCCESS = L10n.lang("bbs.ui.film.render_audio.success");
+    public static final IKey FILM_PLAYER_SETTINGS = L10n.lang("bbs.ui.film.player_settings");
+    public static final IKey FILM_PLAYER_SETTINGS_DESCRIPTION = L10n.lang("bbs.ui.film.player_settings-description");
+    public static final IKey FILM_PLAYER_SETTINGS_HUNGER = L10n.lang("bbs.ui.film.player_settings.hunger");
+    public static final IKey FILM_PLAYER_SETTINGS_HP = L10n.lang("bbs.ui.film.player_settings.hp");
+    public static final IKey FILM_PLAYER_SETTINGS_TITLE = L10n.lang("bbs.ui.film.player_settings-title");
+    public static final IKey FILM_PLAYER_SETTINGS_XP_LEVEL = L10n.lang("bbs.ui.film.player_settings.xp_level");
+    public static final IKey FILM_PLAYER_SETTINGS_XP_PROGRESS = L10n.lang("bbs.ui.film.player_settings.xp_progress");
     public static final IKey FILM_REPLACE_INVENTORY = L10n.lang("bbs.ui.film.replace_inventory");
     public static final IKey FILM_REPLAY_ACTOR = L10n.lang("bbs.ui.film.replay.actor");
     public static final IKey FILM_REPLAY_ACTOR_TOOLTIP = L10n.lang("bbs.ui.film.replay.actor-tooltip");
