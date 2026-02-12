@@ -13,6 +13,7 @@ import mchorse.bbs_mod.ui.framework.elements.utils.UICanvasEditor;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
@@ -36,6 +37,8 @@ public class UIPixelsEditor extends UICanvasEditor
     /* Tools */
     public UIIcon undo;
     public UIIcon redo;
+
+    private int brushSize = 1;
 
     private Texture temporary;
     private Pixels pixels;
@@ -94,6 +97,32 @@ public class UIPixelsEditor extends UICanvasEditor
     public Pixels getPixels()
     {
         return this.pixels;
+    }
+
+    public int getBrushSize()
+    {
+        return this.brushSize;
+    }
+
+    public UIPixelsEditor setBrushSize(int size)
+    {
+        this.brushSize = MathUtils.clamp(size, 1, 256);
+
+        return this;
+    }
+
+    private void paint(int x, int y)
+    {
+        int left = (this.brushSize - 1) / 2;
+        int right = this.brushSize / 2;
+
+        for (int dx = -left; dx <= right; dx++)
+        {
+            for (int dy = -left; dy <= right; dy++)
+            {
+                this.pixelsUndo.setColor(this.pixels, x + dx, y + dy, this.drawColor);
+            }
+        }
     }
 
     protected void wasChanged()
@@ -213,7 +242,7 @@ public class UIPixelsEditor extends UICanvasEditor
 
             Vector2i pixel = this.getHoverPixel(context.mouseX, context.mouseY);
 
-            this.pixelsUndo.setColor(this.pixels, pixel.x, pixel.y, this.drawColor);
+            this.paint(pixel.x, pixel.y);
             this.updateTexture();
 
             this.wasChanged();
@@ -240,7 +269,7 @@ public class UIPixelsEditor extends UICanvasEditor
 
                 for (Vector2i pixel : pixels)
                 {
-                    this.pixelsUndo.setColor(this.pixels, pixel.x, pixel.y, this.drawColor);
+                    this.paint(pixel.x, pixel.y);
                 }
 
                 this.updateTexture();
@@ -273,9 +302,12 @@ public class UIPixelsEditor extends UICanvasEditor
         int pixelX = (int) Math.floor(this.scaleX.from(context.mouseX));
         int pixelY = (int) Math.floor(this.scaleY.from(context.mouseY));
 
+        int left = (this.brushSize - 1) / 2;
+        int right = this.brushSize / 2;
+
         context.batcher.outline(
-            (int) Math.round(this.scaleX.to(pixelX)), (int) Math.round(this.scaleY.to(pixelY)),
-            (int) Math.round(this.scaleX.to(pixelX + 1)), (int) Math.round(this.scaleY.to(pixelY + 1)),
+            (int) Math.round(this.scaleX.to(pixelX - left)), (int) Math.round(this.scaleY.to(pixelY - left)),
+            (int) Math.round(this.scaleX.to(pixelX + right + 1)), (int) Math.round(this.scaleY.to(pixelY + right + 1)),
             Colors.A50
         );
 
@@ -291,7 +323,7 @@ public class UIPixelsEditor extends UICanvasEditor
                 int xx = (int) Lerps.lerp(last.x, current.x, i / distance);
                 int yy = (int) Lerps.lerp(last.y, current.y, i / distance);
 
-                this.pixelsUndo.setColor(this.pixels, xx, yy, this.drawColor);
+                this.paint(xx, yy);
             }
 
             this.wasChanged();

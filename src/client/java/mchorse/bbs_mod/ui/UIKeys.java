@@ -264,6 +264,13 @@ public class UIKeys
     public static final IKey FILM_RENDER_AUDIO = L10n.lang("bbs.ui.film.render_audio");
     public static final IKey FILM_RENDER_AUDIO_ERROR = L10n.lang("bbs.ui.film.render_audio.error");
     public static final IKey FILM_RENDER_AUDIO_SUCCESS = L10n.lang("bbs.ui.film.render_audio.success");
+    public static final IKey FILM_PLAYER_SETTINGS = L10n.lang("bbs.ui.film.player_settings");
+    public static final IKey FILM_PLAYER_SETTINGS_DESCRIPTION = L10n.lang("bbs.ui.film.player_settings-description");
+    public static final IKey FILM_PLAYER_SETTINGS_HUNGER = L10n.lang("bbs.ui.film.player_settings.hunger");
+    public static final IKey FILM_PLAYER_SETTINGS_HP = L10n.lang("bbs.ui.film.player_settings.hp");
+    public static final IKey FILM_PLAYER_SETTINGS_TITLE = L10n.lang("bbs.ui.film.player_settings-title");
+    public static final IKey FILM_PLAYER_SETTINGS_XP_LEVEL = L10n.lang("bbs.ui.film.player_settings.xp_level");
+    public static final IKey FILM_PLAYER_SETTINGS_XP_PROGRESS = L10n.lang("bbs.ui.film.player_settings.xp_progress");
     public static final IKey FILM_REPLACE_INVENTORY = L10n.lang("bbs.ui.film.replace_inventory");
     public static final IKey FILM_REPLAY_ACTOR = L10n.lang("bbs.ui.film.replay.actor");
     public static final IKey FILM_REPLAY_ACTOR_TOOLTIP = L10n.lang("bbs.ui.film.replay.actor-tooltip");
@@ -844,6 +851,7 @@ public class UIKeys
     public static final IKey TEXTURES_SAVE = L10n.lang("bbs.ui.textures.save");
     public static final IKey TEXTURES_SAVE_WRONG_PATH = L10n.lang("bbs.ui.textures.save_wrong_path");
     public static final IKey TEXTURES_TOOLTIP = L10n.lang("bbs.ui.textures.tooltip");
+    public static final IKey TEXTURES_BRUSH_SIZE = L10n.lang("bbs.ui.textures.brush_size");
     public static final IKey TEXTURES_VIEWER_BRIGHTNESS = L10n.lang("bbs.ui.textures.viewer.brightness");
     public static final IKey TEXTURES_VIEWER_CONTEXT_COPY_HEX = L10n.lang("bbs.ui.textures.viewer.context.copy_hex");
     public static final IKey TEXTURE_EDITOR_AUTO_SIZE = L10n.lang("bbs.ui.texture.editor.auto_size");

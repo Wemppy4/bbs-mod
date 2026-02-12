@@ -48,7 +48,7 @@ public class ActionPlayer
     private Form cachedForm;
 
     private float cacheHp;
-    private float cacheHunger;
+    private int cacheHunger;
     private int cacheXpLevel;
     private float cacheXpProgress;
 
@@ -86,12 +86,12 @@ public class ActionPlayer
             ServerNetwork.sendMorphToTracked(this.serverPlayer, fpReplay.form.get());
 
             this.cacheHp = this.serverPlayer.getHealth();
-            this.cacheHunger = this.serverPlayer.getHungerManager().getSaturationLevel();
+            this.cacheHunger = this.serverPlayer.getHungerManager().getFoodLevel();
             this.cacheXpLevel = this.serverPlayer.experienceLevel;
             this.cacheXpProgress = this.serverPlayer.experienceProgress;
 
             this.serverPlayer.setHealth(this.film.hp.get());
-            this.serverPlayer.getHungerManager().setSaturationLevel(this.film.hunger.get());
+            this.serverPlayer.getHungerManager().setFoodLevel(this.film.hunger.get().intValue());
             this.serverPlayer.experienceProgress = this.film.xpProgress.get();
             this.serverPlayer.setExperienceLevel(this.film.xpLevel.get());
         }
@@ -335,7 +335,7 @@ public class ActionPlayer
             ServerNetwork.sendMorphToTracked(this.serverPlayer, this.cachedForm);
 
             this.serverPlayer.setHealth(this.cacheHp);
-            this.serverPlayer.getHungerManager().setSaturationLevel(this.cacheHunger);
+            this.serverPlayer.getHungerManager().setFoodLevel(this.cacheHunger);
             this.serverPlayer.experienceProgress = this.cacheXpProgress;
             this.serverPlayer.setExperienceLevel(this.cacheXpLevel);
         }
