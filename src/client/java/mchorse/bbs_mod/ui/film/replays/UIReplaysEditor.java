@@ -599,6 +599,11 @@ public class UIReplaysEditor extends UIElement
 
                 for (String bone : bones)
                 {
+                    if (model.disabledBones.contains(bone))
+                    {
+                        continue;
+                    }
+
                     String path = FormUtils.getPath(modelForm);
                     String boneKey = PerLimbService.toPoseBoneKey(path, bone);
                     String title = path.isEmpty() ? bone : path + "/" + bone;

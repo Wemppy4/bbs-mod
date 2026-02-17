@@ -285,6 +285,11 @@ public class UIReplaysEditorUtils
             {
                 for (String modelGroup : model.model.getAdjacentGroups(bone))
                 {
+                    if (model.disabledBones.contains(modelGroup))
+                    {
+                        continue;
+                    }
+
                     menu.action(Icons.LIMB, IKey.constant(modelGroup), () -> consumer.accept(modelGroup));
                 }
 
@@ -313,6 +318,11 @@ public class UIReplaysEditorUtils
             {
                 for (String modelGroup : model.model.getHierarchyGroups(bone))
                 {
+                    if (model.disabledBones.contains(modelGroup))
+                    {
+                        continue;
+                    }
+
                     menu.action(Icons.LIMB, IKey.constant(modelGroup), () -> consumer.accept(modelGroup));
                 }
 

@@ -69,6 +69,7 @@ public class ModelInstance implements IModelInstance
 
     public List<ArmorSlot> itemsMain = new ArrayList<>();
     public List<ArmorSlot> itemsOff = new ArrayList<>();
+    public List<String> disabledBones = new ArrayList<>();
     public Map<String, String> flippedParts = new HashMap<>();
     public Map<ArmorType, ArmorSlot> armorSlots = new HashMap<>();
 
@@ -170,6 +171,15 @@ public class ModelInstance implements IModelInstance
             this.sneakingPose.fromData(config.getMap("sneaking_pose"));
         }
         if (config.has("anchor")) this.anchorGroup = config.getString("anchor");
+        if (config.has("disabledBones"))
+        {
+            ListType list = config.getList("disabledBones");
+
+            for (BaseType type : list)
+            {
+                this.disabledBones.add(type.asString());
+            }
+        }
         if (config.has("flipped_parts"))
         {
             MapType map = config.getMap("flipped_parts");
