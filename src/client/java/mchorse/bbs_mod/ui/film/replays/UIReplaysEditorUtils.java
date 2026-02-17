@@ -3,6 +3,7 @@ package mchorse.bbs_mod.ui.film.replays;
 import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.cubic.data.animation.Animation;
 import mchorse.bbs_mod.cubic.data.animation.AnimationPart;
+import mchorse.bbs_mod.film.replays.PerLimbService;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
@@ -57,36 +58,12 @@ public class UIReplaysEditorUtils
 
     /* Picking form and form properties */
 
-    public static void pickFormProperty(UIContext context, UIKeyframeEditor editor, ICursor cursor, Form form, String bone)
+    public static void pickForm(UIKeyframeEditor keyframeEditor, ICursor cursor, Form form, String bone)
     {
-        if (form == null)
-        {
-            return;
-        }
-
-        String path = FormUtils.getPath(form);
-        boolean shift = Window.isShiftPressed();
-        ContextMenuManager manager = new ContextMenuManager();
-
-        manager.autoKeys();
-
-        for (BaseValueBasic formProperty : form.getAllMap().values())
-        {
-            if (!formProperty.isVisible())
-            {
-                continue;
-            }
-
-            manager.action(UIReplaysEditor.getIcon(formProperty.getId()), IKey.constant(formProperty.getId()), () ->
-            {
-                pickProperty(editor, cursor, bone, StringUtils.combinePaths(path, formProperty.getId()), shift);
-            });
-        }
-
-        context.replaceContextMenu(manager.create());
+        pickForm(keyframeEditor, cursor, form, bone, false);
     }
 
-    public static void pickForm(UIKeyframeEditor keyframeEditor, ICursor cursor, Form form, String bone)
+    public static void pickForm(UIKeyframeEditor keyframeEditor, ICursor cursor, Form form, String bone, boolean insert)
     {
         if (form == null || keyframeEditor == null || bone.isEmpty())
         {
@@ -94,11 +71,26 @@ public class UIReplaysEditorUtils
         }
 
         String path = FormUtils.getPath(form);
-        UIKeyframeSheet sheet = getActivePoseSheet(keyframeEditor, path);
+        UIKeyframeSheet sheet = null;
+        String boneKey = PerLimbService.toPoseBoneKey(path, bone);
 
-        if (sheet != null)
+        if (insert)
         {
-            pickProperty(keyframeEditor, cursor, bone, sheet, false);
+            pickProperty(keyframeEditor, cursor, bone, boneKey, insert);
+        }
+        else
+        {
+            sheet = keyframeEditor.view.getGraph().getSheet(boneKey);
+
+            if (sheet == null)
+            {
+                sheet = getActivePoseSheet(keyframeEditor, path);
+            }
+
+            if (sheet != null)
+            {
+                pickProperty(keyframeEditor, cursor, bone, sheet, insert);
+            }
         }
     }
 

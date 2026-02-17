@@ -617,11 +617,6 @@ public class UIReplaysEditor extends UIElement
         UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, form, bone);
     }
 
-    public void pickFormProperty(Form form, String bone)
-    {
-        UIReplaysEditorUtils.pickFormProperty(this.getContext(), this.keyframeEditor, this.filmPanel, form, bone);
-    }
-
     public boolean clickViewport(UIContext context, Area area)
     {
         if (this.filmPanel.isFlying())
@@ -657,9 +652,24 @@ public class UIReplaysEditor extends UIElement
                 }
                 else if (context.mouseButton == 1)
                 {
-                    this.pickFormProperty(pair.a, pair.b);
+                    if (Window.isCtrlPressed())
+                    {
+                        UIReplaysEditorUtils.offerAdjacent(this.getContext(), pair.a, pair.b, (bone) -> UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, pair.a, bone, true));
 
-                    return true;
+                        return true;
+                    }
+                    else if (Window.isShiftPressed())
+                    {
+                        UIReplaysEditorUtils.offerHierarchy(this.getContext(), pair.a, pair.b, (bone) -> UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, pair.a, bone, true));
+
+                        return true;
+                    }
+                    else
+                    {
+                        UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, pair.a, pair.b, true);
+                        
+                        return true;
+                    }
                 }
             }
         }
