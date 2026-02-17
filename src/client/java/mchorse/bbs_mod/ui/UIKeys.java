@@ -303,6 +303,9 @@ public class UIKeys
     public static final IKey FILM_REPLAY_REPLAY = L10n.lang("bbs.ui.film.replay.replay");
     public static final IKey FILM_REPLAY_SHADOW = L10n.lang("bbs.ui.film.replay.shadow");
     public static final IKey FILM_REPLAY_SHADOW_SIZE = L10n.lang("bbs.ui.film.replay.shadow_size");
+    public static final IKey FILM_REPLAY_TAB_1 = L10n.lang("bbs.ui.film.replay.tab.1");
+    public static final IKey FILM_REPLAY_TAB_2 = L10n.lang("bbs.ui.film.replay.tab.2");
+    public static final IKey FILM_REPLAY_TAB_3 = L10n.lang("bbs.ui.film.replay.tab.3");
     public static final IKey FILM_REPLAY_TITLE = L10n.lang("bbs.ui.film.replay.title");
     public static final IKey FILM_RESET_REPLAYS = L10n.lang("bbs.ui.film.reset_replays");
     public static final IKey FILM_SCREENSHOT = L10n.lang("bbs.ui.film.screenshot");
@@ -674,6 +677,11 @@ public class UIKeys
     public static final IKey SCENE_REPLAYS_CONTEXT_PROCESS_EXPRESSION_TOOLTIP = L10n.lang("bbs.ui.scene.replays.context.process.expression-tooltip");
     public static final IKey SCENE_REPLAYS_CONTEXT_PROCESS_TITLE = L10n.lang("bbs.ui.scene.replays.context.process-title");
     public static final IKey SCENE_REPLAYS_CONTEXT_REMOVE = L10n.lang("bbs.ui.scene.replays.context.remove");
+    public static final IKey SCENE_REPLAYS_CONTEXT_RANDOM_TEXTURES = L10n.lang("bbs.ui.scene.replays.context.random_textures");
+    public static final IKey SCENE_REPLAYS_RANDOM_TEXTURES_TITLE = L10n.lang("bbs.ui.scene.replays.random_textures.title");
+    public static final IKey SCENE_REPLAYS_RANDOM_TEXTURES_DESCRIPTION = L10n.lang("bbs.ui.scene.replays.random_textures.description");
+    public static final IKey SCENE_REPLAYS_RANDOM_TEXTURES_APPLY = L10n.lang("bbs.ui.scene.replays.random_textures.apply");
+    public static final IKey SCENE_REPLAYS_RANDOM_TEXTURES_ERROR = L10n.lang("bbs.ui.scene.replays.random_textures.error");
     public static final IKey SELECTORS_CONTEXT_ADD = L10n.lang("bbs.ui.selectors.context.add");
     public static final IKey SELECTORS_CONTEXT_REMOVE = L10n.lang("bbs.ui.selectors.context.remove");
     public static final IKey SELECTORS_ENTITY_ID = L10n.lang("bbs.ui.selectors.entity_id");

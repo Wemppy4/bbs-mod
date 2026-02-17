@@ -272,12 +272,6 @@ public class UIAnimationStateEditor extends UIElement
 
                     return true;
                 }
-                else if (context.mouseButton == 1)
-                {
-                    this.pickFormProperty(pair.a, pair.b);
-
-                    return true;
-                }
             }
         }
 
@@ -287,11 +281,6 @@ public class UIAnimationStateEditor extends UIElement
     public void pickForm(Form form, String bone)
     {
         UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.editor, form, bone);
-    }
-
-    public void pickFormProperty(Form form, String bone)
-    {
-        UIReplaysEditorUtils.pickFormProperty(this.getContext(), this.keyframeEditor, this.editor, form, bone);
     }
 
     public Matrix4f getOrigin(float transition)

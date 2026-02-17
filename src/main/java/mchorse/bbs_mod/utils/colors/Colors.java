@@ -34,7 +34,7 @@ public class Colors
 
     /* General purpose colors */
     public static final int CONTROL_BAR = 0xff141417;
-    public static final int ACTIVE = 0x0088ff;
+    public static final int ACTIVE = 0x676767;
     public static final int POSITIVE = GREEN;
     public static final int NEGATIVE = RED;
     public static final int INACTIVE = 0xffbb00;

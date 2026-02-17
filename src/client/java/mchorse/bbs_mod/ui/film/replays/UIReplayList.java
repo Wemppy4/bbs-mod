@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.film.replays;
 
+import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
 import mchorse.bbs_mod.camera.Camera;
@@ -22,9 +23,11 @@ import mchorse.bbs_mod.forms.forms.utils.Anchor;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.math.IExpression;
 import mchorse.bbs_mod.math.MathBuilder;
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.settings.values.IValueListener;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.core.ValueForm;
+import mchorse.bbs_mod.settings.values.core.ValueLink;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
@@ -37,6 +40,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIConfirmOverlayPanel;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIFolderOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UINumberOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -63,6 +67,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Consumer;
 
 /**
@@ -118,6 +123,11 @@ public class UIReplayList extends UIList<Replay>
 
                 menu.action(Icons.ALL_DIRECTIONS, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS, this::processReplays);
                 menu.action(Icons.TIME, UIKeys.SCENE_REPLAYS_CONTEXT_OFFSET_TIME, this::offsetTimeReplays);
+
+                if (this.getCurrent().size() > 1)
+                {
+                    menu.action(Icons.MATERIAL, UIKeys.SCENE_REPLAYS_CONTEXT_RANDOM_TEXTURES, this::openRandomTexturesOverlay);
+                }
 
                 if (data != null)
                 {
@@ -252,6 +262,89 @@ public class UIReplayList extends UIList<Replay>
         });
 
         UIOverlay.addOverlay(this.getContext(), offsetPanel);
+    }
+
+    private void openRandomTexturesOverlay()
+    {
+        List<Replay> selected = new ArrayList<>(this.getCurrent());
+
+        if (selected.size() < 2)
+        {
+            return;
+        }
+
+        UIFolderOverlayPanel panel = new UIFolderOverlayPanel(UIKeys.SCENE_REPLAYS_RANDOM_TEXTURES_TITLE, UIKeys.SCENE_REPLAYS_RANDOM_TEXTURES_DESCRIPTION, (folder) ->
+        {
+            this.applyRandomTextures(folder, selected, this.getContext());
+        }).confirmLabel(UIKeys.SCENE_REPLAYS_RANDOM_TEXTURES_APPLY);
+
+        UIOverlay.addOverlay(this.getContext(), panel, 320, 0.8F);
+    }
+
+    private void applyRandomTextures(Link folder, List<Replay> replays, UIContext context)
+    {
+        if (folder == null || folder.source.isEmpty())
+        {
+            context.notifyError(UIKeys.SCENE_REPLAYS_RANDOM_TEXTURES_ERROR);
+
+            return;
+        }
+
+        List<Link> textures = this.collectTextures(folder);
+
+        if (textures.isEmpty())
+        {
+            context.notifyError(UIKeys.SCENE_REPLAYS_RANDOM_TEXTURES_ERROR);
+
+            return;
+        }
+
+        int applied = 0;
+        Random random = new Random();
+
+        for (Replay replay : replays)
+        {
+            Form form = replay.form.get();
+
+            if (form == null)
+            {
+                continue;
+            }
+
+            Form copy = FormUtils.copy(form);
+            BaseValue property = FormUtils.getProperty(copy, "texture");
+
+            if (property instanceof ValueLink valueLink)
+            {
+                valueLink.set(textures.get(random.nextInt(textures.size())));
+                replay.form.set(copy);
+                applied += 1;
+            }
+        }
+
+        if (applied == 0)
+        {
+            context.notifyError(UIKeys.SCENE_REPLAYS_RANDOM_TEXTURES_ERROR);
+
+            return;
+        }
+
+        this.updateFilmEditor();
+    }
+
+    private List<Link> collectTextures(Link folder)
+    {
+        List<Link> textures = new ArrayList<>();
+
+        for (Link link : BBSMod.getProvider().getLinksFromPath(folder, false))
+        {
+            if (!link.path.endsWith("/") && link.path.endsWith(".png"))
+            {
+                textures.add(link);
+            }
+        }
+
+        return textures;
     }
 
     private void processReplays()
@@ -729,4 +822,5 @@ public class UIReplayList extends UIList<Replay>
             }
         }
     }
+
 }

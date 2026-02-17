@@ -99,5 +99,18 @@
 			"t": [-0.13875, 1.525, 0],
 			"r": [180, 0, 5.729]
 		}
-	}
+	},
+	"disabledBones": [
+		"body",
+		"torso",
+		"armor_chest",
+		"armor_leggings",
+		"armor_left_arm",
+		"armor_right_arm",
+		"armor_left_leg",
+		"armor_right_leg",
+		"armor_left_boot",
+		"armor_right_boot",
+		"armor_helmet"
+	]
 }

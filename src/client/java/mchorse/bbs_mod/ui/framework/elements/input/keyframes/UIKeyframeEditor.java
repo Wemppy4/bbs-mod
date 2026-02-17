@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes;
 
 import mchorse.bbs_mod.camera.clips.overwrite.KeyframeClip;
+import mchorse.bbs_mod.film.replays.PerLimbService;
 import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
@@ -155,7 +156,14 @@ public class UIKeyframeEditor extends UIElement
             {
                 String id = StringUtils.fileName(sheet.id);
 
-                if (id.startsWith("transform"))
+                PerLimbService.PoseBonePath poseBonePath = PerLimbService.parsePoseBonePath(sheet.id);
+
+                if (poseBonePath != null)
+                {
+                    bone = poseBonePath.bone();
+                    local = transform.transform.isLocal();
+                }
+                else if (id.startsWith("transform"))
                 {
                     int i = sheet.id.lastIndexOf('/');
 

@@ -119,6 +119,11 @@ public class Keys
     public static final KeyCombo FILM_CONTROLLER_PREV_REPLAY = new KeyCombo("prev_replay", UIKeys.FILM_CONTROLLER_KEYS_PREV_REPLAY, GLFW.GLFW_KEY_PAGE_UP).categoryKey("film_controller");
     public static final KeyCombo FILM_CONTROLLER_NEXT_REPLAY = new KeyCombo("next_replay", UIKeys.FILM_CONTROLLER_KEYS_NEXT_REPLAY, GLFW.GLFW_KEY_PAGE_DOWN).categoryKey("film_controller");
 
+    /* Replays editor */
+    public static final KeyCombo REPLAYS_TAB_1 = new KeyCombo("tab_1", UIKeys.FILM_REPLAY_TAB_1, GLFW.GLFW_KEY_1).categoryKey("replays_editor");
+    public static final KeyCombo REPLAYS_TAB_2 = new KeyCombo("tab_2", UIKeys.FILM_REPLAY_TAB_2, GLFW.GLFW_KEY_2).categoryKey("replays_editor");
+    public static final KeyCombo REPLAYS_TAB_3 = new KeyCombo("tab_3", UIKeys.FILM_REPLAY_TAB_3, GLFW.GLFW_KEY_3).categoryKey("replays_editor");
+
     /* Recording groups */
     public static final KeyCombo RECORDING_GROUP_ALL = new KeyCombo("all", UIKeys.FILM_GROUPS_ALL, GLFW.GLFW_KEY_1).categoryKey("recording_groups");
     public static final KeyCombo RECORDING_GROUP_LEFT_STICK = new KeyCombo("left_stick", UIKeys.FILM_GROUPS_LEFT_STICK, GLFW.GLFW_KEY_2).categoryKey("recording_groups");

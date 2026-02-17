@@ -43,6 +43,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIVector3KeyframeGraph;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeElement;
+import mchorse.bbs_mod.utils.keyframes.factories.Vector3fKeyframeFactory;
+
 public class UIKeyframes extends UIElement
 {
     /* Editing states */
@@ -245,13 +249,29 @@ public class UIKeyframes extends UIElement
             Keyframe kf = selected.get(index);
             Keyframe prevKf = selected.get(previous);
 
-            double difference = factory.getY(kf.getValue()) - factory.getY(prevKf.getValue());
-
-            selected.remove(index);
-
-            for (Keyframe keyframe : selected)
+            if (factory instanceof Vector3fKeyframeFactory)
             {
-                keyframe.setValue(factory.yToValue(factory.getY(keyframe.getValue()) + difference));
+                org.joml.Vector3f v1 = (org.joml.Vector3f) kf.getValue();
+                org.joml.Vector3f v2 = (org.joml.Vector3f) prevKf.getValue();
+                org.joml.Vector3f diff = new org.joml.Vector3f(v1).sub(v2);
+
+                selected.remove(index);
+
+                for (Keyframe keyframe : selected)
+                {
+                    keyframe.setValue(new org.joml.Vector3f((org.joml.Vector3f) keyframe.getValue()).add(diff));
+                }
+            }
+            else
+            {
+                double difference = factory.getY(kf.getValue()) - factory.getY(prevKf.getValue());
+
+                selected.remove(index);
+
+                for (Keyframe keyframe : selected)
+                {
+                    keyframe.setValue(factory.yToValue(factory.getY(keyframe.getValue()) + difference));
+                }
             }
 
             sheet.channel.postNotify();
@@ -527,7 +547,14 @@ public class UIKeyframes extends UIElement
             this.dopeSheet.clearSelection();
             this.dopeSheet.pickSelected();
 
-            this.currentGraph = new UIKeyframeGraph(this, sheet);
+            if (sheet.channel.getFactory() instanceof Vector3fKeyframeFactory)
+            {
+                this.currentGraph = new UIVector3KeyframeGraph(this, sheet);
+            }
+            else
+            {
+                this.currentGraph = new UIKeyframeGraph(this, sheet);
+            }
 
             this.resetView();
         }
@@ -781,6 +808,11 @@ public class UIKeyframes extends UIElement
     public void addSheet(UIKeyframeSheet sheet)
     {
         this.dopeSheet.addSheet(sheet);
+    }
+
+    public void addElement(UIKeyframeElement element)
+    {
+        this.dopeSheet.addElement(element);
     }
 
     public void pickKeyframe(Keyframe keyframe)

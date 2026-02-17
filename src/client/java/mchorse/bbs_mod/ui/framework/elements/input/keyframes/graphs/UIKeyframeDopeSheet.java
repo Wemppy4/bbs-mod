@@ -6,6 +6,8 @@ import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.framework.UIContext;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeElement;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeGroup;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.IKeyframeShapeRenderer;
@@ -15,6 +17,7 @@ import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.Scroll;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
+import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.Pair;
@@ -30,13 +33,17 @@ import net.minecraft.client.render.VertexFormats;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UIKeyframeDopeSheet implements IUIKeyframeGraph
 {
     private UIKeyframes keyframes;
 
+    private List<UIKeyframeElement> elements = new ArrayList<>();
     private List<UIKeyframeSheet> sheets = new ArrayList<>();
+    private Map<UIKeyframeSheet, Integer> sheetYCache = new HashMap<>();
     private UIKeyframeSheet lastSheet;
 
     private Scroll dopeSheet;
@@ -69,9 +76,55 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     {
         this.trackHeight = MathUtils.clamp(height, 8D, 100D);
         this.dopeSheet.scrollSpeed = (int) this.trackHeight * 2;
-        this.dopeSheet.scrollSize = (int) this.trackHeight * this.sheets.size() + TOP_MARGIN;
+        this.updateScrollSize();
 
         this.dopeSheet.clamp();
+    }
+
+    private void updateScrollSize()
+    {
+        this.sheetYCache.clear();
+        this.dopeSheet.scrollSize = this.calculateLayout(this.elements, 0) + TOP_MARGIN;
+    }
+
+    private int calculateLayout(List<UIKeyframeElement> elements, int y)
+    {
+        for (UIKeyframeElement element : elements)
+        {
+            if (element instanceof UIKeyframeSheet sheet)
+            {
+                this.sheetYCache.put(sheet, y);
+            }
+
+            y += (int) this.trackHeight;
+
+            if (element instanceof UIKeyframeGroup group && !group.collapsed)
+            {
+                y = this.calculateLayout(group.children, y);
+            }
+        }
+
+        return y;
+    }
+
+    private int getElementHeight(UIKeyframeElement element)
+    {
+        if (element instanceof UIKeyframeGroup group)
+        {
+            int h = (int) this.trackHeight;
+
+            if (!group.collapsed)
+            {
+                for (UIKeyframeElement child : group.children)
+                {
+                    h += this.getElementHeight(child);
+                }
+            }
+
+            return h;
+        }
+
+        return (int) this.trackHeight;
     }
 
     /* Graphing */
@@ -88,12 +141,14 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
 
     public int getDopeSheetY(int sheet)
     {
-        return this.getDopeSheetY() + sheet * (int) this.trackHeight;
+        return this.getDopeSheetY(this.sheets.get(sheet));
     }
 
     public int getDopeSheetY(UIKeyframeSheet sheet)
     {
-        return this.getDopeSheetY(this.sheets.indexOf(sheet));
+        Integer y = this.sheetYCache.get(sheet);
+
+        return this.getDopeSheetY() + (y == null ? 0 : y);
     }
 
     /**
@@ -131,12 +186,38 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
 
     public void removeAllSheets()
     {
+        this.elements.clear();
         this.sheets.clear();
+        this.updateScrollSize();
     }
 
     public void addSheet(UIKeyframeSheet sheet)
     {
+        this.elements.add(sheet);
         this.sheets.add(sheet);
+        this.updateScrollSize();
+    }
+
+    public void addElement(UIKeyframeElement element)
+    {
+        this.elements.add(element);
+        this.flatten(element);
+        this.updateScrollSize();
+    }
+
+    private void flatten(UIKeyframeElement element)
+    {
+        if (element instanceof UIKeyframeSheet sheet)
+        {
+            this.sheets.add(sheet);
+        }
+        else if (element instanceof UIKeyframeGroup group)
+        {
+            for (UIKeyframeElement child : group.children)
+            {
+                this.flatten(child);
+            }
+        }
     }
 
     /* Selection */
@@ -194,10 +275,19 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     @Override
     public UIKeyframeSheet getSheet(int mouseY)
     {
-        int dopeSheetY = this.getDopeSheetY();
-        int index = (mouseY - dopeSheetY) / (int) this.trackHeight;
+        int relY = mouseY - this.getDopeSheetY();
 
-        return CollectionUtils.getSafe(this.sheets, index);
+        for (Map.Entry<UIKeyframeSheet, Integer> entry : this.sheetYCache.entrySet())
+        {
+            int y = entry.getValue();
+
+            if (relY >= y && relY < y + this.trackHeight)
+            {
+                return entry.getKey();
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -295,7 +385,48 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     @Override
     public boolean mouseClicked(UIContext context)
     {
-        return this.dopeSheet.mouseClicked(context);
+        if (this.dopeSheet.mouseClicked(context))
+        {
+            return true;
+        }
+
+        if (context.mouseButton == 0 && this.keyframes.area.isInside(context))
+        {
+            int y = this.getDopeSheetY();
+
+            return this.clickElements(context, this.elements, 0, y);
+        }
+
+        return false;
+    }
+
+    private boolean clickElements(UIContext context, List<UIKeyframeElement> elements, int offset, int y)
+    {
+        for (UIKeyframeElement element : elements)
+        {
+            if (element instanceof UIKeyframeGroup group)
+            {
+                if (context.mouseY >= y && context.mouseY < y + this.trackHeight)
+                {
+                    group.collapsed = !group.collapsed;
+                    this.updateScrollSize();
+
+                    return true;
+                }
+
+                if (!group.collapsed)
+                {
+                    if (this.clickElements(context, group.children, offset + 10, y + (int) this.trackHeight))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            y += this.getElementHeight(element);
+        }
+
+        return false;
     }
 
     @Override
@@ -533,150 +664,222 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     @SuppressWarnings({"rawtypes", "IntegerDivisionInFloatingPointContext"})
     protected void renderGraph(UIContext context)
     {
-        if (this.sheets.isEmpty())
+        if (this.elements.isEmpty())
         {
             return;
         }
 
-        this.dopeSheet.scrollSize = (int) this.trackHeight * this.sheets.size() + TOP_MARGIN;
+        this.updateScrollSize();
 
         Area area = this.keyframes.area;
         BufferBuilder builder = Tessellator.getInstance().getBuffer();
         Matrix4f matrix = context.batcher.getContext().getMatrices().peek().getPositionMatrix();
 
-        for (int i = 0; i < this.sheets.size(); i++)
+        this.renderElements(context, builder, matrix, area, this.elements, 0, this.getDopeSheetY());
+    }
+
+    private int renderElements(UIContext context, BufferBuilder builder, Matrix4f matrix, Area area, List<UIKeyframeElement> elements, int offset, int y)
+    {
+        for (UIKeyframeElement element : elements)
         {
-            int y = this.getDopeSheetY(i);
-
-            if (y + this.trackHeight < area.y || y > area.ey())
+            if (element instanceof UIKeyframeSheet sheet)
             {
-                continue;
+                this.renderSheet(context, builder, matrix, area, sheet, offset, y);
+            }
+            else if (element instanceof UIKeyframeGroup group)
+            {
+                this.renderGroup(context, builder, matrix, area, group, offset, y);
             }
 
-            UIKeyframeSheet sheet = this.sheets.get(i);
-            List keyframes = sheet.channel.getKeyframes();
+            y += (int) this.trackHeight;
 
-            boolean hover = area.isInside(context) && context.mouseY >= y && context.mouseY < y + this.trackHeight;
-            int my = y + (int) this.trackHeight / 2;
-            int cc = Colors.setA(sheet.color, hover ? 1F : 0.45F);
-
-            /* Render track bars (horizontal lines) */
-            builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-
-            context.batcher.fillRect(builder, matrix, area.x, my - 1, area.w, 2, cc, cc, cc, cc);
-
-            if (sheet.separator)
+            if (element instanceof UIKeyframeGroup group && !group.collapsed)
             {
-                int c = Colors.setA(sheet.color, 0F);
+                y = this.renderElements(context, builder, matrix, area, group.children, offset + 10, y);
+            }
+        }
 
-                /* Render separator */
-                context.batcher.fillRect(builder, matrix, area.x, y, area.w, (int) this.trackHeight, c | Colors.A25, c | Colors.A25, c, c);
+        return y;
+    }
+
+    private void renderGroup(UIContext context, BufferBuilder builder, Matrix4f matrix, Area area, UIKeyframeGroup group, int offset, int y)
+    {
+        if (y + this.trackHeight < area.y || y > area.ey())
+        {
+            return;
+        }
+
+        boolean hover = area.isInside(context) && context.mouseY >= y && context.mouseY < y + this.trackHeight;
+        int my = y + (int) this.trackHeight / 2;
+        int cc = Colors.setA(group.color, hover ? 1F : 0.45F);
+
+        /* Render track bars (horizontal lines) */
+        builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        context.batcher.fillRect(builder, matrix, area.x, my - 1, area.w, 2, cc, cc, cc, cc);
+
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+
+        FontRenderer font = context.batcher.getFont();
+        String label = group.title.get();
+        int lw = font.getWidth(label);
+        int lx = area.ex() - lw - 20 - offset;
+
+        context.batcher.gradientHBox(lx, y, area.ex(), y + (int) this.trackHeight, group.color, group.color | (hover ? Colors.A100 : Colors.A50));
+
+        if (hover)
+        {
+            context.batcher.textShadow(label, lx + 5, my - font.getHeight() / 2);
+        }
+        else
+        {
+            context.batcher.textShadow(label, lx + 5, my - font.getHeight() / 2, Colors.WHITE & 0xccffffff);
+        }
+
+        /* Render toggle */
+        int ty = my - 8;
+
+        context.batcher.icon(group.collapsed ? Icons.ARROW_RIGHT : Icons.ARROW_DOWN, area.ex() - 16, ty);
+
+        if (hover && context.mouseButton == 0 && !this.keyframes.isNavigating()) // Check for click
+        {
+            // This is a bit hacky, but UIKeyframeDopeSheet handles input in parent class usually.
+            // Ideally we should handle clicks in mouseClicked.
+        }
+    }
+
+    private void renderSheet(UIContext context, BufferBuilder builder, Matrix4f matrix, Area area, UIKeyframeSheet sheet, int offset, int y)
+    {
+        if (y + this.trackHeight < area.y || y > area.ey())
+        {
+            return;
+        }
+
+        List keyframes = sheet.channel.getKeyframes();
+
+        boolean hover = area.isInside(context) && context.mouseY >= y && context.mouseY < y + this.trackHeight;
+        int my = y + (int) this.trackHeight / 2;
+        int cc = Colors.setA(sheet.color, hover ? 1F : 0.45F);
+
+        /* Render track bars (horizontal lines) */
+        builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        context.batcher.fillRect(builder, matrix, area.x, my - 1, area.w, 2, cc, cc, cc, cc);
+
+        if (sheet.separator)
+        {
+            int c = Colors.setA(sheet.color, 0F);
+
+            /* Render separator */
+            context.batcher.fillRect(builder, matrix, area.x, y, area.w, (int) this.trackHeight, c | Colors.A25, c | Colors.A25, c, c);
+        }
+
+        /* Render bars indicating same values */
+        for (int j = 1; j < keyframes.size(); j++)
+        {
+            Keyframe previous = (Keyframe) keyframes.get(j - 1);
+            Keyframe frame = (Keyframe) keyframes.get(j);
+            int c = Colors.YELLOW | Colors.A25;
+            int xx = this.keyframes.toGraphX(previous.getTick());
+            int xxx = this.keyframes.toGraphX(frame.getTick());
+
+            if (previous.getFactory().compare(previous.getValue(), frame.getValue()))
+            {
+                context.batcher.fillRect(builder, matrix, xx, my - 2, this.keyframes.toGraphX(frame.getTick()) - xx, 4, c, c, c, c);
             }
 
-            /* Render bars indicating same values */
-            for (int j = 1; j < keyframes.size(); j++)
+            if (Math.abs(xxx - xx) < 5)
             {
-                Keyframe previous = (Keyframe) keyframes.get(j - 1);
-                Keyframe frame = (Keyframe) keyframes.get(j);
-                int c = Colors.YELLOW | Colors.A25;
-                int xx = this.keyframes.toGraphX(previous.getTick());
-                int xxx = this.keyframes.toGraphX(frame.getTick());
+                c = Colors.YELLOW | Colors.A50;
 
-                if (previous.getFactory().compare(previous.getValue(), frame.getValue()))
-                {
-                    context.batcher.fillRect(builder, matrix, xx, my - 2, this.keyframes.toGraphX(frame.getTick()) - xx, 4, c, c, c, c);
-                }
+                context.batcher.fillRect(builder, matrix, xx - 2, my + 5, xxx - xx + 4, 2, c, c, c, c);
+            }
+        }
 
-                if (Math.abs(xxx - xx) < 5)
-                {
-                    c = Colors.YELLOW | Colors.A50;
+        /* Draw keyframe handles (outer) */
+        int forcedIndex = 0;
 
-                    context.batcher.fillRect(builder, matrix, xx - 2, my + 5, xxx - xx + 4, 2, c, c, c, c);
-                }
+        for (int j = 0; j < keyframes.size(); j++)
+        {
+            Keyframe frame = (Keyframe) keyframes.get(j);
+            float tick = frame.getTick();
+            int x1 = this.keyframes.toGraphX(tick);
+            int x2 = this.keyframes.toGraphX(tick + frame.getDuration());
+
+            /* Render custom duration markers */
+            if (x1 != x2)
+            {
+                int y1 = my - 8 + (forcedIndex % 2 == 1 ? -4 : 0);
+                int color = sheet.selection.has(j) ? Colors.WHITE :  Colors.setA(Colors.mulRGB(sheet.color, 0.9F), 0.75F);
+
+                context.batcher.fillRect(builder, matrix, x1, y1 - 2, 1, 5, color, color, color, color);
+                context.batcher.fillRect(builder, matrix, x2, y1 - 2, 1, 5, color, color, color, color);
+                context.batcher.fillRect(builder, matrix, x1 + 1, y1, x2 - x1, 1, color, color, color, color);
+
+                forcedIndex += 1;
             }
 
-            /* Draw keyframe handles (outer) */
-            int forcedIndex = 0;
+            boolean isPointHover = this.isNear(this.keyframes.toGraphX(frame.getTick()), my, context.mouseX, context.mouseY, Window.isAltPressed() && Window.isShiftPressed());
+            boolean toRemove = Window.isCtrlPressed() && isPointHover;
 
-            for (int j = 0; j < keyframes.size(); j++)
+            if (this.keyframes.isSelecting())
             {
-                Keyframe frame = (Keyframe) keyframes.get(j);
-                float tick = frame.getTick();
-                int x1 = this.keyframes.toGraphX(tick);
-                int x2 = this.keyframes.toGraphX(tick + frame.getDuration());
-
-                /* Render custom duration markers */
-                if (x1 != x2)
-                {
-                    int y1 = my - 8 + (forcedIndex % 2 == 1 ? -4 : 0);
-                    int color = sheet.selection.has(j) ? Colors.WHITE :  Colors.setA(Colors.mulRGB(sheet.color, 0.9F), 0.75F);
-
-                    context.batcher.fillRect(builder, matrix, x1, y1 - 2, 1, 5, color, color, color, color);
-                    context.batcher.fillRect(builder, matrix, x2, y1 - 2, 1, 5, color, color, color, color);
-                    context.batcher.fillRect(builder, matrix, x1 + 1, y1, x2 - x1, 1, color, color, color, color);
-
-                    forcedIndex += 1;
-                }
-
-                boolean isPointHover = this.isNear(this.keyframes.toGraphX(frame.getTick()), my, context.mouseX, context.mouseY, Window.isAltPressed() && Window.isShiftPressed());
-                boolean toRemove = Window.isCtrlPressed() && isPointHover;
-
-                if (this.keyframes.isSelecting())
-                {
-                    isPointHover = isPointHover || this.keyframes.getGrabbingArea(context).isInside(x1, my);
-                }
-
-                int kc = frame.getColor() != null ? frame.getColor().getRGBColor() | Colors.A100 : sheet.color;
-                int c = (sheet.selection.has(j) || isPointHover ? Colors.WHITE : kc) | Colors.A100;
-
-                if (toRemove)
-                {
-                    c = Colors.RED | Colors.A100;
-                }
-
-                int offset = toRemove ? 4 : 3;
-
-                renderShape(frame, context, builder, matrix, x1, my, offset, c);
+                isPointHover = isPointHover || this.keyframes.getGrabbingArea(context).isInside(x1, my);
             }
 
-            /* Render keyframe handles (inner) */
-            for (int j = 0; j < keyframes.size(); j++)
-            {
-                Keyframe frame = (Keyframe) keyframes.get(j);
-                int c = sheet.selection.has(j) ? Colors.ACTIVE : 0;
-                int mx = this.keyframes.toGraphX(frame.getTick());
-                int mc = c | Colors.A100;
-                IKeyframeShapeRenderer shapeResult = renderShape(frame, context, builder, matrix, mx, my, 2, mc);
+            int kc = frame.getColor() != null ? frame.getColor().getRGBColor() | Colors.A100 : sheet.color;
+            int c = (sheet.selection.has(j) || isPointHover ? Colors.WHITE : kc) | Colors.A100;
 
-                shapeResult.renderKeyframeBackground(context, builder, matrix, mx, my, 2, mc);
+            if (toRemove)
+            {
+                c = Colors.RED | Colors.A100;
             }
 
-            RenderSystem.enableBlend();
-            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-            BufferRenderer.drawWithGlobalProgram(builder.end());
+            int pointOffset = toRemove ? 4 : 3;
 
-            FontRenderer font = context.batcher.getFont();
-            int lw = font.getWidth(sheet.title.get());
+            renderShape(frame, context, builder, matrix, x1, my, pointOffset, c);
+        }
 
-            context.batcher.gradientHBox(area.ex() - lw - 10, y, area.ex(), y + (int) this.trackHeight, sheet.color, sheet.color | (hover ? Colors.A75 : Colors.A25));
+        /* Render keyframe handles (inner) */
+        for (int j = 0; j < keyframes.size(); j++)
+        {
+            Keyframe frame = (Keyframe) keyframes.get(j);
+            int c = sheet.selection.has(j) ? Colors.ACTIVE : 0;
+            int mx = this.keyframes.toGraphX(frame.getTick());
+            int mc = c | Colors.A100;
+            IKeyframeShapeRenderer shapeResult = renderShape(frame, context, builder, matrix, mx, my, 2, mc);
 
-            if (hover)
-            {
-                context.batcher.textShadow(sheet.title.get(), area.ex() - lw - 5, my - font.getHeight() / 2);
-            }
-            else
-            {
-                context.batcher.text(sheet.title.get(), area.ex() - lw - 5, my - font.getHeight() / 2, Colors.WHITE & 0x88ffffff);
-            }
+            shapeResult.renderKeyframeBackground(context, builder, matrix, mx, my, 2, mc);
+        }
 
-            Icon icon = sheet.getIcon();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferRenderer.drawWithGlobalProgram(builder.end());
 
-            if (icon != null && this.trackHeight >= 12D)
-            {
-                context.batcher.box(area.x, y, area.x + 6, y + (int) this.trackHeight, Colors.A75);
-                context.batcher.gradientHBox(area.x + 6, y, area.x + 4 + icon.w, y + (int) this.trackHeight, Colors.A75, 0);
-                context.batcher.icon(icon, area.x + 2, my - icon.h / 2);
-            }
+        FontRenderer font = context.batcher.getFont();
+        int lw = font.getWidth(sheet.title.get());
+        int lx = area.ex() - lw - 10 - offset;
+
+        context.batcher.gradientHBox(lx, y, area.ex(), y + (int) this.trackHeight, sheet.color, sheet.color | (hover ? Colors.A75 : Colors.A25));
+
+        if (hover)
+        {
+            context.batcher.textShadow(sheet.title.get(), lx + 5, my - font.getHeight() / 2);
+        }
+        else
+        {
+            context.batcher.text(sheet.title.get(), lx + 5, my - font.getHeight() / 2, Colors.WHITE & 0x88ffffff);
+        }
+
+        Icon icon = sheet.getIcon();
+
+        if (icon != null && this.trackHeight >= 12D)
+        {
+            context.batcher.box(area.x, y, area.x + 6, y + (int) this.trackHeight, Colors.A75);
+            context.batcher.gradientHBox(area.x + 6, y, area.x + 4 + icon.w, y + (int) this.trackHeight, Colors.A75, 0);
+            context.batcher.icon(icon, area.x + 2, my - icon.h / 2);
         }
     }
 

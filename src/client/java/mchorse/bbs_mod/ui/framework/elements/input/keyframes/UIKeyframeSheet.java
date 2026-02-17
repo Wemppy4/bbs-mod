@@ -11,35 +11,38 @@ import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UIKeyframeSheet
+public class UIKeyframeSheet extends UIKeyframeElement
 {
     /* Meta data */
     public final String id;
-    public final IKey title;
-    public final int color;
-    public boolean separator;
-
     private Icon icon;
 
     public final KeyframeChannel channel;
     public final KeyframeSelection selection;
     public final BaseValueBasic property;
+    public final boolean isBoneTrack;
 
     public UIKeyframeSheet(int color, boolean separator, KeyframeChannel channel, BaseValueBasic property)
     {
-        this(channel.getId(), IKey.constant(property != null ? FormUtils.getForm(property).getTrackName(channel.getId()) : channel.getId()), color, separator, channel, property);
+        this(channel.getId(), IKey.constant(property != null ? FormUtils.getForm(property).getTrackName(channel.getId()) : channel.getId()), color, separator, channel, property, false);
     }
 
     public UIKeyframeSheet(String id, IKey title, int color, boolean separator, KeyframeChannel channel, BaseValueBasic property)
     {
+        this(id, title, color, separator, channel, property, false);
+    }
+
+    public UIKeyframeSheet(String id, IKey title, int color, boolean separator, KeyframeChannel channel, BaseValueBasic property, boolean isBoneTrack)
+    {
+        super(title, color);
+
         this.id = id;
-        this.title = title;
-        this.color = color;
         this.separator = separator;
 
         this.channel = channel;
         this.selection = new KeyframeSelection(channel);
         this.property = property;
+        this.isBoneTrack = isBoneTrack;
     }
 
     public UIKeyframeSheet icon(Icon icon)
@@ -105,6 +108,10 @@ public class UIKeyframeSheet
             else if (selectedValue instanceof Integer)
             {
                 keyframe.setValue((int) keyframe.getValue() + valueNumber.intValue() - (int) selectedValue, dirty);
+            }
+            else if (selectedValue instanceof Long)
+            {
+                keyframe.setValue((long) keyframe.getValue() + valueNumber.longValue() - (long) selectedValue, dirty);
             }
             else
             {

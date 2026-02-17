@@ -36,11 +36,11 @@ import java.util.List;
 
 public class UIKeyframeGraph implements IUIKeyframeGraph
 {
-    private UIKeyframes keyframes;
+    protected UIKeyframes keyframes;
 
-    private UIKeyframeSheet sheet;
+    protected UIKeyframeSheet sheet;
 
-    private final Scale yAxis;
+    protected final Scale yAxis;
 
     public UIKeyframeGraph(UIKeyframes keyframes, UIKeyframeSheet sheet)
     {
@@ -65,7 +65,7 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
     /**
      * Whether given mouse coordinates are near the given point?
      */
-    private boolean isNear(double x, double y, int mouseX, int mouseY)
+    protected boolean isNear(double x, double y, int mouseX, int mouseY)
     {
         return Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2) < 25D;
     }

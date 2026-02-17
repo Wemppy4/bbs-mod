@@ -12,6 +12,7 @@ import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.film.Film;
+import mchorse.bbs_mod.film.replays.PerLimbService;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.film.replays.ReplayKeyframes;
 import mchorse.bbs_mod.forms.FormUtils;
@@ -23,6 +24,9 @@ import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
+import mchorse.bbs_mod.l10n.L10n;
+import mchorse.bbs_mod.l10n.keys.IKey;
+import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIClipsPanel;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
@@ -33,6 +37,9 @@ import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
 import mchorse.bbs_mod.ui.film.utils.keyframes.UIFilmKeyframes;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
+import mchorse.bbs_mod.ui.framework.elements.utils.UIRenderable;
+import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
@@ -42,6 +49,7 @@ import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Gizmo;
 import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
+import mchorse.bbs_mod.utils.NaturalOrderComparator;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.CollectionUtils;
@@ -52,6 +60,7 @@ import mchorse.bbs_mod.utils.RayTracing;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.Clips;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
@@ -64,11 +73,15 @@ import org.joml.Vector3d;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import mchorse.bbs_mod.settings.values.core.ValueTransform;
+import mchorse.bbs_mod.utils.pose.Transform;
 
 public class UIReplaysEditor extends UIElement
 {
@@ -79,6 +92,10 @@ public class UIReplaysEditor extends UIElement
 
     public UIReplaysOverlayPanel replays;
 
+    public UIElement iconBar;
+    public Map<ReplayCategory, UIIcon> tabButtons = new HashMap<>();
+    private ReplayCategory category = ReplayCategory.PLAYER;
+
     /* Keyframes */
     public UIKeyframeEditor keyframeEditor;
 
@@ -87,6 +104,24 @@ public class UIReplaysEditor extends UIElement
     private Film film;
     private Replay replay;
     private Set<String> keys = new LinkedHashSet<>();
+
+    public enum ReplayCategory
+    {
+        PLAYER(Icons.PLAYER, L10n.lang("bbs.ui.film.replays.category.player"), L10n.lang("bbs.ui.film.replays.category.player.tooltip")),
+        MODEL(Icons.BLOCK, L10n.lang("bbs.ui.film.replays.category.model"), L10n.lang("bbs.ui.film.replays.category.model.tooltip")),
+        POSE(Icons.POSE, L10n.lang("bbs.ui.film.replays.category.pose"), L10n.lang("bbs.ui.film.replays.category.pose.tooltip"));
+
+        public final Icon icon;
+        public final IKey label;
+        public final IKey tooltip;
+
+        private ReplayCategory(Icon icon, IKey label, IKey tooltip)
+        {
+            this.icon = icon;
+            this.label = label;
+            this.tooltip = tooltip;
+        }
+    }
 
     static
     {
@@ -244,7 +279,49 @@ public class UIReplaysEditor extends UIElement
         this.filmPanel = filmPanel;
         this.replays = new UIReplaysOverlayPanel(filmPanel, (replay) -> this.setReplay(replay, false, true));
 
+        this.iconBar = new UIElement();
+        this.iconBar.relative(this).x(0).w(20).h(1F).column(0).stretch();
+
+        this.iconBar.add(new UIRenderable((context) ->
+        {
+            context.batcher.box(this.iconBar.area.x, this.iconBar.area.y, this.iconBar.area.ex(), this.iconBar.area.ey(), Colors.A50);
+            context.batcher.gradientHBox(this.iconBar.area.ex(), this.iconBar.area.y, this.iconBar.area.ex() + 6, this.iconBar.area.ey(), 0x29000000, 0);
+
+            UIIcon activeIcon = this.tabButtons.get(this.category);
+
+            if (activeIcon != null)
+            {
+                int color = BBSSettings.primaryColor.get();
+                Area area = activeIcon.area;
+
+                context.batcher.box(area.x, area.y, area.x + 2, area.ey(), Colors.A100 | color);
+                context.batcher.gradientHBox(area.x + 2, area.y, area.ex(), area.ey(), Colors.A75 | color, color);
+            }
+        }));
+
+        for (ReplayCategory category : ReplayCategory.values())
+        {
+            UIIcon button = new UIIcon(category.icon, (b) -> this.setCategory(category));
+
+            button.tooltip(category.tooltip, Direction.RIGHT);
+            this.iconBar.add(button);
+            this.tabButtons.put(category, button);
+        }
+
+        this.setCategory(ReplayCategory.PLAYER);
+
+        this.keys().register(Keys.REPLAYS_TAB_1, () -> this.setCategory(ReplayCategory.PLAYER)).category(UIKeys.FILM_REPLAY_TITLE);
+        this.keys().register(Keys.REPLAYS_TAB_2, () -> this.setCategory(ReplayCategory.MODEL)).category(UIKeys.FILM_REPLAY_TITLE);
+        this.keys().register(Keys.REPLAYS_TAB_3, () -> this.setCategory(ReplayCategory.POSE)).category(UIKeys.FILM_REPLAY_TITLE);
+
+        this.add(this.iconBar);
         this.markContainer();
+    }
+
+    private void setCategory(ReplayCategory c)
+    {
+        this.category = c;
+        this.updateChannelsList();
     }
 
     public void setFilm(Film film)
@@ -309,13 +386,12 @@ public class UIReplaysEditor extends UIElement
 
     public void updateChannelsList()
     {
-        UIKeyframes lastEditor = null;
+        UIKeyframes lastEditor = this.keyframeEditor != null ? this.keyframeEditor.view : null;
 
         if (this.keyframeEditor != null)
         {
             this.keyframeEditor.removeFromParent();
-
-            lastEditor = this.keyframeEditor.view;
+            this.keyframeEditor = null;
         }
 
         if (this.replay == null)
@@ -323,41 +399,73 @@ public class UIReplaysEditor extends UIElement
             return;
         }
 
-        /* Replay keyframes */
         List<UIKeyframeSheet> sheets = new ArrayList<>();
 
-        for (String key : ReplayKeyframes.CURATED_CHANNELS)
+        if (this.category == ReplayCategory.PLAYER)
         {
-            BaseValue value = this.replay.keyframes.get(key);
-            KeyframeChannel channel = (KeyframeChannel) value;
+            for (String key : ReplayKeyframes.CURATED_CHANNELS)
+            {
+                BaseValue value = this.replay.keyframes.get(key);
+                KeyframeChannel channel = (KeyframeChannel) value;
 
-            sheets.add(new UIKeyframeSheet(getColor(key), false, channel, null).icon(ICONS.get(key)));
+                sheets.add(new UIKeyframeSheet(getColor(key), false, channel, null).icon(ICONS.get(key)));
+            }
         }
 
         /* Form properties */
+        Form lastForm = null;
+        List<UIKeyframeSheet> formSheets = new ArrayList<>();
+
         for (String key : FormUtils.collectPropertyPaths(this.replay.form.get()))
         {
             KeyframeChannel property = this.replay.properties.getOrCreate(this.replay.form.get(), key);
+            String name = StringUtils.fileName(key);
+            boolean isPose = name.startsWith("transform") || name.startsWith("pose") || name.startsWith("pose_overlay");
 
-            if (property != null)
+            if (property != null && ((this.category == ReplayCategory.MODEL && !isPose) || (this.category == ReplayCategory.POSE && isPose)))
             {
                 BaseValueBasic formProperty = FormUtils.getProperty(this.replay.form.get(), key);
+                Form form = formProperty.getParent() instanceof Form ? (Form) formProperty.getParent() : null;
+
+                if (form != lastForm)
+                {
+                    if (lastForm != null)
+                    {
+                        this.flushForm(sheets, formSheets, lastForm);
+                    }
+
+                    lastForm = form;
+                }
+
                 UIKeyframeSheet sheet = new UIKeyframeSheet(getColor(key), false, property, formProperty);
 
-                sheets.add(sheet.icon(getIcon(key)));
+                formSheets.add(sheet.icon(getIcon(key)));
             }
+        }
+
+        if (lastForm != null)
+        {
+            this.flushForm(sheets, formSheets, lastForm);
         }
 
         this.keys.clear();
 
         for (UIKeyframeSheet sheet : sheets)
         {
-            this.keys.add(StringUtils.fileName(sheet.id));
+            String name = StringUtils.fileName(sheet.id);
+            if (sheet.isBoneTrack)
+            {
+                continue;
+            }
+
+            this.keys.add(name);
         }
+
+        Set<String> disabled = BBSSettings.disabledSheets.get();
 
         sheets.removeIf((v) ->
         {
-            for (String s : BBSSettings.disabledSheets.get())
+            for (String s : disabled)
             {
                 if (v.id.equals(s) || v.id.endsWith("/" + s))
                 {
@@ -368,11 +476,11 @@ public class UIReplaysEditor extends UIElement
             return false;
         });
 
-        Object lastForm = null;
+        lastForm = null;
 
         for (UIKeyframeSheet sheet : sheets)
         {
-            Object form = sheet.property == null ? null : FormUtils.getForm(sheet.property);
+            Form form = sheet.property == null ? null : FormUtils.getForm(sheet.property);
 
             if (!Objects.equals(lastForm, form))
             {
@@ -385,7 +493,7 @@ public class UIReplaysEditor extends UIElement
         if (!sheets.isEmpty())
         {
             this.keyframeEditor = new UIKeyframeEditor((consumer) -> new UIFilmKeyframes(this.filmPanel.cameraEditor, consumer).absolute()).target(this.filmPanel.editArea);
-            this.keyframeEditor.full(this);
+            this.keyframeEditor.relative(this).x(20).w(1F, -20).h(1F);
             this.keyframeEditor.setUndoId("replay_keyframe_editor");
 
             /* Reset */
@@ -450,14 +558,15 @@ public class UIReplaysEditor extends UIElement
                 {
                     menu.action(Icons.FILTER, UIKeys.FILM_REPLAY_FILTER_SHEETS, () ->
                     {
-                        UIKeyframeSheetFilterOverlayPanel panel = new UIKeyframeSheetFilterOverlayPanel(BBSSettings.disabledSheets.get(), this.keys);
+                        Set<String> disabledSet = BBSSettings.disabledSheets.get();
+                        UIKeyframeSheetFilterOverlayPanel panel = new UIKeyframeSheetFilterOverlayPanel(disabledSet, this.keys);
 
                         UIOverlay.addOverlay(this.getContext(), panel, 240, 0.9F);
 
                         panel.onClose((e) ->
                         {
+                            BBSSettings.disabledSheets.set(disabledSet);
                             this.updateChannelsList();
-                            BBSSettings.disabledSheets.set(BBSSettings.disabledSheets.get());
                         });
                     });
                 }
@@ -479,14 +588,44 @@ public class UIReplaysEditor extends UIElement
         }
     }
 
+    private void flushForm(List<UIKeyframeSheet> sheets, List<UIKeyframeSheet> formSheets, Form form)
+    {
+        sheets.addAll(formSheets);
+        formSheets.clear();
+
+        if (this.category == ReplayCategory.POSE && form instanceof ModelForm modelForm)
+        {
+            ModelInstance model = ModelFormRenderer.getModel(modelForm);
+
+            if (model != null)
+            {
+                List<String> bones = new ArrayList<>(model.model.getAllGroupKeys());
+
+                bones.sort((a, b) -> NaturalOrderComparator.compare(true, a, b));
+
+                for (String bone : bones)
+                {
+                    if (model.disabledBones.contains(bone))
+                    {
+                        continue;
+                    }
+
+                    String path = FormUtils.getPath(modelForm);
+                    String boneKey = PerLimbService.toPoseBoneKey(path, bone);
+                    String title = path.isEmpty() ? bone : path + "/" + bone;
+                    KeyframeChannel boneChannel = this.replay.properties.registerChannel(boneKey, KeyframeFactories.TRANSFORM);
+                    ValueTransform transform = new ValueTransform(boneKey, new Transform());
+                    UIKeyframeSheet boneSheet = new UIKeyframeSheet(boneKey, IKey.constant(title), Colors.HSVtoRGB(Math.abs((bone.hashCode() % 360) / 360F), 0.7F, 0.7F).getRGBColor(), false, boneChannel, transform, true);
+
+                    sheets.add(boneSheet);
+                }
+            }
+        }
+    }
+
     public void pickForm(Form form, String bone)
     {
         UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, form, bone);
-    }
-
-    public void pickFormProperty(Form form, String bone)
-    {
-        UIReplaysEditorUtils.pickFormProperty(this.getContext(), this.keyframeEditor, this.filmPanel, form, bone);
     }
 
     public boolean clickViewport(UIContext context, Area area)
@@ -524,9 +663,24 @@ public class UIReplaysEditor extends UIElement
                 }
                 else if (context.mouseButton == 1)
                 {
-                    this.pickFormProperty(pair.a, pair.b);
+                    if (Window.isCtrlPressed())
+                    {
+                        UIReplaysEditorUtils.offerAdjacent(this.getContext(), pair.a, pair.b, (bone) -> UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, pair.a, bone, true));
 
-                    return true;
+                        return true;
+                    }
+                    else if (Window.isShiftPressed())
+                    {
+                        UIReplaysEditorUtils.offerHierarchy(this.getContext(), pair.a, pair.b, (bone) -> UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, pair.a, bone, true));
+
+                        return true;
+                    }
+                    else
+                    {
+                        UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.filmPanel, pair.a, pair.b, true);
+                        
+                        return true;
+                    }
                 }
             }
         }
