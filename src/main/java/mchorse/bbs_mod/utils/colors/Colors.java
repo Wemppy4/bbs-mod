@@ -21,6 +21,7 @@ public class Colors
     public static final int LIGHTER_GRAY = 0xffaaaaaa;
     public static final int GRAY = 0xff888888;
     public static final int DARKER_GRAY = 0xff444444;
+    public static final int DARK_GRAY = 0xff676767;
     public static final int DARKEST_GRAY = 0xff222222;
     public static final int RED = 0xff3333;
     public static final int GREEN = 0x33ff33;
@@ -34,7 +35,7 @@ public class Colors
 
     /* General purpose colors */
     public static final int CONTROL_BAR = 0xff141417;
-    public static final int ACTIVE = 0x676767;
+    public static final int ACTIVE = 0x0088ff;
     public static final int POSITIVE = GREEN;
     public static final int NEGATIVE = RED;
     public static final int INACTIVE = 0xffbb00;
