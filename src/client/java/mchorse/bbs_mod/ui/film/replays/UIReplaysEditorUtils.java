@@ -9,10 +9,8 @@ import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
-import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.math.molang.expressions.MolangExpression;
-import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.ui.film.ICursor;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
@@ -21,7 +19,6 @@ import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.IUIKeyframeGraph;
-import mchorse.bbs_mod.ui.utils.context.ContextMenuManager;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
@@ -71,27 +68,33 @@ public class UIReplaysEditorUtils
         }
 
         String path = FormUtils.getPath(form);
-        UIKeyframeSheet sheet = null;
         String boneKey = PerLimbService.toPoseBoneKey(path, bone);
 
         if (insert)
         {
-            pickProperty(keyframeEditor, cursor, bone, boneKey, insert);
+            pickProperty(keyframeEditor, cursor, bone, boneKey, true);
+            return;
         }
-        else
+
+        UIKeyframeSheet sheet = resolveBoneSheet(keyframeEditor, boneKey, path);
+
+        if (sheet != null)
         {
-            sheet = keyframeEditor.view.getGraph().getSheet(boneKey);
-
-            if (sheet == null)
-            {
-                sheet = getActivePoseSheet(keyframeEditor, path);
-            }
-
-            if (sheet != null)
-            {
-                pickProperty(keyframeEditor, cursor, bone, sheet, insert);
-            }
+            pickProperty(keyframeEditor, cursor, bone, sheet, false);
         }
+    }
+
+    private static UIKeyframeSheet resolveBoneSheet(UIKeyframeEditor keyframeEditor, String boneKey, String formPath)
+    {
+        IUIKeyframeGraph graph = keyframeEditor.view.getGraph();
+        UIKeyframeSheet sheet = graph.getSheet(boneKey);
+
+        if (sheet != null)
+        {
+            return sheet;
+        }
+
+        return getActivePoseSheet(keyframeEditor, formPath);
     }
 
     private static UIKeyframeSheet getActivePoseSheet(UIKeyframeEditor keyframeEditor, String formPath)
@@ -154,37 +157,50 @@ public class UIReplaysEditorUtils
             return;
         }
 
-        KeyframeSegment segment = sheet.channel.find(tick);
+        Keyframe closest = getClosestKeyframe(sheet, tick);
 
-        if (segment != null)
+        if (closest != null)
         {
-            Keyframe closest = segment.getClosest();
-
-            if (graph.getSelected() != closest)
-            {
-                boolean select = true;
-
-                for (UIKeyframeSheet graphSheet : graph.getSheets())
-                {
-                    if (graphSheet.selection.getSelected().contains(closest))
-                    {
-                        select = false;
-                        break;
-                    }
-                }
-
-                if (select) graph.selectKeyframe(closest);
-                else graph.pickKeyframe(closest);
-            }
-
-            /* Обновляем выбор кости в редакторе позы */
-            updatePoseEditorBoneSelection(keyframeEditor, bone, sheet);
-
+            selectKeyframe(graph, closest);
+            updatePoseEditorBoneSelection(keyframeEditor, bone);
             filmPanel.setCursor((int) closest.getTick());
+        }
+        else
+        {
+            updatePoseEditorBoneSelection(keyframeEditor, bone);
         }
     }
 
-    private static void updatePoseEditorBoneSelection(UIKeyframeEditor keyframeEditor, String bone, UIKeyframeSheet sheet)
+    private static Keyframe getClosestKeyframe(UIKeyframeSheet sheet, int tick)
+    {
+        KeyframeSegment segment = sheet.channel.find(tick);
+
+        return segment != null ? segment.getClosest() : null;
+    }
+
+    private static void selectKeyframe(IUIKeyframeGraph graph, Keyframe closest)
+    {
+        if (graph.getSelected() == closest)
+        {
+            return;
+        }
+
+        boolean select = true;
+
+        for (UIKeyframeSheet graphSheet : graph.getSheets())
+        {
+            if (graphSheet.selection.getSelected().contains(closest))
+            {
+                select = false;
+                break;
+            }
+        }
+
+        if (select) graph.selectKeyframe(closest);
+        else graph.pickKeyframe(closest);
+    }
+
+    private static void updatePoseEditorBoneSelection(UIKeyframeEditor keyframeEditor, String bone)
     {
         /* Обновляем выбор кости в редакторе позы, если он доступен */
         if (keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
