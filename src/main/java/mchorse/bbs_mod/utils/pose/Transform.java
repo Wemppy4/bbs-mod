@@ -44,6 +44,14 @@ public class Transform implements IMapSerializable
         target.z = (float) interp.interpolate(IInterp.context.set(preA.z, a.z, b.z, postB.z, x));
     }
 
+    public void add(Transform transform)
+    {
+        this.translate.add(transform.translate);
+        this.scale.mul(transform.scale);
+        this.rotate.add(transform.rotate);
+        this.rotate2.add(transform.rotate2);
+    }
+
     public void identity()
     {
         this.translate.set(0, 0, 0);

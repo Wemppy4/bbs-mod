@@ -81,6 +81,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import mchorse.bbs_mod.settings.values.core.ValueTransform;
+import mchorse.bbs_mod.utils.pose.PoseTransform;
 import mchorse.bbs_mod.utils.pose.Transform;
 
 public class UIReplaysEditor extends UIElement
@@ -613,8 +614,8 @@ public class UIReplaysEditor extends UIElement
                     String path = FormUtils.getPath(modelForm);
                     String boneKey = PerLimbService.toPoseBoneKey(path, bone);
                     String title = path.isEmpty() ? bone : path + "/" + bone;
-                    KeyframeChannel boneChannel = this.replay.properties.registerChannel(boneKey, KeyframeFactories.TRANSFORM);
-                    ValueTransform transform = new ValueTransform(boneKey, new Transform());
+                    KeyframeChannel boneChannel = this.replay.properties.registerChannel(boneKey, KeyframeFactories.POSE_TRANSFORM);
+                    ValueTransform transform = new ValueTransform(boneKey, new PoseTransform());
                     UIKeyframeSheet boneSheet = new UIKeyframeSheet(boneKey, IKey.constant(title), Colors.HSVtoRGB(Math.abs((bone.hashCode() % 360) / 360F), 0.7F, 0.7F).getRGBColor(), false, boneChannel, transform, true);
 
                     sheets.add(boneSheet);

@@ -23,9 +23,11 @@ import mchorse.bbs_mod.utils.pose.Transform;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class FormProperties extends ValueGroup
 {
@@ -59,7 +61,17 @@ public class FormProperties extends ValueGroup
             return channel;
         }
 
-        return property != null ? this.create(property) : null;
+        if (property != null)
+        {
+            return this.create(property);
+        }
+
+        if (PerLimbService.isPoseBoneChannel(key))
+        {
+            return this.registerChannel(key, KeyframeFactories.POSE_TRANSFORM);
+        }
+
+        return null;
     }
 
     public KeyframeChannel create(BaseValue property)
@@ -67,7 +79,14 @@ public class FormProperties extends ValueGroup
         if (property.isVisible() && property instanceof BaseKeyframeFactoryValue<?> keyframeFactoryValue)
         {
             String key = FormUtils.getPropertyPath(property);
-            KeyframeChannel channel = new KeyframeChannel(key, keyframeFactoryValue.getFactory());
+            IKeyframeFactory factory = keyframeFactoryValue.getFactory();
+
+            if (factory == KeyframeFactories.TRANSFORM && PerLimbService.isPoseBoneChannel(key))
+            {
+                factory = KeyframeFactories.POSE_TRANSFORM;
+            }
+
+            KeyframeChannel channel = new KeyframeChannel(key, factory);
 
             this.properties.put(key, channel);
             this.add(channel);
@@ -120,6 +139,35 @@ public class FormProperties extends ValueGroup
             }
         }
 
+        Set<String> processedForms = new HashSet<>();
+
+        for (KeyframeChannel value : poseBoneChannels)
+        {
+            PerLimbService.PoseBonePath poseBonePath = PerLimbService.parsePoseBonePath(value.getId());
+
+            if (poseBonePath != null)
+            {
+                String formPath = poseBonePath.formPath();
+
+                if (!processedForms.contains(formPath))
+                {
+                    processedForms.add(formPath);
+
+                    String poseKey = this.toPosePropertyKey(formPath);
+
+                    if (!this.properties.containsKey(poseKey))
+                    {
+                        Form targetForm = FormUtils.getForm(form, formPath);
+
+                        if (targetForm instanceof ModelForm modelForm)
+                        {
+                            modelForm.pose.setRuntimeValue(null);
+                        }
+                    }
+                }
+            }
+        }
+
         for (KeyframeChannel value : poseBoneChannels)
         {
             this.applyProperty(tick, form, value, clampedBlend);
@@ -142,20 +190,24 @@ public class FormProperties extends ValueGroup
 
                 if (segment != null)
                 {
-                    PoseTransform transform = modelForm.pose.get().get(bone);
+                    /* Copy on write */
+                    if (modelForm.pose.getRuntimeValue() == null)
+                    {
+                        modelForm.pose.setRuntimeValue(modelForm.pose.getOriginalValue().copy());
+                    }
 
-                    if (transform == null)
+                    PoseTransform transform = modelForm.pose.get().get(bone);
+                    boolean isNew = transform == null;
+
+                    if (isNew)
                     {
                         transform = new PoseTransform();
                         modelForm.pose.get().transforms.put(bone, transform);
                     }
 
-                    Transform interpolated = (Transform) this.interpolateValue(value, transform, segment, blend);
-                    transform.copy(interpolated);
-                }
-                else if (blend >= 1F && !this.hasBasePoseBone(formPath, bone, tick))
-                {
-                    modelForm.pose.get().transforms.remove(bone);
+                    Transform interpolated = (Transform) this.interpolateValue(value, new PoseTransform(), segment, blend);
+
+                    transform.add(interpolated);
                 }
             }
 
@@ -176,7 +228,7 @@ public class FormProperties extends ValueGroup
             Object interpolated = this.interpolateValue(value, property.get(), segment, blend);
             property.setRuntimeValue(interpolated);
         }
-        else
+        else if (blend >= 1F)
         {
             property.setRuntimeValue(null);
         }
@@ -195,28 +247,6 @@ public class FormProperties extends ValueGroup
         }
 
         return segment.createInterpolated();
-    }
-
-    private boolean hasBasePoseBone(String formPath, String bone, float tick)
-    {
-        String posePath = this.toPosePropertyKey(formPath);
-        KeyframeChannel poseChannel = this.properties.get(posePath);
-
-        if (poseChannel == null)
-        {
-            return false;
-        }
-
-        KeyframeSegment poseSegment = poseChannel.find(tick);
-
-        if (poseSegment == null)
-        {
-            return false;
-        }
-
-        Pose pose = (Pose) poseSegment.createInterpolated();
-
-        return pose.transforms.containsKey(bone);
     }
 
     private String toPosePropertyKey(String formPath)
@@ -306,6 +336,32 @@ public class FormProperties extends ValueGroup
                 }
 
                 property = newProperty;
+            }
+
+            /* Convert transform to pose_transform for pose bone channels */
+            if (property.getFactory() == KeyframeFactories.TRANSFORM && PerLimbService.isPoseBoneChannel(key))
+            {
+                KeyframeChannel newChannel = new KeyframeChannel(key, KeyframeFactories.POSE_TRANSFORM);
+
+                for (Object o : property.getKeyframes())
+                {
+                    Keyframe kf = (Keyframe) o;
+                    Object value = kf.getValue();
+                    PoseTransform newValue = new PoseTransform();
+
+                    if (value instanceof Transform)
+                    {
+                        newValue.copy((Transform) value);
+                    }
+
+                    Keyframe newKf = new Keyframe(kf.getId(), KeyframeFactories.POSE_TRANSFORM, kf.getTick(), newValue);
+
+                    newKf.getInterpolation().copy(kf.getInterpolation());
+                    newChannel.add(newKf);
+                }
+
+                newChannel.sort();
+                property = newChannel;
             }
 
             if (property.getFactory() != null)

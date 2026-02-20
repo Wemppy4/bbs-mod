@@ -106,6 +106,19 @@ public class PoseTransform extends Transform
     }
 
     @Override
+    public void add(Transform transform)
+    {
+        super.add(transform);
+
+        if (transform instanceof PoseTransform pose)
+        {
+            this.fix += pose.fix;
+            this.color.mul(pose.color);
+            this.lighting += pose.lighting;
+        }
+    }
+
+    @Override
     public void toData(MapType data)
     {
         super.toData(data);
