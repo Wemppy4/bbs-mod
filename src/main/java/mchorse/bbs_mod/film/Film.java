@@ -5,8 +5,10 @@ import mchorse.bbs_mod.film.replays.Inventory;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.film.replays.Replays;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
+import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
 import mchorse.bbs_mod.settings.values.numeric.ValueInt;
+import mchorse.bbs_mod.settings.values.numeric.ValueLong;
 import mchorse.bbs_mod.utils.clips.Clips;
 
 public class Film extends ValueGroup
@@ -19,6 +21,9 @@ public class Film extends ValueGroup
     public final ValueFloat hunger = new ValueFloat("hunger", 20F);
     public final ValueInt xpLevel = new ValueInt("xp_level", 0);
     public final ValueFloat xpProgress = new ValueFloat("xp_progress", 0F);
+    
+    public final ValueString description = new ValueString("description", "");
+    public final ValueLong timeSpent = new ValueLong("time_spent", 0L);
 
     public Film()
     {
@@ -32,6 +37,9 @@ public class Film extends ValueGroup
         this.add(this.hunger);
         this.add(this.xpLevel);
         this.add(this.xpProgress);
+        
+        this.add(this.description);
+        this.add(this.timeSpent);
     }
 
     public Replay getFirstPersonReplay()

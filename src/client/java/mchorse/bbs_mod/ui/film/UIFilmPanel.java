@@ -22,6 +22,7 @@ import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.graphics.window.Window;
+import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.network.ClientNetwork;
 import mchorse.bbs_mod.settings.values.IValueListener;
@@ -117,6 +118,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public final Matrix4f lastProjection = new Matrix4f();
 
     private Timer flightEditTime = new Timer(100);
+    private long lastTime;
+    private double timeAccumulator;
 
     private List<UIElement> panels = new ArrayList<>();
     private UIElement secretPlay;
@@ -342,6 +345,11 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             menu.action(Icons.GEAR, UIKeys.FILM_PLAYER_SETTINGS, () ->
             {
                 UIOverlay.addOverlay(this.getContext(), new UIFilmPlayerSettingsOverlayPanel(this.getData()), 280, 0.8F);
+            });
+
+            menu.action(Icons.HELP, L10n.lang("bbs.ui.film.details.button"), () ->
+            {
+                UIOverlay.addOverlay(this.getContext(), new UIFilmDetailsOverlayPanel(this.getData()), 300, 260);
             });
         });
 
@@ -921,6 +929,31 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     @Override
     public void render(UIContext context)
     {
+        if (this.lastTime == 0)
+        {
+            this.lastTime = System.currentTimeMillis();
+        }
+
+        long now = System.currentTimeMillis();
+        long diff = now - this.lastTime;
+
+        this.lastTime = now;
+
+        if (this.getData() != null)
+        {
+            this.timeAccumulator += diff;
+
+            /* Batch updates to once per second to avoid undo history pollution
+             * and reduce set() overhead; display already refreshes every 1s */
+            if (this.timeAccumulator >= 1000)
+            {
+                long ticks = (long) (this.timeAccumulator / 50);
+
+                this.getData().timeSpent.set(this.getData().timeSpent.get() + ticks);
+                this.timeAccumulator -= ticks * 50;
+            }
+        }
+
         if (this.controller.isControlling())
         {
             context.mouseX = context.mouseY = -1;
