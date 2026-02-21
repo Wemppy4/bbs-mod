@@ -95,6 +95,8 @@ public class BBSSettings
 
     public static ValueBoolean damageControl;
 
+    public static ValueBoolean darkMode;
+
     public static ValueBoolean shaderCurvesEnabled;
 
     public static ValueBoolean audioWaveformVisible;
@@ -151,6 +153,7 @@ public class BBSSettings
 
         builder.category("appearance");
         builder.register(language = new ValueLanguage("language"));
+        darkMode = builder.getBoolean("dark_mode", false);
         primaryColor = builder.getInt("primary_color", Colors.DARK_GRAY).color();
         enableTrackpadIncrements = builder.getBoolean("trackpad_increments", true);
         enableTrackpadScrolling = builder.getBoolean("trackpad_scrolling", true);
