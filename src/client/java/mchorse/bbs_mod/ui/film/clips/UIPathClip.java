@@ -14,6 +14,7 @@ import mchorse.bbs_mod.ui.film.utils.UICameraUtils;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.context.UIInterpolationContextMenu;
 import mchorse.bbs_mod.ui.framework.tooltips.InterpolationTooltip;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.utils.MathUtils;
 
@@ -60,9 +61,9 @@ public class UIPathClip extends UIClip<PathClip>
     {
         super.registerPanels();
 
-        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_PATH_POINTS), this.points).marginTop(12));
-        this.panels.add(UI.row(this.interpPoint, this.interpAngle).marginBottom(6));
-        this.panels.add(this.point.marginTop(12), this.angle.marginTop(6));
+        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_PATH_POINTS), this.points).marginTop(UIConstants.SECTION_GAP));
+        this.panels.add(UI.row(this.interpPoint, this.interpAngle).marginBottom(UIConstants.SECTION_GAP));
+        this.panels.add(this.point.marginTop(UIConstants.SECTION_GAP), this.angle.marginTop(UIConstants.SECTION_GAP));
         this.panels.context((menu) -> UICameraUtils.positionContextMenu(menu, editor, this.position));
     }
 

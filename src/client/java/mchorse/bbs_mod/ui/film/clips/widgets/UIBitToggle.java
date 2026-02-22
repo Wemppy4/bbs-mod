@@ -5,6 +5,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.utils.colors.Colors;
 
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class UIBitToggle extends UIElement
 
         this.callback = callback;
 
-        this.h(20);
+        this.h(UIConstants.CONTROL_HEIGHT);
     }
 
     public UIBitToggle all()

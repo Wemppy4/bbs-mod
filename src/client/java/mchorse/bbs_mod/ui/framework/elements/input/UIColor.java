@@ -4,6 +4,7 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.color.UIColorPicker;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.colors.Colors;
 
@@ -30,7 +31,7 @@ public class UIColor extends UIElement
         this.picker = new UIColorPicker(callback);
         this.picker.wh(200, 85);
 
-        this.direction(Direction.BOTTOM).h(20);
+        this.direction(Direction.BOTTOM).h(UIConstants.CONTROL_HEIGHT);
     }
 
     public UIColor withTarget(UIElement target)

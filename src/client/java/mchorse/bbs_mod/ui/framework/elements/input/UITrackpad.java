@@ -13,6 +13,7 @@ import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragEndEvent;
 import mchorse.bbs_mod.ui.framework.elements.events.UITrackpadDragStartEvent;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UIBaseTextbox;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Factor;
@@ -110,7 +111,7 @@ public class UITrackpad extends UIBaseTextbox
         this.callback = callback;
 
         this.setValue(0);
-        this.h(20);
+        this.h(UIConstants.CONTROL_HEIGHT);
     }
 
     public UITrackpad max(double max)

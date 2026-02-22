@@ -5,6 +5,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.utils.resources.Pixels;
 
@@ -45,10 +46,10 @@ public class UITextureExtractOverlayPanel extends UIOverlayPanel
             this.close();
         });
 
-        this.content.column(5).vertical().stretch().padding(6);
+        this.content.column(UIConstants.MARGIN).vertical().stretch().padding(UIConstants.SCROLL_PADDING);
         this.content.add(UI.label(UIKeys.TEXTURES_EXTRACT_FRAMES_FRAMES), this.frames);
-        this.content.add(UI.label(UIKeys.TEXTURES_EXTRACT_FRAMES_RESOLUTION).marginTop(6), this.frameWidth, this.frameHeight);
-        this.content.add(UI.label(UIKeys.TEXTURES_EXTRACT_FRAMES_STEP).marginTop(6), this.frameStepX, this.frameStepY);
-        this.content.add(this.extract.marginTop(6));
+        this.content.add(UI.label(UIKeys.TEXTURES_EXTRACT_FRAMES_RESOLUTION).marginTop(UIConstants.SECTION_GAP), this.frameWidth, this.frameHeight);
+        this.content.add(UI.label(UIKeys.TEXTURES_EXTRACT_FRAMES_STEP).marginTop(UIConstants.SECTION_GAP), this.frameStepX, this.frameStepY);
+        this.content.add(this.extract.marginTop(UIConstants.SECTION_GAP));
     }
 }

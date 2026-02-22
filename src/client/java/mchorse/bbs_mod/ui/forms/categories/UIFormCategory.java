@@ -19,6 +19,7 @@ import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.network.ClientNetwork;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.forms.UIFormList;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
@@ -145,7 +146,7 @@ public class UIFormCategory extends UIElement
             }
         });
 
-        this.h(20);
+        this.h(UIConstants.CONTROL_HEIGHT);
     }
 
     public void search(String search)

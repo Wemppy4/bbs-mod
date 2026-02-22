@@ -81,6 +81,8 @@ public class BBSSettings
     public static ValueBoolean editorRewind;
     public static ValueBoolean editorHorizontalClipEditor;
     public static ValueBoolean editorMinutesBackup;
+    public static ValueInt editorTrackWidth;
+    public static ValueFloat editorPreviewResolutionScale;
 
     public static ValueFloat recordingCountdown;
     public static ValueBoolean recordingSwipeDamage;
@@ -94,6 +96,8 @@ public class BBSSettings
     public static ValueString entitySelectorsPropertyWhitelist;
 
     public static ValueBoolean damageControl;
+
+    public static ValueBoolean darkMode;
 
     public static ValueBoolean shaderCurvesEnabled;
 
@@ -151,6 +155,7 @@ public class BBSSettings
 
         builder.category("appearance");
         builder.register(language = new ValueLanguage("language"));
+        darkMode = builder.getBoolean("dark_mode", false);
         primaryColor = builder.getInt("primary_color", Colors.DARK_GRAY).color();
         enableTrackpadIncrements = builder.getBoolean("trackpad_increments", true);
         enableTrackpadScrolling = builder.getBoolean("trackpad_scrolling", true);
@@ -164,6 +169,7 @@ public class BBSSettings
         uniformScale = builder.getBoolean("uniform_scale", false);
         clickSound = builder.getBoolean("click_sound", false);
         gizmos = builder.getBoolean("gizmos", true);
+        editorTrackWidth = builder.getInt("track_width", 2, 1, 10);
         favoriteColors = new ValueColors("favorite_colors");
         disabledSheets = new ValueStringKeys("disabled_sheets");
         disabledSheets.set(defaultFilters);
@@ -223,6 +229,7 @@ public class BBSSettings
         editorRewind = builder.getBoolean("rewind", true);
         editorHorizontalClipEditor = builder.getBoolean("horizontal_clip_editor", true);
         editorMinutesBackup = builder.getBoolean("minutes_backup", true);
+        editorPreviewResolutionScale = builder.getFloat("preview_resolution_scale", 2F, 1F, 3F);
 
         builder.category("recording");
         recordingCountdown = builder.getFloat("countdown", 1.5F, 0F, 30F);

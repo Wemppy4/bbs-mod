@@ -9,6 +9,7 @@ import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseKeyframeFactory;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIPoseTransformKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UITransformKeyframeFactory;
 import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
@@ -169,6 +170,21 @@ public class UIKeyframeEditor extends UIElement
 
                     bone = i >= 0 ? sheet.id.substring(0, i) : "";
                     local = transform.transform.isLocal();
+                }
+            }
+        }
+        else if (editor instanceof UIPoseTransformKeyframeFactory poseTransform)
+        {
+            UIKeyframeSheet sheet = this.getSheet(editor.getKeyframe());
+
+            if (sheet != null)
+            {
+                PerLimbService.PoseBonePath poseBonePath = PerLimbService.parsePoseBonePath(sheet.id);
+
+                if (poseBonePath != null)
+                {
+                    bone = poseBonePath.bone();
+                    local = poseTransform.transform.isLocal();
                 }
             }
         }

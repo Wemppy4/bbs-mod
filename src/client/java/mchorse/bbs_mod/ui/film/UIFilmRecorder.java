@@ -144,6 +144,8 @@ public class UIFilmRecorder extends UIElement
             }
             catch (Exception e) {}
 
+            this.editor.restorePreviewSize();
+
             if (this.isRunning())
             {
                 this.editor.togglePlayback();

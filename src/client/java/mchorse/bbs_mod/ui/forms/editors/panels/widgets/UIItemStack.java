@@ -8,6 +8,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.context.ItemStackContextAction;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -79,7 +80,7 @@ public class UIItemStack extends UIElement
             });
         });
 
-        this.h(20);
+        this.h(UIConstants.CONTROL_HEIGHT);
     }
 
     public void setStack(ItemStack stack)

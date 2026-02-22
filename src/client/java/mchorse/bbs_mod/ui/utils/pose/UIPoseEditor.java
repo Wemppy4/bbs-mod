@@ -11,6 +11,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
 import mchorse.bbs_mod.ui.utils.UI;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.presets.UIDataContextMenu;
 import mchorse.bbs_mod.utils.CollectionUtils;
@@ -93,7 +94,7 @@ public class UIPoseEditor extends UIElement
                 this.setLighting(poseTransform, b.getValue());
             }
         });
-        this.lighting.h(20);
+        this.lighting.h(UIConstants.CONTROL_HEIGHT);
         this.lighting.context((menu) ->
         {
             menu.action(Icons.DOWNLOAD, UIKeys.POSE_CONTEXT_APPLY, () ->

@@ -11,6 +11,7 @@ import mchorse.bbs_mod.ui.framework.elements.events.UIRemovedEvent;
 import mchorse.bbs_mod.ui.framework.elements.utils.EventPropagation;
 import mchorse.bbs_mod.ui.framework.tooltips.ITooltip;
 import mchorse.bbs_mod.ui.framework.tooltips.LabelTooltip;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.context.ContextMenuManager;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -868,7 +869,7 @@ public class UIElement implements IUIElement, IUndoElement
 
     public RowResizer row()
     {
-        return this.row(5);
+        return this.row(UIConstants.MARGIN);
     }
 
     public RowResizer row(int margin)
@@ -883,7 +884,7 @@ public class UIElement implements IUIElement, IUndoElement
 
     public ColumnResizer column()
     {
-        return this.column(5);
+        return this.column(UIConstants.MARGIN);
     }
 
     public ColumnResizer column(int margin)

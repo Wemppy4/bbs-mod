@@ -16,6 +16,7 @@ public class KeyframeFactories
     public static final FloatKeyframeFactory FLOAT = new FloatKeyframeFactory();
     public static final DoubleKeyframeFactory DOUBLE = new DoubleKeyframeFactory();
     public static final IntegerKeyframeFactory INTEGER = new IntegerKeyframeFactory();
+    public static final LongKeyframeFactory LONG = new LongKeyframeFactory();
     public static final LinkKeyframeFactory LINK = new LinkKeyframeFactory();
     public static final Vector3fKeyframeFactory VECTOR3F = new Vector3fKeyframeFactory(new org.joml.Vector3f());
     public static final Vector3fKeyframeFactory VECTOR3F_SCALE = new Vector3fKeyframeFactory(new org.joml.Vector3f(1F, 1F, 1F));
@@ -32,6 +33,7 @@ public class KeyframeFactories
         return factory instanceof DoubleKeyframeFactory
             || factory instanceof FloatKeyframeFactory
             || factory instanceof IntegerKeyframeFactory
+            || factory instanceof LongKeyframeFactory
             || factory instanceof Vector3fKeyframeFactory;
     }
 
@@ -46,6 +48,7 @@ public class KeyframeFactories
         FACTORIES.put("float", FLOAT);
         FACTORIES.put("double", DOUBLE);
         FACTORIES.put("integer", INTEGER);
+        FACTORIES.put("long", LONG);
         FACTORIES.put("link", LINK);
         FACTORIES.put("vector3f", VECTOR3F);
         FACTORIES.put("vector3f_scale", VECTOR3F_SCALE);

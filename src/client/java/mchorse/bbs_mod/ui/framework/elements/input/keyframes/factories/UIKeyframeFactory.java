@@ -16,6 +16,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.IKeyframeShapeRenderer;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.KeyframeShapeRenderers;
 import mchorse.bbs_mod.ui.framework.tooltips.InterpolationTooltip;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.colors.Color;
@@ -98,7 +99,7 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         this.keyframe = keyframe;
         this.editor = editor;
 
-        this.scroll = UI.scrollView(5, 10);
+        this.scroll = UI.scrollView(UIConstants.MARGIN, UIConstants.SCROLL_PADDING);
         this.scroll.scroll.cancelScrolling();
         this.scroll.full(this);
 
@@ -165,8 +166,10 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         });
         this.shape.tooltip(UIKeys.KEYFRAMES_CHANGE_SHAPE);
 
-        this.scroll.add(UI.row(this.interp, this.tick, this.duration));
-        this.scroll.add(UI.row(this.shape, this.color));
+        this.scroll.add(UI.column(0, 0, 0,
+            UI.row(0, 0, 0, this.interp, this.tick, this.duration),
+            UI.row(0, 0, 0, this.shape, this.color)
+        ));
 
         this.add(this.scroll);
 

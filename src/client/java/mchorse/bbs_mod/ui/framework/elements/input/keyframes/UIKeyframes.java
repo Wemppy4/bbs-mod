@@ -74,10 +74,12 @@ public class UIKeyframes extends UIElement
 
     /* Fields */
 
+    public final Area graphArea = new Area();
+
     private final UIKeyframeDopeSheet dopeSheet = new UIKeyframeDopeSheet(this);
     private IUIKeyframeGraph currentGraph = this.dopeSheet;
 
-    private final Scale xAxis = new Scale(this.area, ScrollDirection.HORIZONTAL);
+    private final Scale xAxis = new Scale(this.graphArea, ScrollDirection.HORIZONTAL);
 
     private final Consumer<Keyframe> callback;
     private Consumer<UIContext> backgroundRender;
@@ -86,6 +88,8 @@ public class UIKeyframes extends UIElement
     private SheetCache cache;
 
     private UICopyPasteController copyPasteController;
+
+    public static final int LABEL_WIDTH = 120;
 
     public UIKeyframes(Consumer<Keyframe> callback)
     {
@@ -558,6 +562,8 @@ public class UIKeyframes extends UIElement
 
             this.resetView();
         }
+
+        this.resize();
     }
 
     /* Caching keyframes */
@@ -788,6 +794,11 @@ public class UIKeyframes extends UIElement
         return this.duration == null ? 0 : this.duration.get();
     }
 
+    public float getTick()
+    {
+        return (float) this.fromGraphX(this.getContext().mouseX);
+    }
+
     public boolean isSelecting()
     {
         return this.selecting;
@@ -900,6 +911,17 @@ public class UIKeyframes extends UIElement
 
         super.resize();
 
+        if (this.currentGraph == this.dopeSheet)
+        {
+            this.graphArea.copy(this.area);
+            this.graphArea.x += LABEL_WIDTH;
+            this.graphArea.w -= LABEL_WIDTH;
+        }
+        else
+        {
+            this.graphArea.copy(this.area);
+        }
+
         this.currentGraph.resize();
 
         if (!Operation.equals(minValue, maxValue))
@@ -930,7 +952,7 @@ public class UIKeyframes extends UIElement
             return true;
         }
 
-        if (this.area.isInside(context))
+        if (this.graphArea.isInside(context))
         {
             this.lastX = this.originalX = context.mouseX;
             this.lastY = this.originalY = context.mouseY;
@@ -1207,13 +1229,22 @@ public class UIKeyframes extends UIElement
             int leftBorder = this.toGraphX(0);
             int rightBorder = this.toGraphX(duration);
 
-            if (leftBorder > this.area.x) context.batcher.box(this.area.x, this.area.y, Math.min(this.area.ex(), leftBorder), this.area.y + this.area.h, Colors.A50);
-            if (rightBorder < this.area.ex()) context.batcher.box(Math.max(this.area.x, rightBorder), this.area.y, this.area.ex() , this.area.y + this.area.h, Colors.A50);
+            if (leftBorder > this.graphArea.x) context.batcher.box(this.graphArea.x, this.graphArea.y, Math.min(this.graphArea.ex(), leftBorder), this.graphArea.y + this.graphArea.h, Colors.A50);
+            if (rightBorder < this.graphArea.ex()) context.batcher.box(Math.max(this.graphArea.x, rightBorder), this.graphArea.y, this.graphArea.ex() , this.graphArea.y + this.graphArea.h, Colors.A50);
         }
 
         if (this.backgroundRender != null)
         {
-            this.backgroundRender.accept(context);
+            if (this.currentGraph == this.dopeSheet)
+            {
+                context.batcher.clip(this.graphArea, context);
+                this.backgroundRender.accept(context);
+                context.batcher.unclip(context);
+            }
+            else
+            {
+                this.backgroundRender.accept(context);
+            }
         }
     }
 

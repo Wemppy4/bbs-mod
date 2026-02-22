@@ -8,6 +8,7 @@ import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
 import mchorse.bbs_mod.ui.utils.UI;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.utils.colors.Colors;
 
@@ -39,7 +40,7 @@ public class UIKeyframeSheetFilterOverlayPanel extends UIOverlayPanel
                 }
             });
 
-            toggle.h(20);
+            toggle.h(UIConstants.CONTROL_HEIGHT);
             toggle.setValue(!disabled.contains(key));
             scrollView.add(toggle);
         }

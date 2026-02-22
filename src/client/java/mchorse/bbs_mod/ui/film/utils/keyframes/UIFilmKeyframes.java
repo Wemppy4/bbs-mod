@@ -54,6 +54,12 @@ public class UIFilmKeyframes extends UIKeyframes
     }
 
     @Override
+    public float getTick()
+    {
+        return this.getOffset();
+    }
+
+    @Override
     protected void selectNextKeyframe(int direction)
     {
         super.selectNextKeyframe(direction);
@@ -87,7 +93,9 @@ public class UIFilmKeyframes extends UIKeyframes
             int cx = this.toGraphX(this.getOffset());
             String label = TimeUtils.formatTime(this.getOffset()) + "/" + TimeUtils.formatTime(this.getDuration());
 
+            context.batcher.clip(this.graphArea, context);
             UIClips.renderCursor(context, label, this.area, cx - 1);
+            context.batcher.unclip(context);
         }
     }
 }

@@ -14,6 +14,7 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 
 import java.util.Collection;
@@ -79,10 +80,10 @@ public class UIActionsConfigEditor extends UIElement
 
         this.column().vertical().stretch();
         this.add(UI.label(UIKeys.FORMS_EDITORS_MODEL_ACTIONS), this.actions);
-        this.add(UI.label(UIKeys.FORMS_EDITORS_ACTIONS_ANIMATIONS).marginTop(6), this.animations, this.loop);
-        this.add(UI.label(UIKeys.FORMS_EDITORS_ACTIONS_SPEED).marginTop(6), this.speed);
-        this.add(UI.label(UIKeys.FORMS_EDITORS_ACTIONS_FADE).marginTop(6), this.fade);
-        this.add(UI.label(UIKeys.FORMS_EDITORS_ACTIONS_TICK).marginTop(6), this.tick);
+        this.add(UI.label(UIKeys.FORMS_EDITORS_ACTIONS_ANIMATIONS).marginTop(UIConstants.SECTION_GAP), this.animations, this.loop);
+        this.add(UI.label(UIKeys.FORMS_EDITORS_ACTIONS_SPEED).marginTop(UIConstants.SECTION_GAP), this.speed);
+        this.add(UI.label(UIKeys.FORMS_EDITORS_ACTIONS_FADE).marginTop(UIConstants.SECTION_GAP), this.fade);
+        this.add(UI.label(UIKeys.FORMS_EDITORS_ACTIONS_TICK).marginTop(UIConstants.SECTION_GAP), this.tick);
     }
 
     private void callback(Runnable runnable)

@@ -25,6 +25,19 @@ public class UIFilmUndoHandler extends UIFormUndoHandler
     }
 
     @Override
+    public void handlePreValues(BaseValue baseValue, int flag)
+    {
+        /* time_spent is a passive counter updated every second; it should not
+         * pollute undo history with dozens of entries per minute */
+        if (baseValue.getPath().getLast().equals("time_spent"))
+        {
+            return;
+        }
+
+        super.handlePreValues(baseValue, flag);
+    }
+
+    @Override
     protected void handleValue(BaseValue value)
     {
         super.handleValue(value);

@@ -5,6 +5,7 @@ import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 
 import java.util.function.Consumer;
 
@@ -23,7 +24,7 @@ public class UINestedEdit extends UIElement
         this.edit.relative(this).h(1F);
         this.pick.relative(this).h(1F);
 
-        this.h(20).row(0);
+        this.h(UIConstants.CONTROL_HEIGHT).row(0);
         this.add(this.pick, this.edit);
     }
 

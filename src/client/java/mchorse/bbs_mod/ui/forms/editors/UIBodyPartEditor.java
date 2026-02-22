@@ -11,6 +11,7 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.utils.Pair;
 
@@ -57,13 +58,13 @@ public class UIBodyPartEditor extends UIScrollView
         });
 
         this.bone = new UIStringList((l) -> this.part.bone.set(l.get(0)));
-        this.bone.background().h(16 * 6);
+        this.bone.background().h(UIConstants.LIST_ITEM_HEIGHT * 6);
 
         this.transform = new UIPropTransform().callbacks(() -> this.part.transform);
 
         this.pick.keys().register(Keys.FORMS_EDIT, this.pick::clickItself);
 
-        this.column(5).vertical().stretch().scroll().padding(10);
+        this.column(UIConstants.MARGIN).vertical().stretch().scroll().padding(UIConstants.SCROLL_PADDING);
         this.scroll.cancelScrolling();
     }
 
@@ -81,7 +82,7 @@ public class UIBodyPartEditor extends UIScrollView
 
         if (!this.bone.getList().isEmpty())
         {
-            this.add(this.pick, this.useTarget, UI.label(UIKeys.FORMS_EDITOR_BONE).marginTop(8), this.bone, this.transform);
+            this.add(this.pick, this.useTarget, UI.label(UIKeys.FORMS_EDITOR_BONE).marginTop(UIConstants.SECTION_GAP), this.bone, this.transform);
         }
         else
         {

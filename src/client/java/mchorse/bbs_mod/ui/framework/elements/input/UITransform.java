@@ -9,6 +9,7 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.utils.UI;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.colors.Colors;
@@ -16,9 +17,7 @@ import org.joml.Vector3d;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * Transformation editor GUI
- * 
- * Must be exactly 190 by 70 (with extra 12 on top for labels)
+ * Transformation editor GUI (compact layout: CONTROL_HEIGHT rows, MARGIN between).
  */
 public abstract class UITransform extends UIElement
 {
@@ -103,7 +102,7 @@ public abstract class UITransform extends UIElement
         this.r2z.tooltip(raw.format(UIKeys.TRANSFORMS_ROTATE2, UIKeys.GENERAL_Z));
         this.r2z.textbox.setColor(Colors.BLUE);
 
-        this.w(1F).column().stretch().vertical();
+        this.w(1F).column(0).stretch().vertical();
 
         this.iconT = new UIIcon(Icons.ALL_DIRECTIONS, null);
         this.iconS = new UIIcon(Icons.SCALE, (b) -> this.toggleUniformScale());
@@ -118,10 +117,10 @@ public abstract class UITransform extends UIElement
         this.iconR.setEnabled(false);
         this.iconR2.setEnabled(false);
 
-        this.add(UI.row(this.iconT, this.tx, this.ty, this.tz));
-        this.add(this.scaleRow = UI.row(this.iconS, this.sx, this.sy, this.sz));
-        this.add(UI.row(this.iconR, this.rx, this.ry, this.rz));
-        this.add(UI.row(this.iconR2, this.r2x, this.r2y, this.r2z));
+        this.add(UI.row(2, 0, UIConstants.CONTROL_HEIGHT, this.iconT, this.tx, this.ty, this.tz));
+        this.add(this.scaleRow = UI.row(2, 0, UIConstants.CONTROL_HEIGHT, this.iconS, this.sx, this.sy, this.sz));
+        this.add(UI.row(2, 0, UIConstants.CONTROL_HEIGHT, this.iconR, this.rx, this.ry, this.rz));
+        this.add(UI.row(2, 0, UIConstants.CONTROL_HEIGHT, this.iconR2, this.r2x, this.r2y, this.r2z));
 
         this.context((menu) ->
         {
@@ -147,7 +146,7 @@ public abstract class UITransform extends UIElement
             menu.action(Icons.CLOSE, UIKeys.TRANSFORMS_CONTEXT_RESET, this::reset);
         });
 
-        this.wh(190, 70);
+        this.w(190).h(4 * UIConstants.CONTROL_HEIGHT);
 
         this.keys().register(Keys.COPY, this::copyTransformations).inside().label(UIKeys.TRANSFORMS_CONTEXT_COPY);
         this.keys().register(Keys.PASTE, () ->

@@ -5,6 +5,7 @@ import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.framework.elements.utils.ITextColoring;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.utils.colors.Colors;
 
 import java.util.function.Consumer;
@@ -25,7 +26,7 @@ public class UIButton extends UIClickable<UIButton> implements ITextColoring
         super(callback);
 
         this.label = label;
-        this.h(20);
+        this.h(UIConstants.CONTROL_HEIGHT);
     }
 
     public UIButton color(int color)

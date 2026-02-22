@@ -12,6 +12,7 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UISoundOverlayPanel;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -86,8 +87,8 @@ public class UIAudioClip extends UIClip<AudioClip>
     {
         super.registerPanels();
 
-        this.panels.add(UI.column(UIClip.label(UIKeys.C_CLIP.get("bbs:audio")), UI.row(this.pickAudio, this.extendDuration, this.openFolder)).marginTop(12));
-        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_AUDIO_OFFSET).marginTop(6), this.offset).marginTop(12));
+        this.panels.add(UI.column(UIClip.label(UIKeys.C_CLIP.get("bbs:audio")), UI.row(this.pickAudio, this.extendDuration, this.openFolder)).marginTop(UIConstants.SECTION_GAP));
+        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_AUDIO_OFFSET).marginTop(UIConstants.SECTION_GAP), this.offset).marginTop(UIConstants.SECTION_GAP));
     }
 
     @Override

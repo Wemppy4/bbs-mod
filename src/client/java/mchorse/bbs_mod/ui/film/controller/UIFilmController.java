@@ -33,15 +33,20 @@ import mchorse.bbs_mod.settings.values.ui.ValueOnionSkin;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
+import mchorse.bbs_mod.ui.film.replays.UIReplayList;
+import mchorse.bbs_mod.ui.film.replays.UIReplaysEditorUtils;
 import mchorse.bbs_mod.ui.film.replays.UIRecordOverlayPanel;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
+import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
+import mchorse.bbs_mod.ui.framework.elements.context.UISimpleContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
 import mchorse.bbs_mod.ui.utils.Area;
+import mchorse.bbs_mod.ui.utils.Gizmo;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
@@ -114,6 +119,7 @@ public class UIFilmController extends UIElement
     private IEntity hoveredEntity;
     private StencilFormFramebuffer stencil = new StencilFormFramebuffer();
     private StencilMap stencilMap = new StencilMap();
+    private boolean gizmoActive;
 
     public final OrbitFilmCameraController orbit = new OrbitFilmCameraController(this);
     private int pov;
@@ -138,6 +144,7 @@ public class UIFilmController extends UIElement
         }).active(hasActor).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_TOGGLE_CONTROL, this::toggleControl).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_TOGGLE_ORBIT_MODE, this::toggleOrbitMode).category(category);
+        this.keys().register(Keys.FILM_CONTROLLER_TOGGLE_REPLAY_MENU, this::toggleReplayMenu).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_MOVE_REPLAY_TO_CURSOR, () ->
         {
             Area area = this.panel.preview.getViewport();
@@ -542,6 +549,18 @@ public class UIFilmController extends UIElement
             return true;
         }
 
+        if (this.stencil.hasPicked())
+        {
+            int index = this.stencil.getIndex();
+            UIPropTransform transform = UIReplaysEditorUtils.getEditableTransform(this.panel.replayEditor.keyframeEditor);
+
+            if (Gizmo.INSTANCE.start(index, context.mouseX, context.mouseY, transform))
+            {
+                this.gizmoActive = true;
+                return true;
+            }
+        }
+
         if (context.mouseButton == 0)
         {
             /* Alt pick the replay */
@@ -574,6 +593,12 @@ public class UIFilmController extends UIElement
         if (this.canControl())
         {
             return true;
+        }
+
+        if (this.gizmoActive)
+        {
+            Gizmo.INSTANCE.stop();
+            this.gizmoActive = false;
         }
 
         this.orbit.stop();
@@ -695,6 +720,47 @@ public class UIFilmController extends UIElement
             menu.action(this.getOrbitModeIcon(3), UIKeys.FILM_REPLAY_ORBIT_FIRST_PERSON, this.pov == CAMERA_MODE_FIRST_PERSON, () -> this.setPov(3));
             menu.action(this.getOrbitModeIcon(4), UIKeys.FILM_REPLAY_ORBIT_THIRD_PERSON_BACK, this.pov == CAMERA_MODE_THIRD_PERSON_BACK, () -> this.setPov(4));
             menu.action(this.getOrbitModeIcon(5), UIKeys.FILM_REPLAY_ORBIT_THIRD_PERSON_FRONT, this.pov == CAMERA_MODE_THIRD_PERSON_FRONT, () -> this.setPov(5));
+        });
+    }
+
+    public void toggleReplayMenu()
+    {
+        if (this.controlled != null)
+        {
+            return;
+        }
+
+        UISimpleContextMenu menu = new UISimpleContextMenu();
+
+        menu.actions.scroll.scrollItemSize = 30;
+
+        this.getContext().replaceContextMenu((manager) ->
+        {
+            manager.custom(menu);
+            manager.autoKeys();
+
+            for (Replay replay : this.panel.getData().replays.getList())
+            {
+                int color = this.getReplay() == replay ? BBSSettings.primaryColor(0) : 0;
+
+                manager.action(new ReplayContextAction(replay, IKey.raw(replay.getName()), () ->
+                {
+                    this.panel.replayEditor.setReplay(replay, false, true);
+
+                    UIReplayList list = this.panel.replayEditor.replays.replays;
+
+                    list.setCurrentDirect(replay);
+
+                    int index = list.getIndex();
+
+                    if (index != -1)
+                    {
+                        list.scroll.scrollTo(index * list.scroll.scrollItemSize);
+                    }
+
+                    UIUtils.playClick();
+                }, color));
+            }
         });
     }
 
@@ -1016,7 +1082,7 @@ public class UIFilmController extends UIElement
 
     private void renderPickingPreview(UIContext context, Area area)
     {
-        if (this.panel.isFlying())
+        if (this.panel.isFlying() || this.worldRenderContext == null)
         {
             return;
         }

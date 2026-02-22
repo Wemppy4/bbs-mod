@@ -5,6 +5,7 @@ import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.utils.UIDraggable;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.utils.MathUtils;
 
@@ -25,7 +26,7 @@ public abstract class UIFormPanel <T extends Form> extends UIElement
     {
         this.editor = editor;
 
-        this.options = UI.scrollView(5, 10);
+        this.options = UI.scrollView(UIConstants.MARGIN, UIConstants.SCROLL_PADDING);
         this.options.scroll.cancelScrolling();
         this.options.relative(this).x(1F).w(widths.getOrDefault(this.getClass(), 0F)).minW(140).h(1F).anchorX(1F);
 

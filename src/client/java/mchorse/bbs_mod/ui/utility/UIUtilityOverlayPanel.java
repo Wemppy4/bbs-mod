@@ -19,6 +19,7 @@ import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIStatusLogOverlayPanel;
 import mchorse.bbs_mod.ui.utility.audio.UIAudioEditorPanel;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -174,12 +175,12 @@ public class UIUtilityOverlayPanel extends UIOverlayPanel
             thread.start();
         });
 
-        this.view.add(UI.label(UIKeys.UTILITY_OPEN_FOLDER), UI.row(openGameDirectory, openModelsDirectory, openAudioDirectory).marginBottom(8));
+        this.view.add(UI.label(UIKeys.UTILITY_OPEN_FOLDER), UI.row(openGameDirectory, openModelsDirectory, openAudioDirectory).marginBottom(UIConstants.SECTION_GAP));
         this.view.add(UI.label(UIKeys.UTILITY_RELOAD_LABEL), UI.row(textures, language, models, sounds, terrain));
-        this.view.add(defaultCommands.marginBottom(8));
-        this.view.add(UI.column(UI.label(UIKeys.UTILITY_RESIZE_WINDOW), UI.row(this.width, this.height)).marginBottom(8));
-        this.view.add(UI.label(UIKeys.UTILITY_LANG_LABEL), UI.row(analyze, compile), langEditor.marginBottom(8));
-        this.view.add(UI.label(UIKeys.UTILITY_AUDIO), openAudioEditor.marginBottom(8));
+        this.view.add(defaultCommands.marginBottom(UIConstants.SECTION_GAP));
+        this.view.add(UI.column(UI.label(UIKeys.UTILITY_RESIZE_WINDOW), UI.row(this.width, this.height)).marginBottom(UIConstants.SECTION_GAP));
+        this.view.add(UI.label(UIKeys.UTILITY_LANG_LABEL), UI.row(analyze, compile), langEditor.marginBottom(UIConstants.SECTION_GAP));
+        this.view.add(UI.label(UIKeys.UTILITY_AUDIO), openAudioEditor.marginBottom(UIConstants.SECTION_GAP));
         this.view.add(UI.label(IKey.raw("CDN")), UI.row(cdnDownload, cdnUpload));
         this.content.add(this.view);
     }

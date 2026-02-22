@@ -56,6 +56,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.utils.UILabel;
 import mchorse.bbs_mod.ui.utils.ScrollDirection;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.utils.TimeUtilsClient;
 import mchorse.bbs_mod.utils.clips.Clip;
@@ -178,11 +179,11 @@ public abstract class UIClip <T extends Clip> extends UIElement
 
         if (horizontal)
         {
-            this.panels.full(this).column(5).scroll().width(140).padding(10);
+            this.panels.full(this).column(UIConstants.MARGIN).scroll().width(140).padding(UIConstants.SCROLL_PADDING);
         }
         else
         {
-            this.panels.full(this).column(5).scroll().vertical().stretch().padding(10);
+            this.panels.full(this).column(UIConstants.MARGIN).scroll().vertical().stretch().padding(UIConstants.SCROLL_PADDING);
         }
 
         this.registerUI();
