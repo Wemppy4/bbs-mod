@@ -173,7 +173,13 @@ public class UIFilmPreview extends UIElement
                 return;
             }
 
-            this.panel.recorder.startRecording(this.panel.getData().camera.calculateDuration(), BBSRendering.getTexture());
+            int duration = this.panel.getData().camera.calculateDuration();
+            int exportW = Math.max(2, BBSSettings.videoSettings.width.get());
+            int exportH = Math.max(2, BBSSettings.videoSettings.height.get());
+            if (exportW % 2 != 0) exportW++;
+            if (exportH % 2 != 0) exportH++;
+            BBSRendering.setCustomSize(true, exportW, exportH);
+            this.panel.recorder.startRecording(duration, BBSRendering.getTexture().id, exportW, exportH);
         });
         this.recordVideo.tooltip(UIKeys.CAMERA_TOOLTIPS_RECORD);
         this.recordVideo.context((menu) ->
@@ -323,6 +329,51 @@ public class UIFilmPreview extends UIElement
             context.batcher.box(x - 4, y - 1, x + 3, y, Colors.setA(Colors.WHITE, 0.5F));
             context.batcher.box(x - 1, y - 4, x, y + 3, Colors.setA(Colors.WHITE, 0.5F));
         }
+
+        /* Export resolution frame: semi-transparent bands when camera editor is active */
+        if (this.panel.cameraEditor.isVisible())
+        {
+            int exportW = Math.max(1, BBSSettings.videoSettings.width.get());
+            int exportH = Math.max(1, BBSSettings.videoSettings.height.get());
+            float exportAspect = exportW / (float) exportH;
+            float viewAspect = area.w / (float) area.h;
+
+            int innerX, innerY, innerW, innerH;
+            if (viewAspect > exportAspect)
+            {
+                innerH = area.h;
+                innerW = (int) (area.h * exportAspect);
+                innerX = area.x + (area.w - innerW) / 2;
+                innerY = area.y;
+            }
+            else
+            {
+                innerW = area.w;
+                innerH = (int) (area.w / exportAspect);
+                innerX = area.x;
+                innerY = area.y + (area.h - innerH) / 2;
+            }
+
+            int bandColor = Colors.setA(0, 0.5F);
+            if (area.y < innerY)
+                context.batcher.box(area.x, area.y, area.ex(), innerY, bandColor);
+            if (innerY + innerH < area.ey())
+                context.batcher.box(area.x, innerY + innerH, area.ex(), area.ey(), bandColor);
+            if (area.x < innerX)
+                context.batcher.box(area.x, innerY, innerX, innerY + innerH, bandColor);
+            if (innerX + innerW < area.ex())
+                context.batcher.box(innerX + innerW, innerY, area.ex(), innerY + innerH, bandColor);
+        }
+
+        /* Current window resolution label (bottom-right, same style as replay name) */
+        int resW = BBSRendering.getVideoWidth();
+        int resH = BBSRendering.getVideoHeight();
+        String resLabel = resW + " × " + resH;
+        int resLabelW = context.batcher.getFont().getWidth(resLabel);
+        int resLabelH = context.batcher.getFont().getHeight();
+        int resX = area.ex() - 4;
+        int resY = area.ey() - resLabelH - 5;
+        context.batcher.textCard(resLabel, resX - resLabelW, resY, Colors.WHITE, Colors.A50);
 
         this.panel.getController().renderHUD(context, area);
 

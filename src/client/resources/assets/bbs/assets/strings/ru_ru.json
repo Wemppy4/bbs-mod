@@ -95,6 +95,8 @@
 	"bbs.config.editor.minutes_backup-comment": "Данные будут сохранены каждые 10 минут вместо почасово",
 	"bbs.config.editor.track_width": "Толщина дорожки",
 	"bbs.config.editor.track_width-comment": "Толщина полоски дорожки кейфреймов",
+	"bbs.config.editor.preview_resolution_scale": "Умножитель разрешения превью",
+	"bbs.config.editor.preview_resolution_scale-comment": "Множитель разрешения рендера превью в редакторе фильмов (1 = как размер блока, 1.5 = чётче, выше = меньше пикселизации, больше нагрузка на GPU)",
 	"bbs.config.editor.periodic_save": "Переодическое сохранение",
 	"bbs.config.editor.periodic_save-comment": "Кол-во секунд после которого панель сохранит данные после иссечение периода. Чтобы отключить авто-сохранение, установите 0.",
 	"bbs.config.editor.rewind": "Перемотать",

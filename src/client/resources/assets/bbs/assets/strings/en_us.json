@@ -95,6 +95,8 @@
 	"bbs.config.editor.minutes_backup-comment": "The data will be saved every 10 minutes instead of every hour",
 	"bbs.config.editor.track_width": "Keyframe track thickness",
 	"bbs.config.editor.track_width-comment": "The thickness of the keyframe track strip in the dope sheet view",
+	"bbs.config.editor.preview_resolution_scale": "Preview resolution multiplier",
+	"bbs.config.editor.preview_resolution_scale-comment": "Multiplier for the film preview render resolution (1 = same as block size, 1.5 = sharper, higher = less pixelation, more GPU load)",
 	"bbs.config.editor.periodic_save": "Pereodic save",
 	"bbs.config.editor.periodic_save-comment": "Number of seconds that triggers automatic save repeatedly. To disable periodic saving, set the option to 0",
 	"bbs.config.editor.rewind": "Rewind",

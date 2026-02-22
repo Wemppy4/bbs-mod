@@ -48,6 +48,9 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UINumberOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import org.slf4j.Logger;
+
+import com.mojang.logging.LogUtils;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIPromptOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.utils.UIDraggable;
 import mchorse.bbs_mod.ui.framework.elements.utils.UIRenderable;
@@ -81,6 +84,8 @@ import java.util.function.Supplier;
 
 public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSupported, IUIOrbitKeysHandler, ICursor
 {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private RunnerCameraController runner;
     private boolean lastRunning;
     private final Position position = new Position(0, 0, 0, 0, 0);
@@ -162,6 +167,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
             this.setupEditorFlex(true);
         });
+        this.draggableMain.dragEnd(this::applyPreviewSizeToBBS);
 
         this.draggableMain.reference(() ->
         {
@@ -425,6 +431,58 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         {
             this.resize();
             this.resize();
+        }
+    }
+
+    @Override
+    public void resize()
+    {
+        super.resize();
+
+        if (!this.recorder.isRecording() && !this.draggableMain.isDragging()
+            && this.preview.area.w >= 2 && this.preview.area.h >= 2)
+        {
+            this.applyPreviewSizeToBBS();
+        }
+    }
+
+    /**
+     * Restores BBS fake window size to the preview block size. Call after recording
+     * ends so the preview is no longer at export resolution.
+     */
+    public void restorePreviewSize()
+    {
+        this.applyPreviewSizeToBBS();
+    }
+
+    /**
+     * Applies the preview block size to BBSRendering so the fake window resolution
+     * matches the UI preview area. Called when the user finishes resizing the preview
+     * and when the panel is laid out (so preview size is used instead of export settings).
+     */
+    private void applyPreviewSizeToBBS()
+    {
+        if (this.recorder.isRecording())
+        {
+            return;
+        }
+
+        float scale = BBSSettings.editorPreviewResolutionScale.get();
+        int previewW = this.preview.area.w;
+        int previewH = this.preview.area.h;
+        int w = Math.max(2, (int) (previewW * scale));
+        int h = Math.max(2, (int) (previewH * scale));
+
+        if (w % 2 != 0) w++;
+        if (h % 2 != 0) h++;
+
+        boolean applied = w != BBSRendering.getVideoWidth() || h != BBSRendering.getVideoHeight();
+        LOGGER.info("[BBS film] applyPreviewSizeToBBS preview.area={}x{} -> w={} h={} applied={}",
+            previewW, previewH, w, h, applied);
+
+        if (applied)
+        {
+            BBSRendering.setCustomSize(true, w, h);
         }
     }
 

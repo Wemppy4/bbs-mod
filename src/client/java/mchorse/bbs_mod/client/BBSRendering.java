@@ -39,6 +39,9 @@ import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.opengl.GL11;
+import org.slf4j.Logger;
+
+import com.mojang.logging.LogUtils;
 
 import java.io.File;
 import java.util.Collections;
@@ -50,6 +53,8 @@ import java.util.function.Function;
 
 public class BBSRendering
 {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     /**
      * Cached rendered model blocks
      */
@@ -151,6 +156,8 @@ public class BBSRendering
 
     public static void setCustomSize(boolean customSize, int w, int h)
     {
+        LOGGER.info("[BBS film] setCustomSize customSize={} w={} h={} (stored width/height will be {})",
+            customSize, w, h, customSize ? w + "/" + h : "0/0");
         BBSRendering.customSize = customSize;
 
         width = !customSize ? 0 : w;
@@ -269,6 +276,9 @@ public class BBSRendering
             int w = mc.getWindow().getFramebufferWidth();
             int h = mc.getWindow().getFramebufferHeight();
 
+            LOGGER.info("[BBS film] toggleFramebuffer ON: fb resize to w={} h={} (getVideoWidth/Height={}/{})",
+                w, h, getVideoWidth(), getVideoHeight());
+
             resizeExtraFramebuffers();
 
             if (framebuffer.textureWidth != w || framebuffer.textureHeight != h)
@@ -284,13 +294,26 @@ public class BBSRendering
         }
         else
         {
+            int drawW = window.getFramebufferWidth();
+            int drawH = window.getFramebufferHeight();
+            LOGGER.info("[BBS film] toggleFramebuffer OFF: framebuffer.draw(drawW={} drawH={}) our fb size={}x{}",
+                drawW, drawH, framebuffer != null ? framebuffer.textureWidth : 0, framebuffer != null ? framebuffer.textureHeight : 0);
+
             reassignFramebuffer(clientFramebuffer);
 
             mc.getFramebuffer().beginWrite(true);
 
             if (width != 0)
             {
-                framebuffer.draw(window.getFramebufferWidth(), window.getFramebufferHeight());
+                /* When the film panel is open, the UI draws the preview texture in its block; do not
+                 * blit our framebuffer to the full window or the preview would stretch to full screen. */
+                UIBaseMenu currentMenu = UIScreen.getCurrentMenu();
+                boolean filmPanelShowing = currentMenu instanceof UIDashboard dashboard
+                    && dashboard.getPanels().panel instanceof UIFilmPanel;
+                if (!filmPanelShowing)
+                {
+                    framebuffer.draw(drawW, drawH);
+                }
             }
         }
     }
