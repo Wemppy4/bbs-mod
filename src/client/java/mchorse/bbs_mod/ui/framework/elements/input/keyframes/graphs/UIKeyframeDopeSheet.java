@@ -739,21 +739,22 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
             return;
         }
 
-        boolean hover = area.isInside(context) && context.mouseY >= y && context.mouseY < y + this.trackHeight && context.mouseX < area.x + w;
+        /* Hover: whole row (label + track area) */
+        boolean hover = area.isInside(context) && context.mouseY >= y && context.mouseY < y + this.trackHeight;
         int my = y + (int) this.trackHeight / 2;
         int lx = area.x;
 
         if (hover)
         {
-            context.batcher.box(lx, y, lx + w, y + (int) this.trackHeight, Colors.A12);
+            context.batcher.gradientHBox(lx, y, lx + w, y + (int) this.trackHeight, Colors.setA(group.color, 0.35F), Colors.setA(group.color, 0.08F));
         }
 
         context.batcher.box(lx, y, lx + 2, y + (int) this.trackHeight, group.color | Colors.A100);
 
         FontRenderer font = context.batcher.getFont();
         String label = group.title.get();
-
-        context.batcher.textShadow(label, lx + 5 + offset, my - font.getHeight() / 2);
+        int textColor = hover ? Colors.WHITE : Colors.setA(Colors.WHITE, 0.75F);
+        context.batcher.textShadow(label, lx + 5 + offset, my - font.getHeight() / 2, textColor);
 
         /* Render toggle */
         int ty = my - 8;
@@ -768,20 +769,21 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
             return;
         }
 
-        boolean hover = area.isInside(context) && context.mouseY >= y && context.mouseY < y + this.trackHeight && context.mouseX < area.x + w;
+        /* Hover: whole row (label + track area) */
+        boolean hover = area.isInside(context) && context.mouseY >= y && context.mouseY < y + this.trackHeight;
         int my = y + (int) this.trackHeight / 2;
         int lx = area.x;
 
         if (hover)
         {
-            context.batcher.box(lx, y, lx + w, y + (int) this.trackHeight, Colors.A12);
+            context.batcher.gradientHBox(lx, y, lx + w, y + (int) this.trackHeight, Colors.setA(sheet.color, 0.35F), Colors.setA(sheet.color, 0.08F));
         }
 
         context.batcher.box(lx, y, lx + 2, y + (int) this.trackHeight, sheet.color | Colors.A100);
 
         FontRenderer font = context.batcher.getFont();
-
-        context.batcher.textShadow(sheet.title.get(), lx + 5 + offset, my - font.getHeight() / 2);
+        int textColor = hover ? Colors.WHITE : Colors.setA(Colors.WHITE, 0.75F);
+        context.batcher.textShadow(sheet.title.get(), lx + 5 + offset, my - font.getHeight() / 2, textColor);
 
         Icon icon = sheet.getIcon();
 
