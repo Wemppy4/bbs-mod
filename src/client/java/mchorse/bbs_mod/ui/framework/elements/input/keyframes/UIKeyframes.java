@@ -562,6 +562,8 @@ public class UIKeyframes extends UIElement
 
             this.resetView();
         }
+
+        this.resize();
     }
 
     /* Caching keyframes */
