@@ -32,7 +32,6 @@ import mchorse.bbs_mod.ui.model_blocks.UIModelBlockPanel;
 import mchorse.bbs_mod.ui.morphing.UIMorphingPanel;
 import mchorse.bbs_mod.ui.particles.UIParticleSchemePanel;
 import mchorse.bbs_mod.ui.selectors.UISelectorsOverlayPanel;
-import mchorse.bbs_mod.ui.supporters.UISupportersPanel;
 import mchorse.bbs_mod.ui.utility.UIUtilityOverlayPanel;
 import mchorse.bbs_mod.ui.utility.audio.UIAudioEditorPanel;
 import mchorse.bbs_mod.ui.utils.UIChalkboard;
@@ -245,7 +244,6 @@ public class UIDashboard extends UIBaseMenu
 
     protected void registerPanels()
     {
-        this.panels.registerPanel(new UISupportersPanel(this), UIKeys.SUPPORTERS_TITLE, Icons.USER);
         this.panels.registerPanel(new UIMorphingPanel(this), UIKeys.MORPHING_TITLE, Icons.MORPH);
         this.panels.registerPanel(new UIFilmPanel(this), UIKeys.FILM_TITLE, Icons.FILM);
         this.panels.registerPanel(new UIModelBlockPanel(this), UIKeys.MODEL_BLOCKS_TITLE, Icons.BLOCK);
@@ -259,7 +257,7 @@ public class UIDashboard extends UIBaseMenu
             this.panels.registerPanel(new UIDebugPanel(this), IKey.raw("Sandbox"), Icons.CODE);
         }
 
-        this.setPanel(this.getPanel(UISupportersPanel.class));
+        this.setPanel(this.getPanel(UIFilmPanel.class));
     }
 
     public <T> T getPanel(Class<T> clazz)
@@ -290,6 +288,7 @@ public class UIDashboard extends UIBaseMenu
         {
             if (this.panels.panel != null)
             {
+                this.background(context);
                 this.panels.panel.renderPanelBackground(this.context);
             }
 

@@ -1,5 +1,6 @@
 package mchorse.bbs_mod;
 
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.settings.SettingsBuilder;
 import mchorse.bbs_mod.settings.values.core.ValueLink;
 import mchorse.bbs_mod.settings.values.core.ValueString;
@@ -187,8 +188,8 @@ public class BBSSettings
         keystrokeMode = builder.getInt("keystrokes_position", 1);
 
         builder.category("background");
-        backgroundImage = builder.getRL("image", null);
-        backgroundColor = builder.getInt("color", Colors.A75).colorAlpha();
+        backgroundImage = builder.getRL("image", Link.assets("textures/banners/bg2.png"));
+        backgroundColor = builder.getInt("color", Colors.WHITE).colorAlpha();
 
         builder.category("chroma_sky");
         chromaSkyEnabled = builder.getBoolean("enabled", false);

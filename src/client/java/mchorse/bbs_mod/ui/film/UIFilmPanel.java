@@ -774,7 +774,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.setFlight(false);
         cameraController.add(this.runner);
 
-        this.getContext().menu.getRoot().add(this.secretPlay);
+        if (this.getContext() != null)
+        {
+            this.getContext().menu.getRoot().add(this.secretPlay);
+        }
     }
 
     @Override
@@ -820,7 +823,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     @Override
     public boolean needsBackground()
     {
-        return false;
+        return this.getData() == null;
     }
 
     @Override
@@ -1087,7 +1090,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         int color = BBSSettings.primaryColor.get();
 
-        this.area.render(context.batcher, Colors.mulRGB(color | Colors.A100, 0.2F));
+        if (this.getData() != null)
+        {
+            this.area.render(context.batcher, Colors.mulRGB(color | Colors.A100, 0.2F));
+        }
 
         if (this.editor.isVisible())
         {
