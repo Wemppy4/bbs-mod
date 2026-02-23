@@ -9,6 +9,7 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIAnchorKeyframeFactory;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 
 public class UIOrbitClip extends UIClip<OrbitClip>
@@ -61,11 +62,11 @@ public class UIOrbitClip extends UIClip<OrbitClip>
     {
         super.registerPanels();
 
-        this.panels.add(UIClip.label(UIKeys.CAMERA_PANELS_TARGET).marginTop(12), this.selector);
+        this.panels.add(UIClip.label(UIKeys.CAMERA_PANELS_TARGET).marginTop(UIConstants.SECTION_GAP), this.selector);
         this.panels.add(this.absolute, this.copy);
-        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_DISTANCE), this.distance).marginTop(12));
-        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_ANGLE), UI.row(5, 0, 20, this.yaw, this.pitch)).marginTop(12));
-        this.panels.add(this.offset.marginTop(12));
+        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_DISTANCE), this.distance).marginTop(UIConstants.SECTION_GAP));
+        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_ANGLE), UI.row(5, 0, 20, this.yaw, this.pitch)).marginTop(UIConstants.SECTION_GAP));
+        this.panels.add(this.offset.marginTop(UIConstants.SECTION_GAP));
     }
 
     @Override

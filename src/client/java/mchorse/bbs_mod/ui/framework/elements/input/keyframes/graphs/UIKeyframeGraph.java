@@ -512,7 +512,7 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
         int x = this.keyframes.toGraphX(tick);
         float a = (float) Math.sin(context.getTickTransition() / 2D) * 0.1F + 0.5F;
 
-        context.batcher.box(x - 3, y - 3, x + 3, y + 3, Colors.setA(color, a));
+        context.batcher.box(x - 4, y - 4, x + 4, y + 4, Colors.setA(color, a));
     }
 
     /**

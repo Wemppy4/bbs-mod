@@ -56,6 +56,7 @@ import mchorse.bbs_mod.ui.framework.elements.utils.UIDraggable;
 import mchorse.bbs_mod.ui.framework.elements.utils.UIRenderable;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.UIUtils;
+import mchorse.bbs_mod.ui.utils.context.ContextMenuManager;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.Direction;
@@ -94,6 +95,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public UIElement main;
     public UIElement editArea;
     public UIDraggable draggableMain;
+    public UIIcon swapSmallPanels;
     public UIFilmRecorder recorder;
     public UIFilmPreview preview;
 
@@ -105,7 +107,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public UIClipsPanel actionEditor;
 
     /* Icon bar buttons */
-    public UIIcon openHistory;
+    public UIIcon openFilmMenu;
     public UIIcon toggleHorizontal;
     public UIIcon openCameraEditor;
     public UIIcon openReplayEditor;
@@ -171,43 +173,60 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         this.draggableMain.reference(() ->
         {
+            UIElement rightSmall = this.getRightSmallPanel();
             return BBSSettings.editorLayoutSettings.isHorizontal()
-                ? new Vector2i(this.editArea.area.x, this.editArea.area.ey())
-                : new Vector2i(this.editArea.area.x, this.editArea.area.y);
+                ? new Vector2i(rightSmall.area.x, rightSmall.area.ey())
+                : new Vector2i(rightSmall.area.x, rightSmall.area.y);
         });
         this.draggableMain.rendering((context) ->
         {
+            UIElement rightSmall = this.getRightSmallPanel();
             int size = 5;
 
             if (BBSSettings.editorLayoutSettings.isHorizontal())
             {
-                int x = this.editArea.area.x + 3;
-                int y = this.editArea.area.ey() - 3;
+                int x = rightSmall.area.x + 3;
+                int y = rightSmall.area.ey() - 3;
 
                 context.batcher.box(x, y - size, x + 1, y, Colors.WHITE);
                 context.batcher.box(x, y - 1, x + size, y, Colors.WHITE);
 
-                x = this.editArea.area.x - 3;
-                y = this.editArea.area.ey() - 3;
+                x = rightSmall.area.x - 3;
+                y = rightSmall.area.ey() - 3;
 
                 context.batcher.box(x - 1, y - size, x, y, Colors.WHITE);
                 context.batcher.box(x - size, y - 1, x, y, Colors.WHITE);
             }
             else
             {
-                int x = this.editArea.area.x + 3;
-                int y = this.editArea.area.y - 3;
+                int x = rightSmall.area.x + 3;
+                int y = rightSmall.area.y - 3;
 
                 context.batcher.box(x, y - size, x + 1, y, Colors.WHITE);
                 context.batcher.box(x, y - 1, x + size, y, Colors.WHITE);
 
-                x = this.editArea.area.x + 3;
-                y = this.editArea.area.y + 3;
+                x = rightSmall.area.x + 3;
+                y = rightSmall.area.y + 3;
 
                 context.batcher.box(x, y, x + 1, y + size, Colors.WHITE);
                 context.batcher.box(x, y, x + size, y + 1, Colors.WHITE);
             }
         });
+
+        this.swapSmallPanels = new UIIcon(Icons.EXCHANGE, (b) ->
+        {
+            ValueEditorLayout layout = BBSSettings.editorLayoutSettings;
+            layout.setSmallPanelsSwapped(!layout.isSmallPanelsSwapped());
+            if (layout.isHorizontal())
+                layout.setEditorSizeH(1F - layout.getEditorSizeH());
+            else
+                layout.setEditorSizeV(1F - layout.getEditorSizeV());
+            this.setupEditorFlex(true);
+            UIUtils.playClick();
+        });
+        this.swapSmallPanels.tooltip(UIKeys.FILM_SWAP_SMALL_PANELS, Direction.LEFT);
+        this.swapSmallPanels.setVisible(false);
+        this.draggableMain.add(this.swapSmallPanels);
 
         /* Editors */
         this.cameraEditor = new UIClipsPanel(this, BBSMod.getFactoryCameraClips()).target(this.editArea);
@@ -224,11 +243,11 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.actionEditor.full(this.main).setVisible(false);
 
         /* Icon bar buttons */
-        this.openHistory = new UIIcon(Icons.LIST, (b) ->
+        this.openFilmMenu = new UIIcon(Icons.GEAR, (b) ->
         {
-            UIOverlay.addOverlay(this.getContext(), new UIUndoHistoryOverlay(this), 200, 0.6F);
+            this.getContext().replaceContextMenu(this::fillFilmContextMenu);
         });
-        this.openHistory.tooltip(UIKeys.FILM_OPEN_HISTORY, Direction.LEFT);
+        this.openFilmMenu.tooltip(UIKeys.FILM_OPTIONS, Direction.LEFT);
         this.toggleHorizontal = new UIIcon(() -> BBSSettings.editorLayoutSettings.isHorizontal() ? Icons.EXCHANGE : Icons.CONVERT, (b) ->
         {
             BBSSettings.editorLayoutSettings.setHorizontal(!BBSSettings.editorLayoutSettings.isHorizontal());
@@ -244,8 +263,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.openActionEditor.tooltip(UIKeys.FILM_OPEN_ACTION_EDITOR, Direction.LEFT);
 
         /* Setup elements */
-        this.iconBar.add(this.openHistory, this.toggleHorizontal.marginTop(9), this.openCameraEditor.marginTop(9), this.openReplayEditor, this.openActionEditor);
+        this.iconBar.add(this.openFilmMenu, this.toggleHorizontal.marginTop(9), this.openCameraEditor.marginTop(9), this.openReplayEditor, this.openActionEditor);
 
+        this.editor.prepend(new UIRenderable((context) ->
+        {
+            this.swapSmallPanels.setVisible(this.draggableMain.area.isInside(context));
+        }));
         this.editor.add(this.main, new UIRenderable(this::renderIcons));
         this.main.add(this.cameraEditor, this.replayEditor, this.actionEditor, this.editArea, this.preview, this.draggableMain);
         this.add(this.controller, new UIRenderable(this::renderDividers));
@@ -279,85 +302,6 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.showPanel(MathUtils.cycler(this.getPanelIndex() + (Window.isShiftPressed() ? -1 : 1), this.panels));
             UIUtils.playClick();
         }).category(editor);
-
-        this.openOverlay.context((menu) ->
-        {
-            if (this.data == null)
-            {
-                return;
-            }
-
-            menu.action(Icons.ARROW_RIGHT, UIKeys.FILM_MOVE_TITLE, () ->
-            {
-                UIFilmMoveOverlayPanel panel = new UIFilmMoveOverlayPanel((vector) ->
-                {
-                    int topLayer = this.data.camera.getTopLayer() + 1;
-                    int duration = this.data.camera.calculateDuration();
-                    double dx = vector.x;
-                    double dy = vector.y;
-                    double dz = vector.z;
-
-                    BaseValue.edit(this.data, (__) ->
-                    {
-                        TranslateClip clip = new TranslateClip();
-
-                        clip.layer.set(topLayer);
-                        clip.duration.set(duration);
-                        clip.translate.get().set(dx, dy, dz);
-                        __.camera.addClip(clip);
-
-                        for (Replay replay : __.replays.getList())
-                        {
-                            for (Keyframe<Double> keyframe : replay.keyframes.x.getKeyframes()) keyframe.setValue(keyframe.getValue() + dx);
-                            for (Keyframe<Double> keyframe : replay.keyframes.y.getKeyframes()) keyframe.setValue(keyframe.getValue() + dy);
-                            for (Keyframe<Double> keyframe : replay.keyframes.z.getKeyframes()) keyframe.setValue(keyframe.getValue() + dz);
-
-                            replay.actions.shift(dx, dy, dz);
-                        }
-                    });
-                });
-
-                UIOverlay.addOverlay(this.getContext(), panel, 200, 0.9F);
-            });
-
-            menu.action(Icons.TIME, UIKeys.FILM_INSERT_SPACE_TITLE, () ->
-            {
-                UINumberOverlayPanel panel = new UINumberOverlayPanel(UIKeys.FILM_INSERT_SPACE_TITLE, UIKeys.FILM_INSERT_SPACE_DESCRIPTION, (d) ->
-                {
-                    if (d.intValue() <= 0)
-                    {
-                        return;
-                    }
-
-                    for (Replay replay : this.data.replays.getList())
-                    {
-                        for (KeyframeChannel<?> channel : replay.keyframes.getChannels())
-                        {
-                            channel.insertSpace(this.getCursor(), d.intValue());
-                        }
-
-                        for (KeyframeChannel channel : replay.properties.properties.values())
-                        {
-                            channel.insertSpace(this.getCursor(), d.intValue());
-                        }
-                    }
-                });
-
-                panel.value.limit(1).integer().setValue(1D);
-
-                UIOverlay.addOverlay(this.getContext(), panel);
-            });
-
-            menu.action(Icons.GEAR, UIKeys.FILM_PLAYER_SETTINGS, () ->
-            {
-                UIOverlay.addOverlay(this.getContext(), new UIFilmPlayerSettingsOverlayPanel(this.getData()), 280, 0.8F);
-            });
-
-            menu.action(Icons.HELP, L10n.lang("bbs.ui.film.details.button"), () ->
-            {
-                UIOverlay.addOverlay(this.getContext(), new UIFilmDetailsOverlayPanel(this.getData()), 300, 260);
-            });
-        });
 
         this.fill(null);
 
@@ -398,6 +342,18 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.add(element);
     }
 
+    /** Left of the two small panels (preview and editArea). */
+    public UIElement getLeftSmallPanel()
+    {
+        return BBSSettings.editorLayoutSettings.isSmallPanelsSwapped() ? this.editArea : this.preview;
+    }
+
+    /** Right of the two small panels (preview and editArea). */
+    public UIElement getRightSmallPanel()
+    {
+        return BBSSettings.editorLayoutSettings.isSmallPanelsSwapped() ? this.preview : this.editArea;
+    }
+
     private void setupEditorFlex(boolean resize)
     {
         ValueEditorLayout layout = BBSSettings.editorLayoutSettings;
@@ -407,31 +363,121 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         layout.setMainSizeV(MathUtils.clamp(layout.getMainSizeV(), 0.05F, 0.95F));
         layout.setEditorSizeV(MathUtils.clamp(layout.getEditorSizeV(), 0.05F, 0.95F));
 
+        UIElement leftSmall = this.getLeftSmallPanel();
+        UIElement rightSmall = this.getRightSmallPanel();
+
         this.main.resetFlex();
         this.editArea.resetFlex();
         this.preview.resetFlex();
         this.draggableMain.resetFlex();
+        this.swapSmallPanels.resetFlex();
 
         if (layout.isHorizontal())
         {
             this.main.relative(this.editor).y(1F - layout.getMainSizeH()).w(1F).hTo(this.editor.area, 1F);
-            this.editArea.relative(this.editor).x(1F - layout.getEditorSizeH()).wTo(this.editor.area, 1F).hTo(this.main.area, 0F);
-            this.preview.relative(this.editor).w(1F - layout.getEditorSizeH()).hTo(this.main.area, 0F);
-            this.draggableMain.hoverOnly().relative(this.editArea).x(-6).y(0).w(12).h(1F);
+            leftSmall.relative(this.editor).w(1F - layout.getEditorSizeH()).hTo(this.main.area, 0F);
+            rightSmall.relative(this.editor).x(1F - layout.getEditorSizeH()).wTo(this.editor.area, 1F).hTo(this.main.area, 0F);
+            this.draggableMain.hoverOnly().relative(rightSmall).x(-6).y(0).w(12).h(1F);
         }
         else
         {
             this.main.relative(this.editor).w(layout.getMainSizeV()).h(1F);
-            this.editArea.relative(this.main).x(1F).y(layout.getEditorSizeV()).wTo(this.editor.area, 1F).hTo(this.editor.area, 1F);
-            this.preview.relative(this.main).x(1F).wTo(this.editor.area, 1F).hTo(this.editArea.area, 0F);
-            this.draggableMain.hoverOnly().relative(this.main).x(1F).w(12).h(1F);
+            rightSmall.relative(this.main).x(1F).y(layout.getEditorSizeV()).wTo(this.editor.area, 1F).hTo(this.editor.area, 1F);
+            leftSmall.relative(this.main).x(1F).wTo(this.editor.area, 1F).hTo(rightSmall.area, 0F);
+            this.draggableMain.hoverOnly().relative(rightSmall).x(0).y(-6).w(1F).h(12);
         }
+
+        this.swapSmallPanels.relative(this.draggableMain).x(0.5F).y(0.5F).wh(16, 16).anchor(0.5F, 0.5F);
 
         if (resize)
         {
             this.resize();
             this.resize();
         }
+    }
+
+    private void fillFilmContextMenu(ContextMenuManager menu)
+    {
+        if (this.data == null)
+        {
+            return;
+        }
+
+        menu.action(Icons.LIST, UIKeys.FILM_OPEN_HISTORY, () ->
+        {
+            UIOverlay.addOverlay(this.getContext(), new UIUndoHistoryOverlay(this), 200, 0.6F);
+        });
+
+        menu.action(Icons.ARROW_RIGHT, UIKeys.FILM_MOVE_TITLE, () ->
+        {
+            UIFilmMoveOverlayPanel panel = new UIFilmMoveOverlayPanel((vector) ->
+            {
+                int topLayer = this.data.camera.getTopLayer() + 1;
+                int duration = this.data.camera.calculateDuration();
+                double dx = vector.x;
+                double dy = vector.y;
+                double dz = vector.z;
+
+                BaseValue.edit(this.data, (__) ->
+                {
+                    TranslateClip clip = new TranslateClip();
+
+                    clip.layer.set(topLayer);
+                    clip.duration.set(duration);
+                    clip.translate.get().set(dx, dy, dz);
+                    __.camera.addClip(clip);
+
+                    for (Replay replay : __.replays.getList())
+                    {
+                        for (Keyframe<Double> keyframe : replay.keyframes.x.getKeyframes()) keyframe.setValue(keyframe.getValue() + dx);
+                        for (Keyframe<Double> keyframe : replay.keyframes.y.getKeyframes()) keyframe.setValue(keyframe.getValue() + dy);
+                        for (Keyframe<Double> keyframe : replay.keyframes.z.getKeyframes()) keyframe.setValue(keyframe.getValue() + dz);
+
+                        replay.actions.shift(dx, dy, dz);
+                    }
+                });
+            });
+
+            UIOverlay.addOverlay(this.getContext(), panel, 200, 0.9F);
+        });
+
+        menu.action(Icons.TIME, UIKeys.FILM_INSERT_SPACE_TITLE, () ->
+        {
+            UINumberOverlayPanel panel = new UINumberOverlayPanel(UIKeys.FILM_INSERT_SPACE_TITLE, UIKeys.FILM_INSERT_SPACE_DESCRIPTION, (d) ->
+            {
+                if (d.intValue() <= 0)
+                {
+                    return;
+                }
+
+                for (Replay replay : this.data.replays.getList())
+                {
+                    for (KeyframeChannel<?> channel : replay.keyframes.getChannels())
+                    {
+                        channel.insertSpace(this.getCursor(), d.intValue());
+                    }
+
+                    for (KeyframeChannel channel : replay.properties.properties.values())
+                    {
+                        channel.insertSpace(this.getCursor(), d.intValue());
+                    }
+                }
+            });
+
+            panel.value.limit(1).integer().setValue(1D);
+
+            UIOverlay.addOverlay(this.getContext(), panel);
+        });
+
+        menu.action(Icons.GEAR, UIKeys.FILM_PLAYER_SETTINGS, () ->
+        {
+            UIOverlay.addOverlay(this.getContext(), new UIFilmPlayerSettingsOverlayPanel(this.getData()), 280, 0.8F);
+        });
+
+        menu.action(Icons.HELP, L10n.lang("bbs.ui.film.details.button"), () ->
+        {
+            UIOverlay.addOverlay(this.getContext(), new UIFilmDetailsOverlayPanel(this.getData()), 300, 260);
+        });
     }
 
     @Override
@@ -444,6 +490,19 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         {
             this.applyPreviewSizeToBBS();
         }
+    }
+
+    /**
+     * Sets BBS fake window size to export resolution (from video settings).
+     * Use when starting record, or when entering F1 fullscreen in film panel.
+     */
+    public static void applyExportSizeToBBS()
+    {
+        int w = Math.max(2, BBSSettings.videoSettings.width.get());
+        int h = Math.max(2, BBSSettings.videoSettings.height.get());
+        if (w % 2 != 0) w++;
+        if (h % 2 != 0) h++;
+        BBSRendering.setCustomSize(true, w, h);
     }
 
     /**
@@ -715,7 +774,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.setFlight(false);
         cameraController.add(this.runner);
 
-        this.getContext().menu.getRoot().add(this.secretPlay);
+        if (this.getContext() != null)
+        {
+            this.getContext().menu.getRoot().add(this.secretPlay);
+        }
     }
 
     @Override
@@ -761,7 +823,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     @Override
     public boolean needsBackground()
     {
-        return false;
+        return this.getData() == null;
     }
 
     @Override
@@ -835,7 +897,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         }
 
         this.preview.replays.setEnabled(data != null);
-        this.openHistory.setEnabled(data != null);
+        this.openFilmMenu.setEnabled(data != null);
         this.toggleHorizontal.setEnabled(data != null);
         this.openCameraEditor.setEnabled(data != null);
         this.openReplayEditor.setEnabled(data != null);
@@ -1028,7 +1090,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         int color = BBSSettings.primaryColor.get();
 
-        this.area.render(context.batcher, Colors.mulRGB(color | Colors.A100, 0.2F));
+        if (this.getData() != null)
+        {
+            this.area.render(context.batcher, Colors.mulRGB(color | Colors.A100, 0.2F));
+        }
 
         if (this.editor.isVisible())
         {
@@ -1132,7 +1197,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
     private void renderDividers(UIContext context)
     {
-        Area a1 = this.openHistory.area;
+        Area a1 = this.openFilmMenu.area;
         Area a2 = this.toggleHorizontal.area;
 
         context.batcher.box(a1.x + 3, a1.ey() + 4, a1.ex() - 3, a1.ey() + 5, 0x22ffffff);

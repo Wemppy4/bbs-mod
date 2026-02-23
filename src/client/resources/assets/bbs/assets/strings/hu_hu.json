@@ -39,8 +39,6 @@
     "bbs.config.audio.waveform_height-comment": "A hangsor magassága pixelekben",
     "bbs.config.audio.waveform_time": "Hangsor lejátszási idejének megjelenítése",
     "bbs.config.audio.waveform_time-comment": "Megjelenjen-e a hangsáv lejátszási ideje. Ne feledd, hogy a hangsáv lejátszási ideje nem feltétlenül egyezik meg a jelenet aktuális lejátszási idejével!",
-    "bbs.config.audio.waveform_visible": "Hanghullám megjelenítése",
-    "bbs.config.audio.waveform_visible-comment": "Megjelenjenek-e az audió sávok lejátszás közben?",
     "bbs.config.audio.waveform_width": "Audió sáv szélessége",
     "bbs.config.audio.waveform_width-comment": "Egy audió sáv szélessége lebegőpontos százalékban (0 és 1 között)",
     "bbs.config.background.color": "Szín",

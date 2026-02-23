@@ -6,6 +6,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
@@ -40,9 +41,16 @@ public class UIBezierHandles
 
     public UIElement createColumn()
     {
-        return UI.column(
-            UI.row(new UIIcon(Icons.LEFT_HANDLE, null).tooltip(UIKeys.KEYFRAMES_LEFT_HANDLE), this.lx, this.ly),
-            UI.row(new UIIcon(Icons.RIGHT_HANDLE, null).tooltip(UIKeys.KEYFRAMES_RIGHT_HANDLE), this.rx, this.ry)
+        UIIcon leftIcon = new UIIcon(Icons.LEFT_HANDLE, null);
+        leftIcon.tooltip(UIKeys.KEYFRAMES_LEFT_HANDLE);
+        leftIcon.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
+        UIIcon rightIcon = new UIIcon(Icons.RIGHT_HANDLE, null);
+        rightIcon.tooltip(UIKeys.KEYFRAMES_RIGHT_HANDLE);
+        rightIcon.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
+        int rowMargin = 4;
+        return UI.column(UIConstants.MARGIN,
+            UI.row(rowMargin, 0, UIConstants.CONTROL_HEIGHT, leftIcon, this.lx, this.ly),
+            UI.row(rowMargin, 0, UIConstants.CONTROL_HEIGHT, rightIcon, this.rx, this.ry)
         );
     }
 

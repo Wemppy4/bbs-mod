@@ -38,8 +38,6 @@
     "bbs.config.audio.waveform_height-comment": "Höhe der Audiospur in Pixeln",
     "bbs.config.audio.waveform_time": "Zeige Abspielzeit der Audiospur",
     "bbs.config.audio.waveform_time-comment": "Ob die Abspielzeit der Audiospur gezeigt werden soll. Denk daran das die Abspielzeit der Audiospur nicht unbedingt die Abspielzeit der Szene repräsentiert.",
-    "bbs.config.audio.waveform_visible": "Audiospur sichtbar",
-    "bbs.config.audio.waveform_visible-comment": "Ob Audiospuren gezeigt werden sollen wenn sie abgespielt werden",
     "bbs.config.audio.waveform_width": "Audiospur Breite",
     "bbs.config.audio.waveform_width-comment": "Breite der Audiospur in Gleitkomma-Prozent (zwischen 0 und 1)",
     "bbs.config.background.color": "Farbe",

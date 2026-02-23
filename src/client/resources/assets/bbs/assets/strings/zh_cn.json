@@ -39,8 +39,6 @@
     "bbs.config.audio.waveform_height-comment": "音频条的高度（以像素为单位）",
     "bbs.config.audio.waveform_time": "显示音频条的播放时间",
     "bbs.config.audio.waveform_time-comment": "是否显示音轨的播放时间。请注意，音轨的播放时间不一定代表场景的当前播放时间！",
-    "bbs.config.audio.waveform_visible": "显示音频条",
-    "bbs.config.audio.waveform_visible-comment": "播放时是否显示音频条",
     "bbs.config.audio.waveform_width": "音频条宽度",
     "bbs.config.audio.waveform_width-comment": "音频条的宽度（浮点百分比，介于 0 和 1 之间）",
     "bbs.config.background.color": "颜色",

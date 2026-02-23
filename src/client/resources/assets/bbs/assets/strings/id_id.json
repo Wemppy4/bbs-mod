@@ -29,8 +29,6 @@
     "bbs.config.audio.waveform_height-comment": "Tinggi bar audio dalam piksel",
     "bbs.config.audio.waveform_time": "Tampilkan waktu pemutaran bar audio",
     "bbs.config.audio.waveform_time-comment": "Apakah waktu pemutaran trek audio harus ditampilkan. Perlu diingat bahwa waktu pemutaran trek audio tidak selalu mewakili waktu pemutaran saat ini dari sebuah adegan!",
-    "bbs.config.audio.waveform_visible": "Bar audio terlihat",
-    "bbs.config.audio.waveform_visible-comment": "Apakah bar audio harus ditampilkan saat diputar",
     "bbs.config.audio.waveform_width": "Lebar bar audio",
     "bbs.config.audio.waveform_width-comment": "Lebar bar audio dalam persentase titik mengambang (antara 0 dan 1)",
     "bbs.config.background.color": "Warna",

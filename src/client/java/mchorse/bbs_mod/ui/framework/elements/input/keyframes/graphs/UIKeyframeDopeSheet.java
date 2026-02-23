@@ -392,7 +392,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
 
         if (context.mouseButton == 0 && this.keyframes.area.isInside(context))
         {
-            if (context.mouseX > this.keyframes.area.x + UIKeyframes.LABEL_WIDTH)
+            if (context.mouseX > this.keyframes.area.x + this.keyframes.getLabelWidth())
             {
                 return false;
             }
@@ -672,8 +672,9 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
         int x = this.keyframes.toGraphX(tick);
         int y = this.getDopeSheetY(sheet) + (int) this.trackHeight / 2;
         float a = (float) Math.sin(context.getTickTransition() / 2D) * 0.1F + 0.5F;
+        int r = 4;
 
-        context.batcher.box(x - 3, y - 3, x + 3, y + 3, Colors.setA(color, a));
+        context.batcher.box(x - r, y - r, x + r, y + r, Colors.setA(color, a));
     }
 
     /**
@@ -701,7 +702,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     private void renderLabels(UIContext context, BufferBuilder builder, Matrix4f matrix, List<UIKeyframeElement> elements, int offset, int y)
     {
         Area area = this.keyframes.area;
-        int w = UIKeyframes.LABEL_WIDTH;
+        int w = this.keyframes.getLabelWidth();
 
         /* Render background */
         context.batcher.box(area.x + w - 1, area.y, area.x + w, area.ey(), Colors.A12);

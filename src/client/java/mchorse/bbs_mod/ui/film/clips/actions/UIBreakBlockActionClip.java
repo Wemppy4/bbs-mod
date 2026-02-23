@@ -4,6 +4,7 @@ import mchorse.bbs_mod.actions.types.blocks.BreakBlockActionClip;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.IUIClipsDelegate;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 
 public class UIBreakBlockActionClip extends UIActionClip<BreakBlockActionClip>
@@ -38,9 +39,9 @@ public class UIBreakBlockActionClip extends UIActionClip<BreakBlockActionClip>
     {
         super.registerPanels();
 
-        this.panels.add(UI.label(UIKeys.ACTIONS_BLOCK_POSITION).marginTop(12));
+        this.panels.add(UI.label(UIKeys.ACTIONS_BLOCK_POSITION).marginTop(UIConstants.SECTION_GAP));
         this.panels.add(UI.row(this.x, this.y, this.z));
-        this.panels.add(UI.label(UIKeys.ACTIONS_BLOCK_PROGRESS).marginTop(12), this.progress);
+        this.panels.add(UI.label(UIKeys.ACTIONS_BLOCK_PROGRESS).marginTop(UIConstants.SECTION_GAP), this.progress);
     }
 
     @Override

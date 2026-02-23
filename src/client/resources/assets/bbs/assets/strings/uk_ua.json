@@ -39,8 +39,6 @@
     "bbs.config.audio.waveform_height-comment": "Висота аудіо-стрічки в пікселях",
     "bbs.config.audio.waveform_time": "Показати час відтворення аудіо-стрічки",
     "bbs.config.audio.waveform_time-comment": "Чи відображати час відтворення аудіо-стрічки. Майте на увазі, що час відтворення аудіо-стрічки не обов'язково відображає поточний час відтворення сцени!",
-    "bbs.config.audio.waveform_visible": "Видимість аудіо-стрічки",
-    "bbs.config.audio.waveform_visible-comment": "Чи потрібно показувати аудіо-стрічки під час відтворення",
     "bbs.config.audio.waveform_width": "Ширина аудіо-стрічки",
     "bbs.config.audio.waveform_width-comment": "Ширина аудіо-стрічки у відсотках з плаваючою комою (від 0 до 1)",
     "bbs.config.background.color": "Колір",

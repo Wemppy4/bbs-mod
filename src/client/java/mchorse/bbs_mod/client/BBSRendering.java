@@ -276,9 +276,6 @@ public class BBSRendering
             int w = mc.getWindow().getFramebufferWidth();
             int h = mc.getWindow().getFramebufferHeight();
 
-            LOGGER.info("[BBS film] toggleFramebuffer ON: fb resize to w={} h={} (getVideoWidth/Height={}/{})",
-                w, h, getVideoWidth(), getVideoHeight());
-
             resizeExtraFramebuffers();
 
             if (framebuffer.textureWidth != w || framebuffer.textureHeight != h)
@@ -296,9 +293,6 @@ public class BBSRendering
         {
             int drawW = window.getFramebufferWidth();
             int drawH = window.getFramebufferHeight();
-            LOGGER.info("[BBS film] toggleFramebuffer OFF: framebuffer.draw(drawW={} drawH={}) our fb size={}x{}",
-                drawW, drawH, framebuffer != null ? framebuffer.textureWidth : 0, framebuffer != null ? framebuffer.textureHeight : 0);
-
             reassignFramebuffer(clientFramebuffer);
 
             mc.getFramebuffer().beginWrite(true);

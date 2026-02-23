@@ -228,7 +228,7 @@ public class UIReplaysEditor extends UIElement
 
     public static boolean renderBackground(UIContext context, UIKeyframes keyframes, Clips camera, int clipOffset)
     {
-        if (!BBSSettings.audioWaveformVisible.get())
+        if (!BBSSettings.audioWaveformVisibleInKeyframes.get())
         {
             return false;
         }

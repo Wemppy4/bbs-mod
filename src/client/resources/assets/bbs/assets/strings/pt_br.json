@@ -40,8 +40,6 @@
     "bbs.config.audio.waveform_height-comment": "Altura da barra de áudio em pixeis",
     "bbs.config.audio.waveform_time": "Mostrar tempo de reprodução na barra de áudio",
     "bbs.config.audio.waveform_time-comment": "Se o tempo de reprodução na barra de áudio deve ser mostrado. Tem em mente, que o tempo de reprodução na barra de áudio não nessesariamente representa o atual tempo de repordução de uma cena!",
-    "bbs.config.audio.waveform_visible": "Visibilidade da barra de áudio",
-    "bbs.config.audio.waveform_visible-comment": "Se a barra de áudio deverá ser apresentada durante a reprodução",
     "bbs.config.audio.waveform_width": "Largura da barra de áudio",
     "bbs.config.audio.waveform_width-comment": "Largura da barra de áudio em porcentagem no floating point (entre 0 e 1)",
     "bbs.config.background.color": "Cor",

@@ -7,6 +7,7 @@ import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageBarOverlayPanel;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 import net.minecraft.client.MinecraftClient;
 
@@ -56,11 +57,11 @@ public class UIFilmPlayerSettingsOverlayPanel extends UIMessageBarOverlayPanel
         this.editor = UI.scrollView(5, 6,
             UI.label(UIKeys.FILM_PLAYER_SETTINGS_HP),
             this.hp,
-            UI.label(UIKeys.FILM_PLAYER_SETTINGS_HUNGER).marginTop(6),
+            UI.label(UIKeys.FILM_PLAYER_SETTINGS_HUNGER).marginTop(UIConstants.SECTION_GAP),
             this.hunger,
-            UI.label(UIKeys.FILM_PLAYER_SETTINGS_XP_LEVEL).marginTop(6),
+            UI.label(UIKeys.FILM_PLAYER_SETTINGS_XP_LEVEL).marginTop(UIConstants.SECTION_GAP),
             this.xpLevel,
-            UI.label(UIKeys.FILM_PLAYER_SETTINGS_XP_PROGRESS).marginTop(6),
+            UI.label(UIKeys.FILM_PLAYER_SETTINGS_XP_PROGRESS).marginTop(UIConstants.SECTION_GAP),
             this.xpProgress,
             this.replaceInventory.marginTop(10)
         );

@@ -489,7 +489,7 @@ public class UIReplayList extends UIList<Replay>
         UIOverlay.addOverlay(this.getContext(), panel);
     }
 
-    private void copyReplay()
+    public void copyReplay()
     {
         MapType replays = new MapType();
         ListType replayList = new ListType();
@@ -504,7 +504,7 @@ public class UIReplayList extends UIList<Replay>
         Window.setClipboard(replays, "_CopyReplay");
     }
 
-    private void pasteReplay(MapType data)
+    public void pasteReplay(MapType data)
     {
         Film film = this.panel.getData();
         ListType replays = data.getList("replays");
@@ -558,7 +558,7 @@ public class UIReplayList extends UIList<Replay>
         palette.updatable();
     }
 
-    private void addReplay()
+    public void addReplay()
     {
         World world = MinecraftClient.getInstance().world;
         Camera camera = this.panel.getCamera();
@@ -728,7 +728,7 @@ public class UIReplayList extends UIList<Replay>
         this.panel.replayEditor.updateChannelsList();
     }
 
-    private void dupeReplay()
+    public void dupeReplay()
     {
         if (this.isDeselected())
         {
@@ -755,7 +755,7 @@ public class UIReplayList extends UIList<Replay>
         }
     }
 
-    private void removeReplay()
+    public void removeReplay()
     {
         if (this.isDeselected())
         {

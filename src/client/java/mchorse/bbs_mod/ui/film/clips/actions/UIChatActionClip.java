@@ -5,6 +5,7 @@ import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.IUIClipsDelegate;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 
 public class UIChatActionClip extends UIActionClip<ChatActionClip>
@@ -29,7 +30,7 @@ public class UIChatActionClip extends UIActionClip<ChatActionClip>
     {
         super.registerPanels();
 
-        this.panels.add(UI.label(UIKeys.ACTIONS_CHAT_MESSAGE).marginTop(12), this.message);
+        this.panels.add(UI.label(UIKeys.ACTIONS_CHAT_MESSAGE).marginTop(UIConstants.SECTION_GAP), this.message);
     }
 
     @Override

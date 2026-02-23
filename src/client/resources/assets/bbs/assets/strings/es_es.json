@@ -37,8 +37,6 @@
     "bbs.config.audio.waveform_height-comment": "Altura de la barra de audio en píxeles",
     "bbs.config.audio.waveform_time": "Mostrar el tiempo de reproducción de la barra de audio",
     "bbs.config.audio.waveform_time-comment": "Si se debe mostrar el tiempo de reproducción de la pista de audio. ¡Ten en cuenta que el tiempo de reproducción de la pista de audio no representa necesariamente el tiempo de reproducción actual de una escena!",
-    "bbs.config.audio.waveform_visible": "Barras de audio visibles",
-    "bbs.config.audio.waveform_visible-comment": "Si las barras de audio deben mostrarse cuando se reproducen",
     "bbs.config.audio.waveform_width": "Ancho de la barra de audio",
     "bbs.config.audio.waveform_width-comment": "Ancho de la barra de audio en porcentaje de punto flotante (entre 0 y 1)",
     "bbs.config.background.color-comment": "Color de fondo que se utilizará en cada menú. Si se especifica una imagen, se utilizará como color de tinte para el fondo",

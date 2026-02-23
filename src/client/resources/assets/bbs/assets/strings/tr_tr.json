@@ -37,8 +37,6 @@
     "bbs.config.audio.waveform_height-comment": "Ses çubuğunun piksel cinsinden yüksekliği",
     "bbs.config.audio.waveform_time": "Ses çubuğunun oynatma süresini göster",
     "bbs.config.audio.waveform_time-comment": "Ses parçasının oynatma süresinin gösterilip gösterilmeyeceği. Ses parçasının oynatma süresinin bir sahnenin geçerli oynatma süresini temsil etmesinin gerekmediğini unutmayın!",
-    "bbs.config.audio.waveform_visible": "Ses çubuklarını göster",
-    "bbs.config.audio.waveform_visible-comment": "Ses çubuklarının oynatılırken gösterilip gösterilmeyeceğini kontrol eder",
     "bbs.config.audio.waveform_width": "Ses çubuğu genişliği",
     "bbs.config.audio.waveform_width-comment": "Ses çubuğunun kayan nokta yüzdesi cinsinden genişliği (0 ile 1 arasında)",
     "bbs.config.background.color": "Renk",

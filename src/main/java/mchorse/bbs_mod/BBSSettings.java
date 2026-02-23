@@ -1,5 +1,6 @@
 package mchorse.bbs_mod;
 
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.settings.SettingsBuilder;
 import mchorse.bbs_mod.settings.values.core.ValueLink;
 import mchorse.bbs_mod.settings.values.core.ValueString;
@@ -35,6 +36,7 @@ public class BBSSettings
     public static ValueBoolean uniformScale;
     public static ValueBoolean clickSound;
     public static ValueBoolean gizmos;
+    public static ValueFloat cameraEditorExportBandsOpacity;
 
     public static ValueBoolean enableCursorRendering;
     public static ValueBoolean enableMouseButtonRendering;
@@ -101,7 +103,8 @@ public class BBSSettings
 
     public static ValueBoolean shaderCurvesEnabled;
 
-    public static ValueBoolean audioWaveformVisible;
+    public static ValueBoolean audioWaveformVisibleInPreview;
+    public static ValueBoolean audioWaveformVisibleInKeyframes;
     public static ValueInt audioWaveformDensity;
     public static ValueFloat audioWaveformWidth;
     public static ValueInt audioWaveformHeight;
@@ -169,6 +172,7 @@ public class BBSSettings
         uniformScale = builder.getBoolean("uniform_scale", false);
         clickSound = builder.getBoolean("click_sound", false);
         gizmos = builder.getBoolean("gizmos", true);
+        cameraEditorExportBandsOpacity = builder.getFloat("camera_editor_export_bands_opacity", 0.5F, 0F, 1F);
         editorTrackWidth = builder.getInt("track_width", 2, 1, 10);
         favoriteColors = new ValueColors("favorite_colors");
         disabledSheets = new ValueStringKeys("disabled_sheets");
@@ -184,8 +188,8 @@ public class BBSSettings
         keystrokeMode = builder.getInt("keystrokes_position", 1);
 
         builder.category("background");
-        backgroundImage = builder.getRL("image", null);
-        backgroundColor = builder.getInt("color", Colors.A75).colorAlpha();
+        backgroundImage = builder.getRL("image", Link.assets("textures/banners/bg2.png"));
+        backgroundColor = builder.getInt("color", Colors.WHITE).colorAlpha();
 
         builder.category("chroma_sky");
         chromaSkyEnabled = builder.getBoolean("enabled", false);
@@ -252,7 +256,8 @@ public class BBSSettings
         shaderCurvesEnabled = builder.getBoolean("enabled", true);
 
         builder.category("audio");
-        audioWaveformVisible = builder.getBoolean("waveform_visible", true);
+        audioWaveformVisibleInPreview = builder.getBoolean("waveform_visible_preview", true);
+        audioWaveformVisibleInKeyframes = builder.getBoolean("waveform_visible_keyframes", true);
         audioWaveformDensity = builder.getInt("waveform_density", 20, 10, 100);
         audioWaveformWidth = builder.getFloat("waveform_width", 0.8F, 0F, 1F);
         audioWaveformHeight = builder.getInt("waveform_height", 24, 10, 40);

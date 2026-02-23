@@ -38,8 +38,6 @@
     "bbs.config.audio.waveform_height-comment": "Wyskość paska dźwięku w pikselach",
     "bbs.config.audio.waveform_time": "Pokaż czas odtwarzania paska dźwięku",
     "bbs.config.audio.waveform_time-comment": "Czy czas odtwarzania ścieżki dźwiękowej powinien być wyświetlany. Pamiętaj, że czas odtwarzania ścieżki dźwiękowej niekoniecznie reprezentuje aktualny czas odtwarzania sceny!",
-    "bbs.config.audio.waveform_visible": "Widoczność paska dźwiękowego",
-    "bbs.config.audio.waveform_visible-comment": "Czy paski dźwiękowe powinny być wyświetlane gdy są one odtwarzane",
     "bbs.config.audio.waveform_width": "Szerokość paska dźwiękowego",
     "bbs.config.audio.waveform_width-comment": "Szerokość paska dźwiękowego w procentach zmiennoprzecinkowych (od 0 do 1)",
     "bbs.config.background.color": "Kolor",

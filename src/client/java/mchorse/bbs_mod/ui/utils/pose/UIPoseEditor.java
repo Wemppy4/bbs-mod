@@ -106,7 +106,7 @@ public class UIPoseEditor extends UIElement
         this.transform.setModel();
 
         this.column().vertical().stretch();
-        this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, UI.row(this.color, this.lighting), this.transform);
+        this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, UI.row(this.color, this.lighting), this.transform.marginTop(4));
     }
 
     private void applyChildren(Consumer<PoseTransform> consumer)

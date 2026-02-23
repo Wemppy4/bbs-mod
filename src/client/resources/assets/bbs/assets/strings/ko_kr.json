@@ -35,8 +35,6 @@
     "bbs.config.audio.waveform_height-comment": "오디오 바의 픽셀 단위 높이",
     "bbs.config.audio.waveform_time": "오디오 바의 재생 시간 표시",
     "bbs.config.audio.waveform_time-comment": "오디오 트랙의 재생 시간을 표시할지 여부. 오디오 트랙의 재생 시간이 반드시 씬의 현재 재생 시간을 나타내는 것은 아님에 유의하십시오!",
-    "bbs.config.audio.waveform_visible": "오디오 바 표시",
-    "bbs.config.audio.waveform_visible-comment": "오디오 바가 재생될 때 표시할지 여부",
     "bbs.config.audio.waveform_width": "오디오 바 너비",
     "bbs.config.audio.waveform_width-comment": "부동 소수점 백분율(0에서 1 사이)로 표시되는 오디오 바의 너비",
     "bbs.config.background.color": "색상",

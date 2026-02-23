@@ -38,8 +38,6 @@
     "bbs.config.audio.waveform_height-comment": "Hauteur d'une barre d'audio en pixels",
     "bbs.config.audio.waveform_time": "Voir le temps de lecture de la barre d'audio",
     "bbs.config.audio.waveform_time-comment": "Indique si le temps de lecture de la piste audio doit être affiché. Sachez que le temps de lecture de la piste audio ne représente pas forcément le temps de lecture actuel de la scène!",
-    "bbs.config.audio.waveform_visible": "Barre audio visible",
-    "bbs.config.audio.waveform_visible-comment": "Indique si la barre d'audio devrait s'afficher (ou non) quand elle est jouée",
     "bbs.config.audio.waveform_width": "Largeur de la barre d'audio",
     "bbs.config.audio.waveform_width-comment": "Largeur de la barre d'audio en point de pourcentage flotant (entre 0 et 1)",
     "bbs.config.background.color": "Couleur",

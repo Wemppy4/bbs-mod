@@ -39,8 +39,6 @@
     "bbs.config.audio.waveform_height-comment": "Chiều cao của một thanh âm thanh tính bằng pixel",
     "bbs.config.audio.waveform_time": "Hiển thị thời gian phát của thanh âm thanh",
     "bbs.config.audio.waveform_time-comment": "Có hiển thị thời gian phát của âm thanh hay không. Lưu ý rằng thời gian phát của âm thanh không nhất thiết phải đại diện cho thời gian hiện tại của cảnh!",
-    "bbs.config.audio.waveform_visible": "Thanh âm thanh có hiển thị",
-    "bbs.config.audio.waveform_visible-comment": "Có hiển thị các thanh âm thanh khi chúng đang phát hay không",
     "bbs.config.audio.waveform_width": "Chiều rộng thanh âm thanh",
     "bbs.config.audio.waveform_width-comment": "Chiều rộng của một thanh âm thanh tính bằng phần trăm số thực (giữa 0 và 1)",
     "bbs.config.background.color": "Màu nền",

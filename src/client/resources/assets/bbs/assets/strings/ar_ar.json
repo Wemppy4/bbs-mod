@@ -37,8 +37,6 @@
     "bbs.config.audio.waveform_height-comment": "ﺍﺭﺗﻔﺎﻉ ﺷﺮﻳﻂ ﺍﻟﺼﻮﺕ ﺑﺎﻟﺒﻜﺴﻞ",
     "bbs.config.audio.waveform_time": "إظهار وقت تشغيل شريط الصوت",
     "bbs.config.audio.waveform_time-comment": "ﻣﺎ ﺇﺫﺍ ﻛﺎﻥ ﻳﺠﺐ ﻋﺮﺽ ﻭﻗﺖ ﺗﺸﻐﻴﻞ ﺍﻟﻤﺴﺎﺭ ﺍﻟﺼﻮﺗﻲ. ﻻﺣﻆ ﺃﻥ ﻭﻗﺖ ﺗﺸﻐﻴﻞ Audio Track ﻻ ﻳﻤﺜﻞ ﺑﺎﻟﻀﺮﻭﺭﺓ ﻭﻗﺖ ﺍﻟﺘﺸﻐﻴﻞ ﺍﻟﺤﺎﻟﻲ ﻟﻠﻤﺸﻬﺪ",
-    "bbs.config.audio.waveform_visible": "إظهار أشرطة الصوت",
-    "bbs.config.audio.waveform_visible-comment": "ﻣﺎ ﺇﺫﺍ ﻛﺎﻥ ﻳﺠﺐ ﺇﻇﻬﺎﺭ ﺃﺷﺮﻃﺔ ﺍﻟﺼﻮﺕ ﻋﻨﺪ ﺍﻟﻌﻮﺩﺓ ﺇﻟﻰ ﺍﻟﻮﺭﺍﺀ",
     "bbs.config.audio.waveform_width": "عرض شريط الصوت",
     "bbs.config.audio.waveform_width-comment": "ﻋﺮﺽ ﺷﺮﻳﻂ ﺍﻟﺼﻮﺕ ﺑﻨﺴﺒﺔ ﻧﻘﻄﺔ ﻋﺎﺋﻤﺔ (ﺑﻴﻦ 0 ﻭ 1)",
     "bbs.config.background.color": "اللون",

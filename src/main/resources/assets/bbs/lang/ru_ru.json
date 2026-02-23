@@ -20,6 +20,7 @@
     "key.bbs.pause_film": "Поставить на паузу фильм",
     "key.bbs.record_replay": "Записать текующую запись",
     "key.bbs.record_video": "Записать видео",
+    "key.bbs.play_film_and_record": "Проиграть фильм и записать",
     "key.bbs.teleport": "Телепортироваться к тек. записи",
     "key.bbs.zoom": "Прицелиться (ББС ружьё)",
     "category.bbs.main": "ББС мод",

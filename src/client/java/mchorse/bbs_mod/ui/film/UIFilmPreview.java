@@ -174,12 +174,8 @@ public class UIFilmPreview extends UIElement
             }
 
             int duration = this.panel.getData().camera.calculateDuration();
-            int exportW = Math.max(2, BBSSettings.videoSettings.width.get());
-            int exportH = Math.max(2, BBSSettings.videoSettings.height.get());
-            if (exportW % 2 != 0) exportW++;
-            if (exportH % 2 != 0) exportH++;
-            BBSRendering.setCustomSize(true, exportW, exportH);
-            this.panel.recorder.startRecording(duration, BBSRendering.getTexture().id, exportW, exportH);
+            UIFilmPanel.applyExportSizeToBBS();
+            this.panel.recorder.startRecording(duration, BBSRendering.getTexture().id, BBSRendering.getVideoWidth(), BBSRendering.getVideoHeight());
         });
         this.recordVideo.tooltip(UIKeys.CAMERA_TOOLTIPS_RECORD);
         this.recordVideo.context((menu) ->
@@ -354,7 +350,7 @@ public class UIFilmPreview extends UIElement
                 innerY = area.y + (area.h - innerH) / 2;
             }
 
-            int bandColor = Colors.setA(0, 0.5F);
+            int bandColor = Colors.setA(0, BBSSettings.cameraEditorExportBandsOpacity.get());
             if (area.y < innerY)
                 context.batcher.box(area.x, area.y, area.ex(), innerY, bandColor);
             if (innerY + innerH < area.ey())
@@ -377,7 +373,7 @@ public class UIFilmPreview extends UIElement
 
         this.panel.getController().renderHUD(context, area);
 
-        if (this.panel.replayEditor.isVisible())
+        if (this.panel.replayEditor.isVisible() && BBSSettings.audioWaveformVisibleInPreview.get())
         {
             RunnerCameraController runner = this.panel.getRunner();
             int w = (int) (area.w * BBSSettings.audioWaveformWidth.get());

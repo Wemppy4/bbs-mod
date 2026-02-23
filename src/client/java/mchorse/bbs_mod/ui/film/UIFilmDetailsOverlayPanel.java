@@ -12,6 +12,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.text.UITextarea;
 import mchorse.bbs_mod.ui.framework.elements.input.text.utils.TextLine;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.utils.UILabel;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 
 public class UIFilmDetailsOverlayPanel extends UIOverlayPanel
@@ -53,9 +54,9 @@ public class UIFilmDetailsOverlayPanel extends UIOverlayPanel
         // Reordered: Name -> Description Label -> Description -> Stats -> Duration -> Time
         UIElement column = UI.column(
             nameLabel,
-            UI.label(L10n.lang("bbs.ui.film.details.description")).marginTop(12),
+            UI.label(L10n.lang("bbs.ui.film.details.description")).marginTop(UIConstants.SECTION_GAP),
             this.description,
-            statsLabel.marginTop(12),
+            statsLabel.marginTop(UIConstants.SECTION_GAP),
             durationLabel,
             this.timeLabel
         );

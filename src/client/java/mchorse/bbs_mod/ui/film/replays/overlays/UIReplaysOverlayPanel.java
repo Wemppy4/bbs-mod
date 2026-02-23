@@ -2,6 +2,9 @@ package mchorse.bbs_mod.ui.film.replays.overlays;
 
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
+import mchorse.bbs_mod.graphics.window.Window;
+import mchorse.bbs_mod.data.types.MapType;
+import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.replays.UIReplayList;
@@ -9,7 +12,10 @@ import mchorse.bbs_mod.ui.forms.UINestedEdit;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
+import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIAnchorKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
@@ -23,6 +29,10 @@ import java.util.function.Consumer;
 
 public class UIReplaysOverlayPanel extends UIOverlayPanel
 {
+    public UIIcon addReplay;
+    public UIIcon dupeReplay;
+    public UIIcon removeReplay;
+
     public UIReplayList replays;
 
     public UIElement properties;
@@ -50,6 +60,30 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
 
         this.callback = callback;
         this.replays = new UIReplayList((l) -> this.callback.accept(l.isEmpty() ? null : l.get(0)), this, filmPanel);
+
+        this.addReplay = new UIIcon(Icons.ADD, (b) -> this.replays.addReplay());
+        this.addReplay.tooltip(UIKeys.SCENE_REPLAYS_CONTEXT_ADD, Direction.LEFT);
+        this.dupeReplay = new UIIcon(Icons.DUPE, (b) -> this.replays.dupeReplay());
+        this.dupeReplay.tooltip(UIKeys.SCENE_REPLAYS_CONTEXT_DUPE, Direction.LEFT);
+        this.removeReplay = new UIIcon(Icons.REMOVE, (b) -> this.replays.removeReplay());
+        this.removeReplay.tooltip(UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE, Direction.LEFT);
+
+        this.icons.add(this.addReplay, this.dupeReplay, this.removeReplay);
+
+        this.keys().register(Keys.DELETE, () -> this.replays.removeReplay())
+            .label(UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE)
+            .active(() -> this.replays.isSelected() || !this.replays.getCurrent().isEmpty());
+        this.keys().register(Keys.COPY, this.replays::copyReplay)
+            .label(UIKeys.SCENE_REPLAYS_CONTEXT_COPY)
+            .active(() -> this.replays.isSelected() || !this.replays.getCurrent().isEmpty());
+        this.keys().register(Keys.PASTE, () ->
+        {
+            MapType data = Window.getClipboardMap("_CopyReplay");
+            if (data != null) this.replays.pasteReplay(data);
+        }).label(UIKeys.SCENE_REPLAYS_CONTEXT_PASTE).active(() -> Window.getClipboardMap("_CopyReplay") != null);
+        this.keys().register(Keys.REPLAYS_DUPE, () -> this.replays.dupeReplay())
+            .label(UIKeys.SCENE_REPLAYS_CONTEXT_DUPE)
+            .active(() -> this.replays.isSelected() || !this.replays.getCurrent().isEmpty());
 
         this.pickEdit = new UINestedEdit((editing) ->
         {
@@ -121,6 +155,14 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
         this.content.add(this.replays, this.properties);
     }
 
+    @Override
+    public void resize()
+    {
+        super.resize();
+
+        this.updateButtonsState();
+    }
+
     private void edit(Consumer<Replay> consumer)
     {
         if (consumer != null)
@@ -134,8 +176,20 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
         }
     }
 
+    private void updateButtonsState()
+    {
+        UIFilmPanel panel = this.replays.panel;
+        boolean hasFilm = panel != null && panel.getData() != null;
+        boolean hasSelection = this.replays.isSelected() || !this.replays.getCurrent().isEmpty();
+
+        this.addReplay.setEnabled(hasFilm);
+        this.dupeReplay.setEnabled(hasSelection);
+        this.removeReplay.setEnabled(hasSelection);
+    }
+
     public void setReplay(Replay replay)
     {
+        this.updateButtonsState();
         this.properties.setVisible(replay != null);
 
         if (replay != null)
@@ -155,6 +209,13 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
             this.relativeOffsetZ.setValue(replay.relativeOffset.get().z);
             this.axesPreview.setValue(replay.axesPreview.get());
         }
+    }
+
+    @Override
+    public void render(UIContext context)
+    {
+        this.updateButtonsState();
+        super.render(context);
     }
 
     @Override

@@ -3,6 +3,7 @@ package mchorse.bbs_mod.film;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.audio.AudioRenderer;
 import mchorse.bbs_mod.camera.clips.misc.AudioClip;
 import mchorse.bbs_mod.camera.controller.ICameraController;
@@ -33,6 +34,12 @@ public class Films
 {
     private List<BaseFilmController> controllers = new ArrayList<BaseFilmController>();
     private Recorder recorder;
+
+    /**
+     * When set, video recording is stopped automatically when the film with this id finishes playback.
+     * Used for the "play film and record" (Ctrl+F4) combo.
+     */
+    private String stopVideoRecordingWhenFilmFinishedId;
 
     public Map<String, Map<String, Integer>> actors = new HashMap<>();
 
@@ -244,6 +251,18 @@ public class Films
 
             if (film.hasFinished())
             {
+                if (this.stopVideoRecordingWhenFilmFinishedId != null
+                    && film.film.getId().equals(this.stopVideoRecordingWhenFilmFinishedId))
+                {
+                    if (BBSModClient.getVideoRecorder().isRecording())
+                    {
+                        BBSModClient.getVideoRecorder().stopRecording();
+                        BBSRendering.setCustomSize(false, 0, 0);
+                    }
+
+                    this.stopVideoRecordingWhenFilmFinishedId = null;
+                }
+
                 film.shutdown();
             }
 
@@ -298,24 +317,27 @@ public class Films
             batcher2D.icon(Icons.SPHERE, Colors.RED | Colors.A100, x, y);
             batcher2D.textShadow(label, x + 18, y + 4);
 
-            /* Render audio waveform */
-            List<AudioClip> audioClips = new ArrayList<>();
-
-            for (Clip clip : recorder.film.camera.get())
+            /* Render audio waveform (uses preview visibility setting) */
+            if (BBSSettings.audioWaveformVisibleInPreview.get())
             {
-                if (clip instanceof AudioClip)
+                List<AudioClip> audioClips = new ArrayList<>();
+
+                for (Clip clip : recorder.film.camera.get())
                 {
-                    audioClips.add((AudioClip) clip);
+                    if (clip instanceof AudioClip)
+                    {
+                        audioClips.add((AudioClip) clip);
+                    }
                 }
+
+                int sw = MinecraftClient.getInstance().getWindow().getScaledWidth();
+                int sh = MinecraftClient.getInstance().getWindow().getScaledHeight();
+                w = (int) (sw * BBSSettings.audioWaveformWidth.get());
+                x = sw / 2 - w / 2;
+                y = sh / 2 + 100;
+
+                AudioRenderer.renderAll(batcher2D, audioClips, recorder.getTick() + tickDelta, x, y, w, BBSSettings.audioWaveformHeight.get(), sw, sh);
             }
-
-            int sw = MinecraftClient.getInstance().getWindow().getScaledWidth();
-            int sh = MinecraftClient.getInstance().getWindow().getScaledHeight();
-            w = (int) (sw * BBSSettings.audioWaveformWidth.get());
-            x = sw / 2 - w / 2;
-            y = sh / 2 + 100;
-
-            AudioRenderer.renderAll(batcher2D, audioClips, recorder.getTick() + tickDelta, x, y, w, BBSSettings.audioWaveformHeight.get(), sw, sh);
         }
     }
 
@@ -324,5 +346,15 @@ public class Films
         controllers.clear();
 
         recorder = null;
+        stopVideoRecordingWhenFilmFinishedId = null;
+    }
+
+    /**
+     * Schedule video recording to stop when the given film finishes playback.
+     * Used when starting both film and video recording via Ctrl+F4.
+     */
+    public void setStopVideoRecordingWhenFilmFinished(String filmId)
+    {
+        this.stopVideoRecordingWhenFilmFinishedId = filmId;
     }
 }

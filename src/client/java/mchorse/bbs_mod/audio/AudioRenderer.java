@@ -23,11 +23,6 @@ public class AudioRenderer
 {
     public static void renderAll(Batcher2D batcher, List<AudioClip> clips, float tick, int x, int y, int w, int h, int sw, int sh)
     {
-        if (!BBSSettings.audioWaveformVisible.get())
-        {
-            return;
-        }
-
         for (AudioClip clip : clips)
         {
             SoundBuffer audio = BBSModClient.getSounds().get(clip.audio.get(), true);

@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes;
 
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
@@ -11,12 +12,14 @@ import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.utils.UIDraggable;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.IUIKeyframeGraph;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.KeyframeType;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIKeyframeDopeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.graphs.UIKeyframeGraph;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
+import mchorse.bbs_mod.ui.utils.Scroll;
 import mchorse.bbs_mod.ui.utils.ScrollDirection;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
@@ -89,11 +92,23 @@ public class UIKeyframes extends UIElement
 
     private UICopyPasteController copyPasteController;
 
-    public static final int LABEL_WIDTH = 120;
+    private UIDraggable labelResizer;
+
+    /** Default width of the names column when no layout setting is available. */
+    public static final int LABEL_WIDTH_DEFAULT = 120;
 
     public UIKeyframes(Consumer<Keyframe> callback)
     {
         this.callback = callback;
+
+        this.labelResizer = new UIDraggable((context) ->
+        {
+            int w = context.mouseX - this.area.x;
+            BBSSettings.editorLayoutSettings.setKeyframeLabelWidth(w);
+            this.resize();
+        });
+        this.labelResizer.hoverOnly();
+        this.add(this.labelResizer);
 
         this.copyPasteController = new UICopyPasteController(PresetManager.KEYFRAMES, "_CopyKeyframes")
             .supplier(this::serializeKeyframes)
@@ -214,6 +229,11 @@ public class UIKeyframes extends UIElement
         this.keys().register(Keys.KEYFRAMES_SELECT_NEXT, () -> this.selectNextKeyframe(1)).category(category);
         this.keys().register(Keys.KEYFRAMES_SPREAD, this::spreadKeyframes).category(category);
         this.keys().register(Keys.KEYFRAMES_ADJUST_VALUES, this::adjustValues).category(category);
+    }
+
+    public int getLabelWidth()
+    {
+        return BBSSettings.editorLayoutSettings.getKeyframeLabelWidth();
     }
 
     public UIKeyframes single()
@@ -909,13 +929,21 @@ public class UIKeyframes extends UIElement
         double minValue = this.xAxis.getMinValue();
         double maxValue = this.xAxis.getMaxValue();
 
+        int labelWidth = this.getLabelWidth();
+        boolean showLabelResizer = this.currentGraph == this.dopeSheet;
+        this.labelResizer.setVisible(showLabelResizer);
+        if (showLabelResizer)
+        {
+            this.labelResizer.relative(this).x(labelWidth - 3).y(0.35F).w(6).h(0.3F);
+        }
+
         super.resize();
 
-        if (this.currentGraph == this.dopeSheet)
+        if (showLabelResizer)
         {
             this.graphArea.copy(this.area);
-            this.graphArea.x += LABEL_WIDTH;
-            this.graphArea.w -= LABEL_WIDTH;
+            this.graphArea.x += labelWidth;
+            this.graphArea.w -= labelWidth;
         }
         else
         {
@@ -1159,6 +1187,13 @@ public class UIKeyframes extends UIElement
         this.currentGraph.postRender(context);
 
         context.batcher.unclip(context);
+
+        /* Draw label resizer on top so it is not covered by the semi-transparent background */
+        if (this.labelResizer.isVisible() && (this.labelResizer.area.isInside(context) || this.labelResizer.isDragging()))
+        {
+            Area a = this.labelResizer.area;
+            Scroll.bar(context.batcher, a.x, a.y, a.ex(), a.ey(), Colors.A100);
+        }
     }
 
     /**

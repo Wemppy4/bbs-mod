@@ -198,7 +198,7 @@ public abstract class UIClip <T extends Clip> extends UIElement
     protected void registerPanels()
     {
         this.panels.add(UIClip.label(UIKeys.CAMERA_PANELS_TITLE), this.title);
-        this.panels.add(this.enabled.marginBottom(6));
+        this.panels.add(this.enabled.marginBottom(UIConstants.SECTION_GAP));
         this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_METRICS), UI.row(this.layer, this.tick), this.duration));
 
         this.addEnvelopes();
@@ -206,7 +206,7 @@ public abstract class UIClip <T extends Clip> extends UIElement
 
     protected void addEnvelopes()
     {
-        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_ENVELOPES_TITLE), this.envelope).marginTop(12));
+        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_ENVELOPES_TITLE), this.envelope).marginTop(UIConstants.SECTION_GAP));
     }
 
     public void handleUndo(IUndo<ValueGroup> undo, boolean redo)

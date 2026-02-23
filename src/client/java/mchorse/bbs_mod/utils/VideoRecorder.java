@@ -1,8 +1,10 @@
 package mchorse.bbs_mod.utils;
 
 import mchorse.bbs_mod.BBSMod;
+import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.client.BBSRendering;
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.system.MemoryUtil;
@@ -25,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 public class VideoRecorder
 {
+    private static final Link RENDER_COMPLETE_SOUND = Link.assets("sounds/render_complete.ogg");
+
     private Process process;
     private WritableByteChannel channel;
     private boolean recording;
@@ -241,7 +245,10 @@ public class VideoRecorder
 
         this.recording = false;
 
-        UIUtils.playClick(0.5F);
+        if (BBSModClient.getSounds().play(RENDER_COMPLETE_SOUND) == null)
+        {
+            UIUtils.playClick(0.5F);
+        }
 
         this.serverTicks = this.lastServerTicks = 0;
     }

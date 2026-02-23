@@ -99,7 +99,7 @@ public abstract class UIKeyframeFactory <T> extends UIElement
         this.keyframe = keyframe;
         this.editor = editor;
 
-        this.scroll = UI.scrollView(UIConstants.MARGIN, UIConstants.SCROLL_PADDING);
+        this.scroll = UI.scrollView(UIConstants.MARGIN, Math.max(UIConstants.SCROLL_PADDING, 4));
         this.scroll.scroll.cancelScrolling();
         this.scroll.full(this);
 
@@ -116,6 +116,7 @@ public abstract class UIKeyframeFactory <T> extends UIElement
 
             this.getContext().replaceContextMenu(menu.callback(() -> this.editor.getGraph().setInterpolation(interp)));
         });
+        this.interp.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
         this.interp.tooltip(new InterpolationTooltip(0F, 0.5F, () -> this.keyframe.getInterpolation()));
         this.interp.keys().register(Keys.KEYFRAMES_INTERP, this.interp::clickItself).category(UIKeys.KEYFRAMES_KEYS_CATEGORY);
 
@@ -164,11 +165,12 @@ public abstract class UIKeyframeFactory <T> extends UIElement
                 }
             });
         });
+        this.shape.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
         this.shape.tooltip(UIKeys.KEYFRAMES_CHANGE_SHAPE);
 
         this.scroll.add(UI.column(0, 0, 0,
-            UI.row(0, 0, 0, this.interp, this.tick, this.duration),
-            UI.row(0, 0, 0, this.shape, this.color)
+            UI.row(UIConstants.MARGIN, 0, 0, this.interp, this.tick, this.duration),
+            UI.row(UIConstants.MARGIN, 0, 0, this.shape, this.color).marginTop(UIConstants.SECTION_GAP)
         ));
 
         this.add(this.scroll);

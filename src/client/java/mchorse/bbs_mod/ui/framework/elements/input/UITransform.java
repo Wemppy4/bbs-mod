@@ -102,13 +102,18 @@ public abstract class UITransform extends UIElement
         this.r2z.tooltip(raw.format(UIKeys.TRANSFORMS_ROTATE2, UIKeys.GENERAL_Z));
         this.r2z.textbox.setColor(Colors.BLUE);
 
-        this.w(1F).column(0).stretch().vertical();
+        this.w(1F).column(2).stretch().vertical();
 
         this.iconT = new UIIcon(Icons.ALL_DIRECTIONS, null);
         this.iconS = new UIIcon(Icons.SCALE, (b) -> this.toggleUniformScale());
         this.iconS.tooltip(UIKeys.TRANSFORMS_UNIFORM_SCALE);
         this.iconR = new UIIcon(Icons.REFRESH, null);
         this.iconR2 = new UIIcon(Icons.REFRESH, null);
+
+        this.iconT.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
+        this.iconS.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
+        this.iconR.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
+        this.iconR2.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
 
         this.iconT.disabledColor = this.iconS.disabledColor = this.iconR.disabledColor = this.iconR2.disabledColor = Colors.WHITE;
         this.iconT.hoverColor = this.iconS.hoverColor = this.iconR.hoverColor = this.iconR2.hoverColor = Colors.WHITE;

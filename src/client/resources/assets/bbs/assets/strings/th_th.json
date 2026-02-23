@@ -39,8 +39,6 @@
     "bbs.config.audio.waveform_height-comment": "ความสูงของแถบเสียงในหน่วยพิกเซล",
     "bbs.config.audio.waveform_time": "แสดงเวลาการเล่นของแถบเสียง",
     "bbs.config.audio.waveform_time-comment": "จะแสดงเวลาการเล่นของแทร็กเสียงหรือไม่?\n\nโปรดทราบว่าเวลาการเล่นของแทร็กเสียงอาจไม่ตรงกับเวลาการเล่นของฉากในขณะนั้นเสมอไป",
-    "bbs.config.audio.waveform_visible": "แถบเสียงที่มองเห็นได้",
-    "bbs.config.audio.waveform_visible-comment": "ตัวเลือกนี้กำหนดว่าจะแสดงแถบเสียงในอินเตอร์เฟซขณะที่เสียงกำลังเล่นอยู่หรือไม่ หากเปิดใช้งาน แถบเสียงจะปรากฏขึ้นในระหว่างการเล่นเสีย",
     "bbs.config.audio.waveform_width": "ความกว้างของแถบเสียง",
     "bbs.config.audio.waveform_width-comment": "ความกว้างของแถบเสียงในรูปแบบเปอร์เซ็นต์ทศนิยม (ระหว่าง 0 และ 1)",
     "bbs.config.background.color": "สี",

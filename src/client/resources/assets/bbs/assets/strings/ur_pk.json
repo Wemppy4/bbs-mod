@@ -37,8 +37,6 @@
     "bbs.config.audio.waveform_height-comment": "آڈیو بار کی اونچائی پکسلز میں",
     "bbs.config.audio.waveform_time": "آڈیو بار کا پلے بیک وقت",
     "bbs.config.audio.waveform_time-comment": "کیا آڈیو ٹریک کا پلے بیک وقت دکھایا جائے۔ خیال رہے کہ پلے بیک وقت لازماً منظر کے موجودہ پلے بیک وقت کی نمائندگی نہیں کرتا!",
-    "bbs.config.audio.waveform_visible": "آڈیو بارز نمایاں",
-    "bbs.config.audio.waveform_visible-comment": "کیا پلے بیک کے دوران آڈیو بارز دکھائی جائیں",
     "bbs.config.audio.waveform_width": "آڈیو بار کی چوڑائی",
     "bbs.config.audio.waveform_width-comment": "آڈیو بار کی چوڑائی فلوٹنگ پوائنٹ فیصد میں (0 اور 1 کے درمیان)",
     "bbs.config.background.color": "رنگ",

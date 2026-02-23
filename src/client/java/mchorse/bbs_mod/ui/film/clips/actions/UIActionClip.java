@@ -5,6 +5,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.IUIClipsDelegate;
 import mchorse.bbs_mod.ui.film.clips.UIClip;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UI;
 
 public abstract class UIActionClip <T extends ActionClip> extends UIClip<T>
@@ -30,7 +31,7 @@ public abstract class UIActionClip <T extends ActionClip> extends UIClip<T>
     {
         super.registerPanels();
 
-        this.panels.add(UI.label(UIKeys.ACTIONS_FREQUENCY).marginTop(6), this.frequency);
+        this.panels.add(UI.label(UIKeys.ACTIONS_FREQUENCY).marginTop(UIConstants.SECTION_GAP), this.frequency);
     }
 
     @Override

@@ -17,6 +17,7 @@ import mchorse.bbs_mod.client.renderer.item.ModelBlockItemRenderer;
 import mchorse.bbs_mod.cubic.model.ModelManager;
 import mchorse.bbs_mod.events.register.RegisterClientSettingsEvent;
 import mchorse.bbs_mod.events.register.RegisterL10nEvent;
+import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.film.Recorder;
 import mchorse.bbs_mod.film.replays.Replay;
@@ -109,6 +110,7 @@ public class BBSModClient implements ClientModInitializer
     private static KeyBinding keyPauseFilm;
     private static KeyBinding keyRecordReplay;
     private static KeyBinding keyRecordVideo;
+    private static KeyBinding keyPlayFilmAndRecord;
     private static KeyBinding keyOpenReplays;
     private static KeyBinding keyOpenMorphing;
     private static KeyBinding keyDemorph;
@@ -390,6 +392,7 @@ public class BBSModClient implements ClientModInitializer
         keyPauseFilm = this.createKey("pause_film", GLFW.GLFW_KEY_BACKSLASH);
         keyRecordReplay = this.createKey("record_replay", GLFW.GLFW_KEY_RIGHT_ALT);
         keyRecordVideo = this.createKey("record_video", GLFW.GLFW_KEY_F4);
+        keyPlayFilmAndRecord = this.createKey("play_film_and_record", GLFW.GLFW_KEY_F6);
         keyOpenReplays = this.createKey("open_replays", GLFW.GLFW_KEY_RIGHT_SHIFT);
         keyOpenMorphing = this.createKey("open_morphing", GLFW.GLFW_KEY_B);
         keyDemorph = this.createKey("demorph", GLFW.GLFW_KEY_PERIOD);
@@ -517,6 +520,7 @@ public class BBSModClient implements ClientModInitializer
                 videoRecorder.toggleRecording(BBSRendering.getTexture().id, width, height);
                 BBSRendering.setCustomSize(videoRecorder.isRecording(), width, height);
             }
+            while (keyPlayFilmAndRecord.wasPressed()) this.keyPlayFilmAndRecord();
             while (keyOpenReplays.wasPressed()) this.keyOpenReplays();
             while (keyOpenMorphing.wasPressed())
             {
@@ -662,6 +666,39 @@ public class BBSModClient implements ClientModInitializer
         {
             Films.playFilm(panel.getData().getId(), false);
         }
+    }
+
+    /**
+     * Start video recording and film playback together (Ctrl+F4).
+     * Recording stops automatically when the film finishes.
+     */
+    private void keyPlayFilmAndRecord()
+    {
+        UIFilmPanel panel = getDashboard().getPanel(UIFilmPanel.class);
+
+        if (panel.getData() == null)
+        {
+            return;
+        }
+
+        if (videoRecorder.isRecording())
+        {
+            return;
+        }
+
+        Window window = MinecraftClient.getInstance().getWindow();
+        int width = Math.max(window.getWidth(), 2);
+        int height = Math.max(window.getHeight(), 2);
+
+        if (width % 2 == 1) width -= width % 2;
+        if (height % 2 == 1) height -= height % 2;
+
+        videoRecorder.toggleRecording(BBSRendering.getTexture().id, width, height);
+        BBSRendering.setCustomSize(videoRecorder.isRecording(), width, height);
+
+        Film film = panel.getData();
+        Films.playFilm(film.getId(), false);
+        getFilms().setStopVideoRecordingWhenFilmFinished(film.getId());
     }
 
     private void keyPauseFilm()
