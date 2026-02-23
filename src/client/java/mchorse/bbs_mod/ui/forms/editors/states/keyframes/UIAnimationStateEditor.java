@@ -2,6 +2,7 @@ package mchorse.bbs_mod.ui.forms.editors.states.keyframes;
 
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.cubic.ModelInstance;
+import mchorse.bbs_mod.film.replays.PerLimbService;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
@@ -28,13 +29,17 @@ import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.utils.UIDraggable;
 import mchorse.bbs_mod.ui.utils.Gizmo;
 import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
+import mchorse.bbs_mod.l10n.keys.IKey;
+import mchorse.bbs_mod.settings.values.core.ValueTransform;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.NaturalOrderComparator;
 import mchorse.bbs_mod.utils.Pair;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.joml.Matrices;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
+import mchorse.bbs_mod.utils.pose.PoseTransform;
 import org.joml.Matrix4f;
 import org.joml.Vector2i;
 
@@ -126,6 +131,9 @@ public class UIAnimationStateEditor extends UIElement
         List<UIKeyframeSheet> sheets = new ArrayList<>();
 
         /* Form properties */
+        Form lastForm = null;
+        List<UIKeyframeSheet> formSheets = new ArrayList<>();
+
         for (String key : FormUtils.collectPropertyPaths(this.editor.form))
         {
             KeyframeChannel property = this.state.properties.getOrCreate(this.editor.form, key);
@@ -133,16 +141,38 @@ public class UIAnimationStateEditor extends UIElement
             if (property != null)
             {
                 BaseValueBasic formProperty = FormUtils.getProperty(this.editor.form, key);
+                Form form = formProperty.getParent() instanceof Form f ? f : null;
+
+                if (form != lastForm)
+                {
+                    if (lastForm != null)
+                    {
+                        this.flushForm(sheets, formSheets, lastForm);
+                    }
+
+                    lastForm = form;
+                }
+
                 UIKeyframeSheet sheet = new UIKeyframeSheet(UIReplaysEditor.getColor(key), false, property, formProperty);
 
-                sheets.add(sheet.icon(UIReplaysEditor.getIcon(key)));
+                formSheets.add(sheet.icon(UIReplaysEditor.getIcon(key)));
             }
+        }
+
+        if (lastForm != null)
+        {
+            this.flushForm(sheets, formSheets, lastForm);
         }
 
         this.keys.clear();
 
         for (UIKeyframeSheet sheet : sheets)
         {
+            if (sheet.isBoneTrack)
+            {
+                continue;
+            }
+
             this.keys.add(StringUtils.fileName(sheet.id));
         }
 
@@ -164,11 +194,11 @@ public class UIAnimationStateEditor extends UIElement
             return false;
         });
 
-        Object lastForm = null;
+        lastForm = null;
 
         for (UIKeyframeSheet sheet : sheets)
         {
-            Object form = sheet.property == null ? null : FormUtils.getForm(sheet.property);
+            Form form = sheet.property == null ? null : FormUtils.getForm(sheet.property);
 
             if (!Objects.equals(lastForm, form))
             {
@@ -251,6 +281,41 @@ public class UIAnimationStateEditor extends UIElement
         }
     }
 
+    private void flushForm(List<UIKeyframeSheet> sheets, List<UIKeyframeSheet> formSheets, Form form)
+    {
+        sheets.addAll(formSheets);
+        formSheets.clear();
+
+        if (form instanceof ModelForm modelForm)
+        {
+            ModelInstance model = ModelFormRenderer.getModel(modelForm);
+
+            if (model != null)
+            {
+                List<String> bones = new ArrayList<>(model.model.getAllGroupKeys());
+
+                bones.sort((a, b) -> NaturalOrderComparator.compare(true, a, b));
+
+                for (String bone : bones)
+                {
+                    if (model.disabledBones.contains(bone))
+                    {
+                        continue;
+                    }
+
+                    String path = FormUtils.getPath(modelForm);
+                    String boneKey = PerLimbService.toPoseBoneKey(path, bone);
+                    String title = path.isEmpty() ? bone : path + "/" + bone;
+                    KeyframeChannel boneChannel = this.state.properties.registerChannel(boneKey, KeyframeFactories.POSE_TRANSFORM);
+                    ValueTransform transform = new ValueTransform(boneKey, new PoseTransform());
+                    UIKeyframeSheet boneSheet = new UIKeyframeSheet(boneKey, IKey.constant(title), Colors.HSVtoRGB(Math.abs((bone.hashCode() % 360) / 360F), 0.7F, 0.7F).getRGBColor(), false, boneChannel, transform, true);
+
+                    sheets.add(boneSheet);
+                }
+            }
+        }
+    }
+
     public boolean clickViewport(UIContext context, StencilFormFramebuffer stencil)
     {
         if (stencil.hasPicked() && this.state != null)
@@ -272,6 +337,27 @@ public class UIAnimationStateEditor extends UIElement
 
                     return true;
                 }
+                else if (context.mouseButton == 1)
+                {
+                    if (Window.isCtrlPressed())
+                    {
+                        UIReplaysEditorUtils.offerAdjacent(this.getContext(), pair.a, pair.b, (bone) -> UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.editor, pair.a, bone, true));
+
+                        return true;
+                    }
+                    else if (Window.isShiftPressed())
+                    {
+                        UIReplaysEditorUtils.offerHierarchy(this.getContext(), pair.a, pair.b, (bone) -> UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.editor, pair.a, bone, true));
+
+                        return true;
+                    }
+                    else
+                    {
+                        UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.editor, pair.a, pair.b, true);
+
+                        return true;
+                    }
+                }
             }
         }
 
@@ -280,7 +366,7 @@ public class UIAnimationStateEditor extends UIElement
 
     public void pickForm(Form form, String bone)
     {
-        UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.editor, form, bone);
+        UIReplaysEditorUtils.pickForm(this.keyframeEditor, this.editor, form, bone, false);
     }
 
     public Matrix4f getOrigin(float transition)
