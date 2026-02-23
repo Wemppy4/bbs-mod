@@ -127,11 +127,7 @@ public class UIDashboard extends UIBaseMenu
 
                 if (!this.main.isVisible() && this.panels.panel instanceof UIFilmPanel)
                 {
-                    int w = Math.max(2, BBSSettings.videoSettings.width.get());
-                    int h = Math.max(2, BBSSettings.videoSettings.height.get());
-                    if (w % 2 != 0) w++;
-                    if (h % 2 != 0) h++;
-                    BBSRendering.setCustomSize(true, w, h);
+                    UIFilmPanel.applyExportSizeToBBS();
                 }
             }
         }).category(category);

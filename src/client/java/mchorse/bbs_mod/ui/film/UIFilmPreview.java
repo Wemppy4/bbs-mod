@@ -174,12 +174,8 @@ public class UIFilmPreview extends UIElement
             }
 
             int duration = this.panel.getData().camera.calculateDuration();
-            int exportW = Math.max(2, BBSSettings.videoSettings.width.get());
-            int exportH = Math.max(2, BBSSettings.videoSettings.height.get());
-            if (exportW % 2 != 0) exportW++;
-            if (exportH % 2 != 0) exportH++;
-            BBSRendering.setCustomSize(true, exportW, exportH);
-            this.panel.recorder.startRecording(duration, BBSRendering.getTexture().id, exportW, exportH);
+            UIFilmPanel.applyExportSizeToBBS();
+            this.panel.recorder.startRecording(duration, BBSRendering.getTexture().id, BBSRendering.getVideoWidth(), BBSRendering.getVideoHeight());
         });
         this.recordVideo.tooltip(UIKeys.CAMERA_TOOLTIPS_RECORD);
         this.recordVideo.context((menu) ->

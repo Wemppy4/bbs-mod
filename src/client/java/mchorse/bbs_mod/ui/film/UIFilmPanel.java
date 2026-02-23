@@ -447,6 +447,19 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     }
 
     /**
+     * Sets BBS fake window size to export resolution (from video settings).
+     * Use when starting record, or when entering F1 fullscreen in film panel.
+     */
+    public static void applyExportSizeToBBS()
+    {
+        int w = Math.max(2, BBSSettings.videoSettings.width.get());
+        int h = Math.max(2, BBSSettings.videoSettings.height.get());
+        if (w % 2 != 0) w++;
+        if (h % 2 != 0) h++;
+        BBSRendering.setCustomSize(true, w, h);
+    }
+
+    /**
      * Restores BBS fake window size to the preview block size. Call after recording
      * ends so the preview is no longer at export resolution.
      */
