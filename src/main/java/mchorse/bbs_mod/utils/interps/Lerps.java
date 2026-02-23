@@ -40,13 +40,17 @@ public class Lerps
     }
 
 //    B-Spline interpolation
-    public static double bSpline(double y0, double y1, double y2, double y3, double x) {
-        double a = -y0 + 3 * y1 - 3 * y2 + y3;
-        double b = 3 * y0 - 6 * y1 + 3 * y2;
-        double c = -3 * y0 + 3 * y2;
-        double d = y0 + 4 * y1 + y2;
+    public static double bSpline(double p0, double p1, double p2, double p3, double t)
+    {
+        double t2 = t * t;
+        double t3 = t2 * t;
 
-        return (((a * x + b) * x + c) * x + d) / 6.0;
+        double w0 = (1 - 3*t + 3*t2 - t3) / 6f;
+        double w1 = (4       - 6*t2 + 3*t3) / 6f;
+        double w2 = (1 + 3*t + 3*t2 - 3*t3) / 6f;
+        double w3 = (t3) / 6f;
+
+        return w0*p0 + w1*p1 + w2*p2 + w3*p3;
     }
 
     /**
