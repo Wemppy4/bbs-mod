@@ -350,7 +350,7 @@ public class UIFilmPreview extends UIElement
                 innerY = area.y + (area.h - innerH) / 2;
             }
 
-            int bandColor = Colors.setA(0, 0.5F);
+            int bandColor = Colors.setA(0, BBSSettings.cameraEditorExportBandsOpacity.get());
             if (area.y < innerY)
                 context.batcher.box(area.x, area.y, area.ex(), innerY, bandColor);
             if (innerY + innerH < area.ey())

@@ -11,6 +11,8 @@
 	"bbs.config.appearance.freeze_models-comment": "When enabled, models in form picker won't follow the mouse",
 	"bbs.config.appearance.gizmos": "Gizmos",
 	"bbs.config.appearance.gizmos-comment": "Whether grab-able axes elements for translation, scale and rotation are enabled",
+	"bbs.config.appearance.camera_editor_export_bands_opacity": "Export bands opacity",
+	"bbs.config.appearance.camera_editor_export_bands_opacity-comment": "Opacity of the black letterbox/pillarbox bands that show export resolution bounds in the film preview when the camera editor is open (0 = invisible, 1 = solid)",
 	"bbs.config.appearance.hsv_color_picker": "HSV picker",
 	"bbs.config.appearance.hsv_color_picker-comment": "When enabled, this option switches all color pickers to use HSV color model instead of RGB, which is more intuitive",
 	"bbs.config.appearance.language": "Language",

@@ -2,10 +2,11 @@
     "schemaVersion": 1,
     "id": "bbs",
     "version": "${version}",
-    "name": "BBS mod",
+    "name": "BBS FS mod",
     "description": "A new generation of video production mod",
     "authors": [
-        "McHorse"
+        "McHorse",
+        "Wemppy"
     ],
     "contributors": [
         "Chryfi (tracker clip)",
