@@ -78,6 +78,8 @@ public class BBSRendering
     private static Framebuffer clientFramebuffer;
     private static Texture texture;
 
+    private static Runnable pendingExportResolutionAction;
+
     public static int getMotionBlur()
     {
         return getMotionBlur(BBSSettings.videoSettings.frameRate.get(), getMotionBlurFactor());
@@ -383,6 +385,18 @@ public class BBSRendering
         texture.unbind();
 
         toggleFramebuffer(false);
+
+        if (pendingExportResolutionAction != null)
+        {
+            Runnable action = pendingExportResolutionAction;
+            pendingExportResolutionAction = null;
+            MinecraftClient.getInstance().execute(action);
+        }
+    }
+
+    public static void scheduleAfterNextExportFrame(Runnable action)
+    {
+        pendingExportResolutionAction = action;
     }
 
     public static void onRenderChunkLayer(MatrixStack stack)

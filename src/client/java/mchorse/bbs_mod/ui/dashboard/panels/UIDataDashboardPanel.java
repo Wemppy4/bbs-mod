@@ -107,11 +107,17 @@ public abstract class UIDataDashboardPanel <T extends ValueGroup> extends UICRUD
     {
         super.resize();
 
-        if (!this.openedBefore && this.getContext() != null)
+        if (!this.openedBefore && this.getContext() != null && this.shouldAutoOpenListOnFirstResize())
         {
             this.openOverlay.clickItself();
             this.openedBefore = true;
         }
+    }
+
+    /** If false, the list overlay is not auto-opened when the panel is first shown. Default true. */
+    protected boolean shouldAutoOpenListOnFirstResize()
+    {
+        return true;
     }
 
     @Override

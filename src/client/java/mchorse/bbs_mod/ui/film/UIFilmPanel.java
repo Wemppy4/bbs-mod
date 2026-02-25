@@ -222,7 +222,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             else
                 layout.setEditorSizeV(1F - layout.getEditorSizeV());
             this.setupEditorFlex(true);
-            UIUtils.playClick();
+            this.getRoot().resize();
         });
         this.swapSmallPanels.tooltip(UIKeys.FILM_SWAP_SMALL_PANELS, Direction.LEFT);
         this.swapSmallPanels.setVisible(false);
@@ -478,6 +478,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         {
             UIOverlay.addOverlay(this.getContext(), new UIFilmDetailsOverlayPanel(this.getData()), 300, 260);
         });
+    }
+
+    @Override
+    protected boolean shouldAutoOpenListOnFirstResize()
+    {
+        return false;
     }
 
     @Override

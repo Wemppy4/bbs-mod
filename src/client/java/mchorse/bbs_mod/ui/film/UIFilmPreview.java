@@ -12,6 +12,7 @@ import mchorse.bbs_mod.camera.data.Point;
 import mchorse.bbs_mod.camera.data.Position;
 import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.client.BBSRendering;
+import mchorse.bbs_mod.ui.framework.UIScreen;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.graphics.window.Window;
@@ -21,6 +22,7 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.dashboard.panels.UIDashboardPanels;
 import mchorse.bbs_mod.ui.film.controller.UIOnionSkinContextMenu;
 import mchorse.bbs_mod.ui.film.utils.UICameraUtils;
+import mchorse.bbs_mod.ui.framework.UIBaseMenu;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
@@ -183,17 +185,28 @@ public class UIFilmPreview extends UIElement
             menu.action(Icons.CAMERA, UIKeys.FILM_SCREENSHOT, () ->
             {
                 ScreenshotRecorder recorder = BBSModClient.getScreenshotRecorder();
-                Texture texture = BBSRendering.getTexture();
+                File output = Window.isAltPressed() ? null : recorder.getScreenshotFile();
 
-                recorder.takeScreenshot(Window.isAltPressed() ? null : recorder.getScreenshotFile(), texture.id, texture.width, texture.height);
+                UIFilmPanel.applyExportSizeToBBS();
+                BBSRendering.scheduleAfterNextExportFrame(() ->
+                {
+                    Texture texture = BBSRendering.getTexture();
+                    int w = BBSRendering.getVideoWidth();
+                    int h = BBSRendering.getVideoHeight();
+                    recorder.takeScreenshot(output, texture.id, w, h);
+                    this.panel.restorePreviewSize();
 
-                UIMessageFolderOverlayPanel overlayPanel = new UIMessageFolderOverlayPanel(
-                    UIKeys.FILM_SCREENSHOT_TITLE,
-                    UIKeys.FILM_SCREENSHOT_DESCRIPTION,
-                    recorder.getScreenshots()
-                );
-
-                UIOverlay.addOverlay(this.getContext(), overlayPanel);
+                    UIBaseMenu currentMenu = UIScreen.getCurrentMenu();
+                    if (currentMenu != null)
+                    {
+                        UIMessageFolderOverlayPanel overlayPanel = new UIMessageFolderOverlayPanel(
+                            UIKeys.FILM_SCREENSHOT_TITLE,
+                            UIKeys.FILM_SCREENSHOT_DESCRIPTION,
+                            recorder.getScreenshots()
+                        );
+                        UIOverlay.addOverlay(currentMenu.context, overlayPanel);
+                    }
+                });
             });
 
             menu.action(Icons.FILM, UIKeys.CAMERA_TOOLTIPS_OPEN_VIDEOS, () -> this.panel.recorder.openMovies());
