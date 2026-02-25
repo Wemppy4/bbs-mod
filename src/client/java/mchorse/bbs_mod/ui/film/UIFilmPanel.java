@@ -481,6 +481,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     }
 
     @Override
+    protected boolean shouldAutoOpenListOnFirstResize()
+    {
+        return false;
+    }
+
+    @Override
     public void resize()
     {
         super.resize();
