@@ -36,6 +36,7 @@ import mchorse.bbs_mod.utils.OS;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -50,8 +51,16 @@ public class UIValueMap
     {
         register(ValueBoolean.class, (value, ui) ->
         {
-            UIToggle toggle = UIValueFactory.booleanUI(value, null);
-
+            Consumer<UIToggle> callback = null;
+            if (value == BBSSettings.editorHorizontalClipEditorFollowsLayout && ui instanceof UISettingsOverlayPanel)
+            {
+                callback = (t) -> ((UISettingsOverlayPanel) ui).refresh();
+            }
+            UIToggle toggle = UIValueFactory.booleanUI(value, callback);
+            if (value == BBSSettings.editorHorizontalClipEditor)
+            {
+                toggle.setEnabled(!BBSSettings.editorHorizontalClipEditorFollowsLayout.get());
+            }
             toggle.resetFlex();
 
             return Arrays.asList(toggle);

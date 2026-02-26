@@ -253,6 +253,16 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             BBSSettings.editorLayoutSettings.setHorizontal(!BBSSettings.editorLayoutSettings.isHorizontal());
 
             this.setupEditorFlex(true);
+
+            if (BBSSettings.editorHorizontalClipEditorFollowsLayout.get())
+            {
+                for (UIClipsPanel editor : List.of(this.cameraEditor, this.actionEditor))
+                {
+                    Clip current = editor.getClip();
+                    if (current != null)
+                        editor.pickClip(current);
+                }
+            }
         });
         this.toggleHorizontal.tooltip(UIKeys.FILM_TOGGLE_LAYOUT, Direction.LEFT);
         this.openCameraEditor = new UIIcon(Icons.FRUSTUM, (b) -> this.showPanel(this.cameraEditor));

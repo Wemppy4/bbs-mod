@@ -91,6 +91,8 @@
 	"bbs.config.editor.guides_color-comment": "Color that will be used for rule of thirds and center lines (including transparency)",
 	"bbs.config.editor.horizontal_clip_editor": "Horizontal clip editor",
 	"bbs.config.editor.horizontal_clip_editor-comment": "Determines whether clip editor's elements will be organized vertically or horizontally",
+	"bbs.config.editor.horizontal_clip_editor_follows_layout": "Clip editor follows layout",
+	"bbs.config.editor.horizontal_clip_editor_follows_layout-comment": "When enabled, horizontal clip editor is tied to dashboard layout: horizontal layout = vertical editor, vertical layout = horizontal editor. The option above is ignored.",
 	"bbs.config.editor.horizontal_flight": "Horizontal flight",
 	"bbs.config.editor.horizontal_flight-comment": "When enabled, the pitch of the camera won't affect the movement making the WASD movement cardinal (XZ plane)",
 	"bbs.config.editor.jump": "Jump",

@@ -172,7 +172,7 @@ public abstract class UIClip <T extends Clip> extends UIElement
         this.envelope = new UIEnvelope(this);
         this.envelope.channel.setUndoId("envelope_keyframes");
 
-        boolean horizontal = BBSSettings.editorHorizontalClipEditor.get();
+        boolean horizontal = BBSSettings.isHorizontalClipEditorEffective();
 
         this.panels = new UIScrollView(horizontal ? ScrollDirection.HORIZONTAL : ScrollDirection.VERTICAL);
         this.panels.scroll.cancelScrolling();
