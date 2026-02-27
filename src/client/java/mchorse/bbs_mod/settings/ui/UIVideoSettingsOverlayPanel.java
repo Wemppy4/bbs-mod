@@ -26,6 +26,7 @@ public class UIVideoSettingsOverlayPanel extends UIOverlayPanel
     private UITrackpad motionBlur;
     private UITrackpad heldFrames;
     private UITextbox path;
+    private UIToggle openFolderAfterExport;
 
     public UIVideoSettingsOverlayPanel(ValueVideoSettings value)
     {
@@ -62,12 +63,15 @@ public class UIVideoSettingsOverlayPanel extends UIOverlayPanel
         this.heldFrames.limit(this.value.heldFrames.getMin(), this.value.heldFrames.getMax(), true);
         this.heldFrames.tooltip(UIKeys.VIDEO_SETTINGS_HELD_FRAMES_TOOLTIP);
         this.path = new UITextbox(1024, (s) -> this.value.path.set(s));
+        this.openFolderAfterExport = new UIToggle(UIKeys.VIDEO_SETTINGS_OPEN_FOLDER_AFTER_EXPORT, (b) -> this.value.openFolderAfterExport.set(b.getValue()));
+        this.openFolderAfterExport.tooltip(UIKeys.VIDEO_SETTINGS_OPEN_FOLDER_AFTER_EXPORT_TOOLTIP);
 
         this.editor = UI.scrollView(5, 6,
             UI.label(UIKeys.VIDEO_SETTINGS_ARGS),
             this.arguments,
             UI.label(UIKeys.VIDEO_SETTINGS_AUDIO_ARGS),
             this.argumentsAudio, this.audio,
+            this.openFolderAfterExport,
             UI.label(UIKeys.VIDEO_SETTINGS_RESOLUTION).marginTop(6),
             UI.row(this.width, this.flip, this.height),
             UI.label(UIKeys.VIDEO_SETTINGS_FRAME_RATE).marginTop(6),
@@ -119,5 +123,6 @@ public class UIVideoSettingsOverlayPanel extends UIOverlayPanel
         this.motionBlur.setValue(this.value.motionBlur.get());
         this.heldFrames.setValue(this.value.heldFrames.get());
         this.path.setText(this.value.path.get());
+        this.openFolderAfterExport.setValue(this.value.openFolderAfterExport.get());
     }
 }

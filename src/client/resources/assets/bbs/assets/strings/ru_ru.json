@@ -1093,6 +1093,8 @@
 	"bbs.ui.video_settings.motion_blur": "Размытие в движении",
 	"bbs.ui.video_settings.motion_blur-tooltip": "Чем больше число тем лучше качество размытия движения но также экспоненциально уйдёт больше времени на запись видео",
 	"bbs.ui.video_settings.path": "Путь экспортирования",
+	"bbs.ui.video_settings.open_folder_after_export": "Открыть папку после экспорта",
+	"bbs.ui.video_settings.open_folder_after_export-tooltip": "Если включено, после завершения рендера откроется папка с экспортированным видео в проводнике.",
 	"bbs.ui.video_settings.presets.shorts_1080p": "1080p для Шортсов (1080x1920 - 60 FPS)",
 	"bbs.ui.video_settings.resolution": "Разрешение кадра",
 	"bbs.ui.video_settings.title": "Настройки видео экспорта",

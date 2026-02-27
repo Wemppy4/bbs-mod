@@ -6,6 +6,7 @@ import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.utils.UIUtils;
+import net.minecraft.client.MinecraftClient;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.system.MemoryUtil;
 import sun.misc.Unsafe;
@@ -248,6 +249,12 @@ public class VideoRecorder
         if (BBSModClient.getSounds().play(RENDER_COMPLETE_SOUND) == null)
         {
             UIUtils.playClick(0.5F);
+        }
+
+        if (BBSSettings.videoSettings.openFolderAfterExport.get())
+        {
+            File folder = BBSRendering.getVideoFolder();
+            MinecraftClient.getInstance().execute(() -> UIUtils.openFolder(folder));
         }
 
         this.serverTicks = this.lastServerTicks = 0;

@@ -19,6 +19,7 @@ public class ValueVideoSettings extends ValueGroup
     public final ValueInt motionBlur = new ValueInt("motionBlur", 0, 0, 6);
     public final ValueInt heldFrames = new ValueInt("heldFrames", 1, 1, 1000);
     public final ValueString path = new ValueString("exportPath", "");
+    public final ValueBoolean openFolderAfterExport = new ValueBoolean("openFolderAfterExport", false);
 
     public ValueVideoSettings(String id)
     {
@@ -33,5 +34,6 @@ public class ValueVideoSettings extends ValueGroup
         this.add(this.motionBlur);
         this.add(this.heldFrames);
         this.add(this.path);
+        this.add(this.openFolderAfterExport);
     }
 }

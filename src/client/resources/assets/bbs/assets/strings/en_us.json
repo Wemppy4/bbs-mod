@@ -1100,6 +1100,8 @@
 	"bbs.ui.video_settings.motion_blur": "Motion blur",
 	"bbs.ui.video_settings.motion_blur-tooltip": "The bigger the number, the better quality of motion blur, but also the longer it will take to record",
 	"bbs.ui.video_settings.path": "Export path",
+	"bbs.ui.video_settings.open_folder_after_export": "Open folder after export",
+	"bbs.ui.video_settings.open_folder_after_export-tooltip": "When enabled, the folder containing the exported video will open in the system file manager after the render completes.",
 	"bbs.ui.video_settings.presets.1080p": "1080p (1920x1080 - 60 FPS)",
 	"bbs.ui.video_settings.presets.1440p": "1440p (2560x1440 - 60 FPS)",
 	"bbs.ui.video_settings.presets.4k": "4K (3840x2160 - 60 FPS)",
