@@ -86,6 +86,7 @@ import mchorse.bbs_mod.utils.pose.Transform;
 
 public class UIReplaysEditor extends UIElement
 {
+
     private static final Map<String, Integer> COLORS = new HashMap<>();
     private static final Map<String, Icon> ICONS = new HashMap<>();
     private static String lastFilm = "";

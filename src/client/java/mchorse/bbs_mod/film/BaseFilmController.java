@@ -5,6 +5,7 @@ import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import mchorse.bbs_mod.client.renderer.ModelBlockEntityRenderer;
 import mchorse.bbs_mod.entity.ActorEntity;
+import mchorse.bbs_mod.film.replays.PerLimbService;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
@@ -182,9 +183,10 @@ public abstract class BaseFilmController
 
     private static void renderAxes(String bone, boolean local, StencilMap stencilMap, Form form, IEntity entity, float transition, MatrixStack stack)
     {
+        String mapKey = bone != null && bone.contains(PerLimbService.POSE_BONES) ? bone.replace(PerLimbService.POSE_BONES, "") : bone;
         Form root = FormUtils.getRoot(form);
         MatrixCache map = FormUtilsClient.getRenderer(root).collectMatrices(entity, transition);
-        Matrix4f matrix = local ? map.get(bone).matrix() : map.get(bone).origin();
+        Matrix4f matrix = local ? map.get(mapKey).matrix() : map.get(mapKey).origin();
 
         if (matrix != null)
         {
