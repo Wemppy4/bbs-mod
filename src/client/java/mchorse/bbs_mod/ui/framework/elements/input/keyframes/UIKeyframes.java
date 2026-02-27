@@ -1060,9 +1060,6 @@ public class UIKeyframes extends UIElement
             }
 
             sheet.selection.add(found);
-
-            found = this.currentGraph.getSelected();
-
             this.pickKeyframe(found);
         }
         else if (!this.selecting)

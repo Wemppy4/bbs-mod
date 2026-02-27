@@ -922,6 +922,8 @@ public class UIKeys
     public static final IKey VIDEO_SETTINGS_MOTION_BLUR = L10n.lang("bbs.ui.video_settings.motion_blur");
     public static final IKey VIDEO_SETTINGS_MOTION_BLUR_TOOLTIP = L10n.lang("bbs.ui.video_settings.motion_blur-tooltip");
     public static final IKey VIDEO_SETTINGS_PATH = L10n.lang("bbs.ui.video_settings.path");
+    public static final IKey VIDEO_SETTINGS_OPEN_FOLDER_AFTER_EXPORT = L10n.lang("bbs.ui.video_settings.open_folder_after_export");
+    public static final IKey VIDEO_SETTINGS_OPEN_FOLDER_AFTER_EXPORT_TOOLTIP = L10n.lang("bbs.ui.video_settings.open_folder_after_export-tooltip");
     public static final IKey VIDEO_SETTINGS_PRESETS_1080P = L10n.lang("bbs.ui.video_settings.presets.1080p");
     public static final IKey VIDEO_SETTINGS_PRESETS_1440P = L10n.lang("bbs.ui.video_settings.presets.1440p");
     public static final IKey VIDEO_SETTINGS_PRESETS_4K = L10n.lang("bbs.ui.video_settings.presets.4k");

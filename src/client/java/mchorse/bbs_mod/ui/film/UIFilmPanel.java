@@ -531,9 +531,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     }
 
     /**
-     * Applies the preview block size to BBSRendering so the fake window resolution
-     * matches the UI preview area. Called when the user finishes resizing the preview
-     * and when the panel is laid out (so preview size is used instead of export settings).
+     * Applies the preview or export size to BBSRendering. When the camera editor is
+     * visible, uses export resolution so the preview matches export proportions.
+     * Otherwise uses the UI preview area size. Called when the user finishes resizing
+     * the preview, when the panel is laid out, and when switching to/from camera editor.
      */
     private void applyPreviewSizeToBBS()
     {
@@ -542,18 +543,31 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             return;
         }
 
-        float scale = BBSSettings.editorPreviewResolutionScale.get();
-        int previewW = this.preview.area.w;
-        int previewH = this.preview.area.h;
-        int w = Math.max(2, (int) (previewW * scale));
-        int h = Math.max(2, (int) (previewH * scale));
+        int w;
+        int h;
+
+        boolean useExportSize = !BBSSettings.editorPreviewAutoSize.get()
+            || this.cameraEditor.isVisible();
+        if (useExportSize)
+        {
+            w = Math.max(2, BBSSettings.videoSettings.width.get());
+            h = Math.max(2, BBSSettings.videoSettings.height.get());
+        }
+        else
+        {
+            float scale = BBSSettings.editorPreviewResolutionScale.get();
+            int previewW = this.preview.area.w;
+            int previewH = this.preview.area.h;
+            w = Math.max(2, (int) (previewW * scale));
+            h = Math.max(2, (int) (previewH * scale));
+        }
 
         if (w % 2 != 0) w++;
         if (h % 2 != 0) h++;
 
         boolean applied = w != BBSRendering.getVideoWidth() || h != BBSRendering.getVideoHeight();
-        LOGGER.info("[BBS film] applyPreviewSizeToBBS preview.area={}x{} -> w={} h={} applied={}",
-            previewW, previewH, w, h, applied);
+        LOGGER.info("[BBS film] applyPreviewSizeToBBS autoSize={} cameraEditor={} -> w={} h={} applied={}",
+            BBSSettings.editorPreviewAutoSize.get(), this.cameraEditor.isVisible(), w, h, applied);
 
         if (applied)
         {
@@ -594,6 +608,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.actionEditor.setVisible(false);
 
         element.setVisible(true);
+
+        this.applyPreviewSizeToBBS();
 
         if (this.isFlying())
         {

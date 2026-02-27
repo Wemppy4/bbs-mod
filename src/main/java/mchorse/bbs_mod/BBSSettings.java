@@ -36,7 +36,6 @@ public class BBSSettings
     public static ValueBoolean uniformScale;
     public static ValueBoolean clickSound;
     public static ValueBoolean gizmos;
-    public static ValueFloat cameraEditorExportBandsOpacity;
 
     public static ValueBoolean enableCursorRendering;
     public static ValueBoolean enableMouseButtonRendering;
@@ -85,6 +84,7 @@ public class BBSSettings
     public static ValueBoolean editorHorizontalClipEditorFollowsLayout;
     public static ValueBoolean editorMinutesBackup;
     public static ValueInt editorTrackWidth;
+    public static ValueBoolean editorPreviewAutoSize;
     public static ValueFloat editorPreviewResolutionScale;
 
     public static ValueFloat recordingCountdown;
@@ -183,7 +183,6 @@ public class BBSSettings
         uniformScale = builder.getBoolean("uniform_scale", false);
         clickSound = builder.getBoolean("click_sound", false);
         gizmos = builder.getBoolean("gizmos", true);
-        cameraEditorExportBandsOpacity = builder.getFloat("camera_editor_export_bands_opacity", 0.5F, 0F, 1F);
         editorTrackWidth = builder.getInt("track_width", 2, 1, 10);
         favoriteColors = new ValueColors("favorite_colors");
         disabledSheets = new ValueStringKeys("disabled_sheets");
@@ -199,7 +198,7 @@ public class BBSSettings
         keystrokeMode = builder.getInt("keystrokes_position", 1);
 
         builder.category("background");
-        backgroundImage = builder.getRL("image", Link.assets("textures/banners/bg2.png"));
+        backgroundImage = builder.getRL("image", Link.assets("textures/banners/bg.png"));
         backgroundColor = builder.getInt("color", Colors.WHITE).colorAlpha();
 
         builder.category("chroma_sky");
@@ -245,6 +244,7 @@ public class BBSSettings
         editorHorizontalClipEditor = builder.getBoolean("horizontal_clip_editor", true);
         editorHorizontalClipEditorFollowsLayout = builder.getBoolean("horizontal_clip_editor_follows_layout", true);
         editorMinutesBackup = builder.getBoolean("minutes_backup", true);
+        editorPreviewAutoSize = builder.getBoolean("preview_auto_size", true);
         editorPreviewResolutionScale = builder.getFloat("preview_resolution_scale", 2F, 1F, 3F);
 
         builder.category("recording");

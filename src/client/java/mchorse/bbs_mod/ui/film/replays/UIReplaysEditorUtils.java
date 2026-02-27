@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 
 public class UIReplaysEditorUtils
 {
+
     public static UIPropTransform getEditableTransform(UIKeyframeEditor editor)
     {
         if (editor == null || editor.editor == null)
@@ -97,6 +98,15 @@ public class UIReplaysEditorUtils
         if (sheet != null)
         {
             return sheet;
+        }
+
+        /* Fallback: match by id ignoring case (stencil may return "head", sheet id may be "pose.bones.Head") */
+        for (UIKeyframeSheet s : graph.getSheets())
+        {
+            if (s.id != null && s.id.equalsIgnoreCase(boneKey))
+            {
+                return s;
+            }
         }
 
         return getActivePoseSheet(keyframeEditor, formPath);
@@ -164,15 +174,21 @@ public class UIReplaysEditorUtils
 
         Keyframe closest = getClosestKeyframe(sheet, tick);
 
+        /* Bone display key for pose editor: include form path so child bones (e.g. 0/head) select correctly */
+        PerLimbService.PoseBonePath path = PerLimbService.parsePoseBonePath(sheet.id);
+        String boneForEditor = path != null && !path.formPath().isEmpty()
+            ? path.formPath() + "/" + path.bone()
+            : bone;
+
         if (closest != null)
         {
-            selectKeyframe(graph, closest);
-            updatePoseEditorBoneSelection(keyframeEditor, bone);
+            forceSelectInSheet(graph, sheet, closest);
+            updatePoseEditorBoneSelection(keyframeEditor, boneForEditor);
             filmPanel.setCursor((int) closest.getTick());
         }
         else
         {
-            updatePoseEditorBoneSelection(keyframeEditor, bone);
+            updatePoseEditorBoneSelection(keyframeEditor, boneForEditor);
         }
     }
 
@@ -183,26 +199,12 @@ public class UIReplaysEditorUtils
         return segment != null ? segment.getClosest() : null;
     }
 
-    private static void selectKeyframe(IUIKeyframeGraph graph, Keyframe closest)
+    private static void forceSelectInSheet(IUIKeyframeGraph graph, UIKeyframeSheet sheet, Keyframe keyframe)
     {
-        if (graph.getSelected() == closest)
-        {
-            return;
-        }
-
-        boolean select = true;
-
-        for (UIKeyframeSheet graphSheet : graph.getSheets())
-        {
-            if (graphSheet.selection.getSelected().contains(closest))
-            {
-                select = false;
-                break;
-            }
-        }
-
-        if (select) graph.selectKeyframe(closest);
-        else graph.pickKeyframe(closest);
+        /* World-pick must deterministically activate exactly clicked sheet/keyframe */
+        graph.clearSelection();
+        sheet.selection.add(keyframe);
+        graph.pickKeyframe(keyframe);
     }
 
     private static void updatePoseEditorBoneSelection(UIKeyframeEditor keyframeEditor, String bone)
@@ -212,9 +214,6 @@ public class UIReplaysEditorUtils
         {
             poseFactory.poseEditor.selectBone(bone);
         }
-        
-        /* Также обновляем выбор в основном редакторе ключевых кадров */
-        keyframeEditor.view.getGraph().pickKeyframe(keyframeEditor.view.getGraph().getSelected());
     }
 
     /* Converting Blockbench model keyframes to pose keyframes */

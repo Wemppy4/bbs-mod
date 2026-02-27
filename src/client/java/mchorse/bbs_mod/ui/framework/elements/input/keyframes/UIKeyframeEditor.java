@@ -142,9 +142,14 @@ public class UIKeyframeEditor extends UIElement
 
                 if (id.startsWith("pose"))
                 {
-                    int i = sheet.id.lastIndexOf('/');
-
-                    bone = i >= 0 ? sheet.id.substring(0, i + 1) + currentFirst : currentFirst;
+                    PerLimbService.PoseBonePath path = PerLimbService.parsePoseBonePath(sheet.id);
+                    if (path != null)
+                        bone = path.formPath().isEmpty() ? currentFirst : path.formPath() + "/" + currentFirst;
+                    else
+                    {
+                        int i = sheet.id.lastIndexOf('/');
+                        bone = i >= 0 ? sheet.id.substring(0, i + 1) + currentFirst : currentFirst;
+                    }
                     local = pose.poseEditor.transform.isLocal();
                 }
             }
@@ -161,7 +166,7 @@ public class UIKeyframeEditor extends UIElement
 
                 if (poseBonePath != null)
                 {
-                    bone = poseBonePath.bone();
+                    bone = poseBonePath.formPath().isEmpty() ? poseBonePath.bone() : poseBonePath.formPath() + "/" + poseBonePath.bone();
                     local = transform.transform.isLocal();
                 }
                 else if (id.startsWith("transform"))
@@ -183,7 +188,7 @@ public class UIKeyframeEditor extends UIElement
 
                 if (poseBonePath != null)
                 {
-                    bone = poseBonePath.bone();
+                    bone = poseBonePath.formPath().isEmpty() ? poseBonePath.bone() : poseBonePath.formPath() + "/" + poseBonePath.bone();
                     local = poseTransform.transform.isLocal();
                 }
             }

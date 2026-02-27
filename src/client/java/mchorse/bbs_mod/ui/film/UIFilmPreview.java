@@ -59,8 +59,6 @@ public class UIFilmPreview extends UIElement
     private List<AudioClip> clips = new ArrayList<>();
     private UIFilmPanel panel;
 
-    private final Area guidesArea = new Area();
-
     public UIElement icons;
 
     public UIIcon replays;
@@ -278,35 +276,6 @@ public class UIFilmPreview extends UIElement
         return area;
     }
 
-    private void getGuidesArea(Area viewport, Area out)
-    {
-        if (!this.panel.cameraEditor.isVisible())
-        {
-            out.copy(viewport);
-            return;
-        }
-
-        int exportW = Math.max(1, BBSSettings.videoSettings.width.get());
-        int exportH = Math.max(1, BBSSettings.videoSettings.height.get());
-        float exportAspect = exportW / (float) exportH;
-        float viewAspect = viewport.w / (float) viewport.h;
-
-        if (viewAspect > exportAspect)
-        {
-            int innerW = (int) (viewport.h * exportAspect);
-            int innerX = viewport.x + (viewport.w - innerW) / 2;
-            out.setPos(innerX, viewport.y);
-            out.setSize(innerW, viewport.h);
-        }
-        else
-        {
-            int innerH = (int) (viewport.w / exportAspect);
-            int innerY = viewport.y + (viewport.h - innerH) / 2;
-            out.setPos(viewport.x, innerY);
-            out.setSize(viewport.w, innerH);
-        }
-    }
-
     @Override
     protected boolean subMouseClicked(UIContext context)
     {
@@ -339,61 +308,40 @@ public class UIFilmPreview extends UIElement
 
         this.renderCursor(context);
 
-        boolean needGuides = this.panel.cameraEditor.isVisible()
-            || BBSSettings.editorRuleOfThirds.get()
+        boolean needGuides = BBSSettings.editorRuleOfThirds.get()
             || BBSSettings.editorCenterLines.get()
             || BBSSettings.editorCrosshair.get();
         if (needGuides)
-            this.getGuidesArea(area, this.guidesArea);
-
-        /* Render rule of thirds (inside export frame when camera editor shows bands) */
-        if (BBSSettings.editorRuleOfThirds.get())
         {
-            int guidesColor = BBSSettings.editorGuidesColor.get();
-            Area g = this.guidesArea;
+            if (BBSSettings.editorRuleOfThirds.get())
+            {
+                int guidesColor = BBSSettings.editorGuidesColor.get();
 
-            context.batcher.box(g.x + g.w / 3 - 1, g.y, g.x + g.w / 3, g.y + g.h, guidesColor);
-            context.batcher.box(g.x + g.w - g.w / 3, g.y, g.x + g.w - g.w / 3 + 1, g.y + g.h, guidesColor);
+                context.batcher.box(area.x + area.w / 3 - 1, area.y, area.x + area.w / 3, area.y + area.h, guidesColor);
+                context.batcher.box(area.x + area.w - area.w / 3, area.y, area.x + area.w - area.w / 3 + 1, area.y + area.h, guidesColor);
 
-            context.batcher.box(g.x, g.y + g.h / 3 - 1, g.x + g.w, g.y + g.h / 3, guidesColor);
-            context.batcher.box(g.x, g.y + g.h - g.h / 3, g.x + g.w, g.y + g.h - g.h / 3 + 1, guidesColor);
-        }
+                context.batcher.box(area.x, area.y + area.h / 3 - 1, area.x + area.w, area.y + area.h / 3, guidesColor);
+                context.batcher.box(area.x, area.y + area.h - area.h / 3, area.x + area.w, area.y + area.h - area.h / 3 + 1, guidesColor);
+            }
 
-        if (BBSSettings.editorCenterLines.get())
-        {
-            int guidesColor = BBSSettings.editorGuidesColor.get();
-            Area g = this.guidesArea;
-            int x = g.mx();
-            int y = g.my();
+            if (BBSSettings.editorCenterLines.get())
+            {
+                int guidesColor = BBSSettings.editorGuidesColor.get();
+                int x = area.mx();
+                int y = area.my();
 
-            context.batcher.box(g.x, y, g.ex(), y + 1, guidesColor);
-            context.batcher.box(x, g.y, x + 1, g.ey(), guidesColor);
-        }
+                context.batcher.box(area.x, y, area.ex(), y + 1, guidesColor);
+                context.batcher.box(x, area.y, x + 1, area.ey(), guidesColor);
+            }
 
-        if (BBSSettings.editorCrosshair.get())
-        {
-            Area g = this.guidesArea;
-            int x = g.mx() + 1;
-            int y = g.my() + 1;
+            if (BBSSettings.editorCrosshair.get())
+            {
+                int x = area.mx() + 1;
+                int y = area.my() + 1;
 
-            context.batcher.box(x - 4, y - 1, x + 3, y, Colors.setA(Colors.WHITE, 0.5F));
-            context.batcher.box(x - 1, y - 4, x, y + 3, Colors.setA(Colors.WHITE, 0.5F));
-        }
-
-        /* Export resolution frame: semi-transparent bands when camera editor is active */
-        if (this.panel.cameraEditor.isVisible())
-        {
-            int bandColor = Colors.setA(0, BBSSettings.cameraEditorExportBandsOpacity.get());
-            Area g = this.guidesArea;
-
-            if (area.y < g.y)
-                context.batcher.box(area.x, area.y, area.ex(), g.y, bandColor);
-            if (g.ey() < area.ey())
-                context.batcher.box(area.x, g.ey(), area.ex(), area.ey(), bandColor);
-            if (area.x < g.x)
-                context.batcher.box(area.x, g.y, g.x, g.ey(), bandColor);
-            if (g.ex() < area.ex())
-                context.batcher.box(g.ex(), g.y, area.ex(), g.ey(), bandColor);
+                context.batcher.box(x - 4, y - 1, x + 3, y, Colors.setA(Colors.WHITE, 0.5F));
+                context.batcher.box(x - 1, y - 4, x, y + 3, Colors.setA(Colors.WHITE, 0.5F));
+            }
         }
 
         /* Current window resolution label (bottom-right, same style as replay name) */
