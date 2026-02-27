@@ -198,7 +198,7 @@ public class BBSSettings
         keystrokeMode = builder.getInt("keystrokes_position", 1);
 
         builder.category("background");
-        backgroundImage = builder.getRL("image", Link.assets("textures/banners/bg2.png"));
+        backgroundImage = builder.getRL("image", Link.assets("textures/banners/bg.png"));
         backgroundColor = builder.getInt("color", Colors.WHITE).colorAlpha();
 
         builder.category("chroma_sky");
