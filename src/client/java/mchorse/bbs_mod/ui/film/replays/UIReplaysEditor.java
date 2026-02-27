@@ -223,7 +223,8 @@ public class UIReplaysEditor extends UIElement
         if (topLevel.startsWith("pose_overlay")) return COLORS.get("pose_overlay");
         if (topLevel.startsWith("transform_overlay")) return COLORS.get("transform_overlay");
 
-        return COLORS.getOrDefault(topLevel, Colors.ACTIVE);
+        if (COLORS.containsKey(topLevel)) return COLORS.get(topLevel);
+        return Colors.HSVtoRGB(Math.abs((key.hashCode() % 360) / 360F), 0.7F, 0.7F).getRGBColor();
     }
 
     public static boolean renderBackground(UIContext context, UIKeyframes keyframes, Clips camera, int clipOffset)
@@ -453,22 +454,17 @@ public class UIReplaysEditor extends UIElement
 
         for (UIKeyframeSheet sheet : sheets)
         {
-            String name = StringUtils.fileName(sheet.id);
-            if (sheet.isBoneTrack)
-            {
-                continue;
-            }
-
-            this.keys.add(name);
+            this.keys.add(sheet.isBoneTrack ? sheet.title.get() : StringUtils.fileName(sheet.id));
         }
 
         Set<String> disabled = BBSSettings.disabledSheets.get();
 
         sheets.removeIf((v) ->
         {
+            String filterKey = v.isBoneTrack ? v.title.get() : StringUtils.fileName(v.id);
             for (String s : disabled)
             {
-                if (v.id.equals(s) || v.id.endsWith("/" + s))
+                if (filterKey.equals(s) || v.id.equals(s) || v.id.endsWith("/" + s))
                 {
                     return true;
                 }

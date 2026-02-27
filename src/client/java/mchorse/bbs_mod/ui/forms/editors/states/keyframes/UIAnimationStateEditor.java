@@ -168,12 +168,7 @@ public class UIAnimationStateEditor extends UIElement
 
         for (UIKeyframeSheet sheet : sheets)
         {
-            if (sheet.isBoneTrack)
-            {
-                continue;
-            }
-
-            this.keys.add(StringUtils.fileName(sheet.id));
+            this.keys.add(sheet.isBoneTrack ? sheet.title.get() : StringUtils.fileName(sheet.id));
         }
 
         sheets.removeIf((v) ->
@@ -183,9 +178,10 @@ public class UIAnimationStateEditor extends UIElement
                 return true;
             }
 
+            String filterKey = v.isBoneTrack ? v.title.get() : StringUtils.fileName(v.id);
             for (String s : BBSSettings.disabledSheets.get())
             {
-                if (v.id.equals(s) || v.id.endsWith("/" + s))
+                if (filterKey.equals(s) || v.id.equals(s) || v.id.endsWith("/" + s))
                 {
                     return true;
                 }
