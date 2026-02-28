@@ -84,10 +84,7 @@ public class UIDashboard extends UIBaseMenu
                 this.orbit.setFovRoll(panel.supportsRollFOVControl());
             }
 
-            if (e.lastPanel != e.panel)
-            {
-                this.copyCurrentEntityCamera();
-            }
+            this.copyCurrentEntityCamera();
         });
         this.panels.full(this.viewport);
         this.registerPanels();
