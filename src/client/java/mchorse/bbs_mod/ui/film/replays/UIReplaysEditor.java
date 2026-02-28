@@ -225,7 +225,7 @@ public class UIReplaysEditor extends UIElement
         if (topLevel.startsWith("transform_overlay")) return COLORS.get("transform_overlay");
 
         if (COLORS.containsKey(topLevel)) return COLORS.get(topLevel);
-        return Colors.HSVtoRGB(Math.abs((key.hashCode() % 360) / 360F), 0.7F, 0.7F).getRGBColor();
+        return Colors.BLUE;
     }
 
     public static boolean renderBackground(UIContext context, UIKeyframes keyframes, Clips camera, int clipOffset)
@@ -557,7 +557,13 @@ public class UIReplaysEditor extends UIElement
                     menu.action(Icons.FILTER, UIKeys.FILM_REPLAY_FILTER_SHEETS, () ->
                     {
                         Set<String> disabledSet = BBSSettings.disabledSheets.get();
-                        UIKeyframeSheetFilterOverlayPanel panel = new UIKeyframeSheetFilterOverlayPanel(disabledSet, this.keys);
+                        Map<String, Integer> keyToColor = new HashMap<>();
+                        for (UIKeyframeSheet sheet : this.keyframeEditor.view.getGraph().getSheets())
+                        {
+                            String k = sheet.isBoneTrack ? sheet.title.get() : StringUtils.fileName(sheet.id);
+                            keyToColor.put(k, sheet.color);
+                        }
+                        UIKeyframeSheetFilterOverlayPanel panel = new UIKeyframeSheetFilterOverlayPanel(disabledSet, this.keys, keyToColor);
 
                         UIOverlay.addOverlay(this.getContext(), panel, 240, 0.9F);
 
