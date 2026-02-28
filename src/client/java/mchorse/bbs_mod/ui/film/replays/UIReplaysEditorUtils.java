@@ -86,6 +86,19 @@ public class UIReplaysEditorUtils
             {
                 return;
             }
+            String mainPoseId = path.isEmpty() ? "pose" : path + FormUtils.PATH_SEPARATOR + "pose";
+            if (currentSheet != null && mainPoseId.equals(currentSheet.id))
+            {
+                int tick = cursor.getCursor();
+                Keyframe closest = getClosestKeyframe(currentSheet, tick);
+                if (closest != null)
+                {
+                    forceSelectInSheet(graph, currentSheet, closest);
+                    cursor.setCursor((int) closest.getTick());
+                }
+                updatePoseEditorBoneSelection(keyframeEditor, bone);
+                return;
+            }
         }
 
         if (insert)
