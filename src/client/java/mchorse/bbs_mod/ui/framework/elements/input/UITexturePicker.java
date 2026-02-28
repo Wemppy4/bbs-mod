@@ -729,7 +729,14 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
         }
         else if (context.isPressed(GLFW.GLFW_KEY_ESCAPE) && this.canBeClosed)
         {
-            this.close();
+            if (this.pixelEditor != null)
+            {
+                this.togglePixelEditor();
+            }
+            else
+            {
+                this.close();
+            }
 
             return true;
         }
