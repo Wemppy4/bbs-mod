@@ -17,10 +17,11 @@ import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.utils.UIConstants;
+import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Direction;
-import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.MathUtils;
+import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.resources.Pixels;
@@ -66,6 +67,18 @@ public class UITexturePainter extends UIElement
     private UIIcon addTabButton;
     private UIElement content;
     private Consumer<Link> saveCallback;
+
+    private static void setupButtonColors(UIButton tabButton, int index, int primary)
+    {
+        if (index == currentIndex)
+        {
+            tabButton.color(Colors.mulRGB(primary, 0.25F), Colors.mulRGB(primary, 0.35F));
+        }
+        else
+        {
+            tabButton.color(0, 0);
+        }
+    }
 
     public UITexturePainter(Consumer<Link> saveCallback)
     {
@@ -152,6 +165,7 @@ public class UITexturePainter extends UIElement
         this.keys().register(Keys.PIXEL_FILL, this::fillColor).inside().category(category);
         this.keys().register(Keys.PIXEL_BRUSH_DEC, () -> this.adjustBrushSize(-1)).inside().category(category);
         this.keys().register(Keys.PIXEL_BRUSH_INC, () -> this.adjustBrushSize(1)).inside().category(category);
+        this.keys().register(Keys.CYCLE_PANELS, this::cycleTabs).inside().category(category);
     }
 
     private void adjustBrushSize(int delta)
@@ -165,6 +179,27 @@ public class UITexturePainter extends UIElement
 
         this.brushSize.setValue(n);
         this.setBrushSize(n);
+    }
+
+    private void cycleTabs()
+    {
+        if (documents.size() <= 1)
+        {
+            return;
+        }
+
+        currentIndex = MathUtils.cycler(currentIndex + (Window.isShiftPressed() ? -1 : 1), documents);
+        this.showCurrentEditor();
+
+        int primary = BBSSettings.primaryColor.get() | Colors.A100;
+        List<UIButton> children = this.tabsContainer.getChildren(UIButton.class);
+
+        for (int j = 0; j < children.size(); j++)
+        {
+            setupButtonColors(children.get(j), j, primary);
+        }
+
+        UIUtils.playClick();
     }
 
     private UITextureEditor createEditor(Link link, Pixels pixels)
@@ -257,18 +292,13 @@ public class UITexturePainter extends UIElement
         }
 
         Document doc = documents.get(index);
+
         doc.editor.removeFromParent();
         doc.pixels.delete();
+        doc.editor.deleteTexture();
         documents.remove(index);
 
-        if (currentIndex >= documents.size())
-        {
-            currentIndex = documents.size() - 1;
-        }
-        else if (index < currentIndex)
-        {
-            currentIndex--;
-        }
+        currentIndex = MathUtils.clamp(currentIndex - 1, 0, documents.size());
 
         this.rebuildTabButtons();
         this.showCurrentEditor();
@@ -288,36 +318,20 @@ public class UITexturePainter extends UIElement
             UIButton tab = new UIButton(IKey.raw(StringUtils.fileName(doc.link.path)), (b) ->
             {
                 currentIndex = index;
+
                 this.showCurrentEditor();
 
                 List<UIButton> children = this.tabsContainer.getChildren(UIButton.class);
 
                 for (int j = 0; j < children.size(); j++)
                 {
-                    UIButton bb = children.get(j);
-
-                    if (j == currentIndex)
-                    {
-                        bb.color(Colors.mulRGB(primary, 0.25F), Colors.mulRGB(primary, 0.35F));
-                    }
-                    else
-                    {
-                        bb.color(0, 0);
-                    }
+                    setupButtonColors(children.get(j), j, primary);
                 }
             });
 
             tab.tooltip(IKey.raw(doc.link.path), Direction.BOTTOM);
 
-            if (i == currentIndex)
-            {
-                tab.color(Colors.mulRGB(primary, 0.25F), Colors.mulRGB(primary, 0.35F));
-            }
-            else
-            {
-                tab.color(0, 0);
-            }
-
+            setupButtonColors(tab, i, primary);
             tab.context((menu) ->
             {
                 if (documents.size() > 1) menu.action(Icons.REMOVE, UIKeys.GENERAL_REMOVE, () -> this.closeTab(index));

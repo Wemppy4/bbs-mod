@@ -187,16 +187,20 @@ public class UIPixelsEditor extends UICanvasEditor
         }
     }
 
-    public void fillPixels(Pixels pixels)
+    public void deleteTexture()
     {
-        this.lastPixel = null;
-
         if (this.temporary != null)
         {
             this.temporary.delete();
             this.temporary = null;
         }
+    }
 
+    public void fillPixels(Pixels pixels)
+    {
+        this.lastPixel = null;
+
+        this.deleteTexture();
         this.setEditing(false);
 
         this.pixels = pixels;
