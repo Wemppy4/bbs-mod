@@ -84,10 +84,7 @@ public class UIDashboard extends UIBaseMenu
                 this.orbit.setFovRoll(panel.supportsRollFOVControl());
             }
 
-            if (e.lastPanel != e.panel)
-            {
-                this.copyCurrentEntityCamera();
-            }
+            this.copyCurrentEntityCamera();
         });
         this.panels.full(this.viewport);
         this.registerPanels();
@@ -291,7 +288,6 @@ public class UIDashboard extends UIBaseMenu
         {
             if (this.panels.panel != null)
             {
-                this.background(context);
                 this.panels.panel.renderPanelBackground(this.context);
             }
 

@@ -180,7 +180,7 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
 
             File file = BBSMod.getProvider().getFile(this.current);
 
-            if (file.isFile() && file.getName().endsWith(".png"))
+            if (file != null && file.isFile() && file.getName().endsWith(".png"))
             {
                 menu.action(Icons.ADD, UIKeys.TEXTURES_CREATE_MCMETA, () ->
                 {

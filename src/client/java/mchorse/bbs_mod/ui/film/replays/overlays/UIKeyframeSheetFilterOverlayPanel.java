@@ -11,13 +11,20 @@ import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.utils.colors.Colors;
+import mchorse.bbs_mod.utils.StringUtils;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 public class UIKeyframeSheetFilterOverlayPanel extends UIOverlayPanel
 {
     public UIKeyframeSheetFilterOverlayPanel(Set<String> disabled, Set<String> keys)
+    {
+        this(disabled, keys, null);
+    }
+
+    public UIKeyframeSheetFilterOverlayPanel(Set<String> disabled, Set<String> keys, Map<String, Integer> keyToColor)
     {
         super(UIKeys.FILM_REPLAY_FILTER_SHEETS_TITLE);
 
@@ -28,7 +35,8 @@ public class UIKeyframeSheetFilterOverlayPanel extends UIOverlayPanel
 
         for (String key : keys)
         {
-            UIToggle toggle = new UICoolToggle(key, IKey.constant(key), (b) ->
+            int color = keyToColor != null && keyToColor.containsKey(key) ? keyToColor.get(key) : UIReplaysEditor.getColor(key);
+            UIToggle toggle = new UICoolToggle(key, IKey.constant(key), color, (b) ->
             {
                 if (disabled.contains(key))
                 {
@@ -49,12 +57,14 @@ public class UIKeyframeSheetFilterOverlayPanel extends UIOverlayPanel
     public static class UICoolToggle extends UIToggle
     {
         private String key;
+        private int color;
 
-        public UICoolToggle(String key, IKey label, Consumer<UIToggle> callback)
+        public UICoolToggle(String key, IKey label, int color, Consumer<UIToggle> callback)
         {
             super(label, callback);
 
             this.key = key;
+            this.color = color;
         }
 
         @Override
@@ -65,7 +75,6 @@ public class UIKeyframeSheetFilterOverlayPanel extends UIOverlayPanel
             int w = this.area.w;
             int h = this.area.h;
             Icon icon = UIReplaysEditor.getIcon(this.key);
-            int color = UIReplaysEditor.getColor(key);
 
             context.batcher.box(x, y, x + 2, y + h, Colors.A100 | color);
             context.batcher.gradientHBox(x + 2, y, x + 24, y + h, Colors.A25 | color, color);

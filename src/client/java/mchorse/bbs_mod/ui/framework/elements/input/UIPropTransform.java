@@ -205,6 +205,10 @@ public class UIPropTransform extends UITransform
         }
 
         UIContext context = this.getContext();
+        if (context == null)
+        {
+            return;
+        }
 
         if (this.editing)
         {

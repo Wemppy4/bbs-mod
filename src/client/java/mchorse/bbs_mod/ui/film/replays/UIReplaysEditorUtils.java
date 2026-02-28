@@ -76,6 +76,31 @@ public class UIReplaysEditorUtils
         String path = FormUtils.getPath(form);
         String boneKey = PerLimbService.toPoseBoneKey(path, bone);
 
+        if (!insert)
+        {
+            IUIKeyframeGraph graph = keyframeEditor.view.getGraph();
+            Keyframe selected = graph.getSelected();
+            UIKeyframeSheet currentSheet = selected != null ? graph.getSheet(selected) : null;
+            PerLimbService.PoseBonePath currentPath = currentSheet != null && currentSheet.id != null ? PerLimbService.parsePoseBonePath(currentSheet.id) : null;
+            if (currentPath != null && !path.equals(currentPath.formPath()))
+            {
+                return;
+            }
+            String mainPoseId = path.isEmpty() ? "pose" : path + FormUtils.PATH_SEPARATOR + "pose";
+            if (currentSheet != null && mainPoseId.equals(currentSheet.id))
+            {
+                int tick = cursor.getCursor();
+                Keyframe closest = getClosestKeyframe(currentSheet, tick);
+                if (closest != null)
+                {
+                    forceSelectInSheet(graph, currentSheet, closest);
+                    cursor.setCursor((int) closest.getTick());
+                }
+                updatePoseEditorBoneSelection(keyframeEditor, bone);
+                return;
+            }
+        }
+
         if (insert)
         {
             pickProperty(keyframeEditor, cursor, bone, boneKey, true);
@@ -174,11 +199,8 @@ public class UIReplaysEditorUtils
 
         Keyframe closest = getClosestKeyframe(sheet, tick);
 
-        /* Bone display key for pose editor: include form path so child bones (e.g. 0/head) select correctly */
         PerLimbService.PoseBonePath path = PerLimbService.parsePoseBonePath(sheet.id);
-        String boneForEditor = path != null && !path.formPath().isEmpty()
-            ? path.formPath() + "/" + path.bone()
-            : bone;
+        String boneForEditor = path != null ? path.bone() : bone;
 
         if (closest != null)
         {
@@ -209,7 +231,6 @@ public class UIReplaysEditorUtils
 
     private static void updatePoseEditorBoneSelection(UIKeyframeEditor keyframeEditor, String bone)
     {
-        /* Обновляем выбор кости в редакторе позы, если он доступен */
         if (keyframeEditor.editor instanceof UIPoseKeyframeFactory poseFactory)
         {
             poseFactory.poseEditor.selectBone(bone);
