@@ -291,7 +291,6 @@ public class UIDashboard extends UIBaseMenu
         {
             if (this.panels.panel != null)
             {
-                this.background(context);
                 this.panels.panel.renderPanelBackground(this.context);
             }
 

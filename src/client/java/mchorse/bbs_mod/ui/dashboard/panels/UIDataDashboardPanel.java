@@ -110,6 +110,7 @@ public abstract class UIDataDashboardPanel <T extends ValueGroup> extends UICRUD
         if (!this.openedBefore && this.getContext() != null && this.shouldAutoOpenListOnFirstResize())
         {
             this.openOverlay.clickItself();
+
             this.openedBefore = true;
         }
     }
