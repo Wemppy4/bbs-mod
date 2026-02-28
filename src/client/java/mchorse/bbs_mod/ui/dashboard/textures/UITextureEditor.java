@@ -1,17 +1,14 @@
 package mchorse.bbs_mod.ui.dashboard.textures;
 
 import mchorse.bbs_mod.BBSMod;
-import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.dashboard.textures.undo.PixelsUndo;
 import mchorse.bbs_mod.ui.framework.UIContext;
-import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageFolderOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIPromptOverlayPanel;
-import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.PNGEncoder;
@@ -26,10 +23,6 @@ import java.util.function.Consumer;
 
 public class UITextureEditor extends UIPixelsEditor
 {
-    public UIIcon save;
-    public UIIcon resize;
-    public UIIcon extract;
-
     private Link texture;
     private boolean dirty;
 
@@ -38,37 +31,49 @@ public class UITextureEditor extends UIPixelsEditor
     public UITextureEditor()
     {
         super();
+    }
 
-        this.save = new UIIcon(() -> this.dirty ? Icons.SAVE : Icons.SAVED, (b) -> this.saveTexture());
-        this.resize = new UIIcon(Icons.FULLSCREEN, (b) ->
+    /** Called from UITexturePainter save icon. Opens the save path prompt. */
+    public void openSaveOverlay()
+    {
+        this.saveTexture();
+    }
+
+    /** Called from UITexturePainter resize icon. Opens the resize overlay. */
+    public void openResizeOverlay()
+    {
+        Pixels pixels = this.getPixels();
+        if (pixels == null)
         {
-            Pixels pixels = this.getPixels();
-            UIResizeTextureOverlayPanel overlayPanel = new UIResizeTextureOverlayPanel(pixels.width, pixels.height, (size) ->
-            {
-                boolean editing = this.isEditing();
-                Pixels newPixels = Pixels.fromSize(
-                    MathUtils.clamp(size.x, 1, 4096),
-                    MathUtils.clamp(size.y, 1, 4096)
-                );
-
-                newPixels.draw(pixels, 0, 0, newPixels.width, newPixels.height);
-                pixels.delete();
-
-                this.fillPixels(newPixels);
-                this.setDirty(false);
-                this.setEditing(editing);
-            });
-
-            UIOverlay.addOverlay(this.getContext(), overlayPanel);
-        });
-        this.resize.tooltip(UIKeys.TEXTURES_RESIZE);
-        this.extract = new UIIcon(Icons.UPLOAD, (b) ->
+            return;
+        }
+        UIResizeTextureOverlayPanel overlayPanel = new UIResizeTextureOverlayPanel(pixels.width, pixels.height, (size) ->
         {
-            UIOverlay.addOverlay(this.getContext(), new UITextureExtractOverlayPanel(this.getTexture(), this.getPixels()), 200, 231);
-        });
-        this.extract.tooltip(UIKeys.TEXTURES_EXTRACT_FRAMES_TITLE);
+            boolean editing = this.isEditing();
+            Pixels newPixels = Pixels.fromSize(
+                MathUtils.clamp(size.x, 1, 4096),
+                MathUtils.clamp(size.y, 1, 4096)
+            );
 
-        this.toolbar.add(this.resize, this.extract, this.save);
+            newPixels.draw(pixels, 0, 0, newPixels.width, newPixels.height);
+            pixels.delete();
+
+            this.fillPixels(newPixels);
+            this.setDirty(false);
+            this.setEditing(editing);
+        });
+
+        UIOverlay.addOverlay(this.getContext(), overlayPanel);
+    }
+
+    /** Called from UITexturePainter extract icon. Opens the extract frames overlay. */
+    public void openExtractOverlay()
+    {
+        if (this.getTexture() == null || this.getPixels() == null)
+        {
+            return;
+        }
+        UIOverlay.addOverlay(this.getContext(), new UITextureExtractOverlayPanel(this.getTexture(), this.getPixels()), 200, 231);
     }
 
     public UITextureEditor saveCallback(Consumer<Link> saveCallback)
@@ -235,22 +240,16 @@ public class UITextureEditor extends UIPixelsEditor
         }
     }
 
-    public void fillTexture(Link texture)
+    /**
+     * Set the document from existing link and pixels. Caller keeps ownership of pixels (no delete).
+     */
+    public void setDocument(Link link, Pixels pixels)
     {
-        if (this.getPixels() != null)
-        {
-            this.getPixels().delete();
-        }
+        this.texture = link;
 
-        this.texture = texture;
-
-        if (texture != null)
-        {
-            Texture t = BBSModClient.getTextures().getTexture(texture);
-
-            this.fillPixels(Texture.pixelsFromTexture(t));
-            this.setDirty(false);
-        }
+        this.fillPixels(pixels);
+        this.setDirty(false);
+        this.setEditing(true);
     }
 
     @Override

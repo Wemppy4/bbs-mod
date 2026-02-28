@@ -1,27 +1,54 @@
 package mchorse.bbs_mod.ui.dashboard.textures;
 
+import mchorse.bbs_mod.BBSModClient;
+import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
+import mchorse.bbs_mod.ui.framework.elements.IUIElement;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Direction;
+import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
+import mchorse.bbs_mod.utils.resources.Pixels;
 import org.joml.Vector2i;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class UITexturePainter extends UIElement
 {
+    private static List<Document> documents = new ArrayList<>();
+    private static int currentIndex = -1;
+
+    public static final class Document
+    {
+        public final Link link;
+        public final Pixels pixels;
+        public final UITextureEditor editor;
+
+        public Document(Link link, Pixels pixels, UITextureEditor editor)
+        {
+            this.link = link;
+            this.pixels = pixels;
+            this.editor = editor;
+        }
+    }
+
     public UITrackpad brightness;
     public UITrackpad brushSize;
     public UIElement savebar;
@@ -29,11 +56,21 @@ public class UITexturePainter extends UIElement
     public UIColor primary;
     public UIColor secondary;
 
-    public UITextureEditor main;
-    public UITextureEditor reference;
+    public UIIcon undoIcon;
+    public UIIcon redoIcon;
+    public UIIcon saveIcon;
+    public UIIcon resizeIcon;
+    public UIIcon extractIcon;
+
+    private UIElement tabsContainer;
+    private UIIcon addTabButton;
+    private UIElement content;
+    private Consumer<Link> saveCallback;
 
     public UITexturePainter(Consumer<Link> saveCallback)
     {
+        this.saveCallback = saveCallback;
+
         this.brightness = new UITrackpad();
         this.brightness.limit(0, 1).setValue(0.7);
         this.brightness.tooltip(UIKeys.TEXTURES_VIEWER_BRIGHTNESS, Direction.TOP);
@@ -42,62 +79,71 @@ public class UITexturePainter extends UIElement
         this.brushSize = new UITrackpad((v) -> this.setBrushSize(v.intValue()));
         this.brushSize.integer().limit(1, 64, true).setValue(1);
         this.brushSize.tooltip(UIKeys.TEXTURES_BRUSH_SIZE, Direction.TOP);
-        this.brushSize.relative(this).x(1F, -10).y(1F, -40).w(130).anchor(1F, 1F).h(20);
+        this.brushSize.relative(this).x(1F, -10).y(1F, -40).w(130).anchor(1F, 1F);
+
+        this.addTabButton = new UIIcon(Icons.ADD, (b) -> this.openNewTab());
+        this.addTabButton.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
+
+        this.tabsContainer = new UIElement();
+        this.tabsContainer.relative(this).w(1F).h(UIConstants.CONTROL_HEIGHT + UIConstants.MARGIN * 2).row(UIConstants.MARGIN).height(UIConstants.CONTROL_HEIGHT).padding(UIConstants.MARGIN);
+        this.tabsContainer.add(this.addTabButton);
+
+        this.content = new UIElement();
+        this.content.relative(this.tabsContainer).y(1F).w(1F).hTo(this.area, 1F);
 
         this.savebar = new UIElement();
-        this.savebar.relative(this).x(1F).h(30).anchorX(1F).row(0).resize().padding(5);
+        this.savebar.relative(this.content).h(UIConstants.CONTROL_HEIGHT + UIConstants.MARGIN * 2).row(UIConstants.MARGIN).resize().height(UIConstants.CONTROL_HEIGHT).padding(UIConstants.MARGIN);
 
         this.primary = new UIColor((c) -> {}).noLabel();
-        this.primary.direction(Direction.RIGHT).w(20);
-        this.secondary = new UIColor((c) -> {}).noLabel();
-        this.secondary.direction(Direction.RIGHT).w(20);
-
+        this.primary.direction(Direction.RIGHT).w((int) (UIConstants.CONTROL_HEIGHT * 1.5F)).h(UIConstants.CONTROL_HEIGHT);
         this.primary.setColor(0);
+        this.secondary = new UIColor((c) -> {}).noLabel();
+        this.secondary.direction(Direction.RIGHT).w((int) (UIConstants.CONTROL_HEIGHT * 1.5F)).h(UIConstants.CONTROL_HEIGHT);
         this.secondary.setColor(Colors.WHITE);
 
-        UIIcon open = new UIIcon(Icons.SEARCH, (b) ->
+        this.resizeIcon = new UIIcon(Icons.FULLSCREEN, (b) ->
         {
-            UITexturePicker.findAllTextures(this.getContext(), this.main.getTexture(), (s) ->
-            {
-                if (this.reference != null)
-                {
-                    this.reference.fillTexture(Link.create(s));
-                    this.reference.setEditing(true);
-                    this.reference.setBrushSize(this.main.getBrushSize());
-                    this.resize();
-                }
-                else
-                {
-                    this.reference = new UITextureEditor();
-                    this.reference.fillTexture(Link.create(s));
-                    this.reference.setEditing(true);
-                    this.reference
-                        .colorSupplier(() -> this.primary.picker.color)
-                        .backgroundSupplier(() -> (float) this.brightness.getValue());
-                    this.reference.setBrushSize(this.main.getBrushSize());
+            UITextureEditor ed = this.getCurrentEditor();
+            if (ed != null) ed.openResizeOverlay();
+        });
+        this.resizeIcon.tooltip(UIKeys.TEXTURES_RESIZE, Direction.BOTTOM);
+        this.extractIcon = new UIIcon(Icons.UPLOAD, (b) ->
+        {
+            UITextureEditor ed = this.getCurrentEditor();
+            if (ed != null) ed.openExtractOverlay();
+        });
+        this.extractIcon.tooltip(UIKeys.TEXTURES_EXTRACT_FRAMES_TITLE, Direction.BOTTOM);
 
-                    this.reference.full(this).x(0.5F).wTo(this.area, 1F);
-                    this.main.w(0.5F);
+        this.undoIcon = new UIIcon(Icons.UNDO, (b) ->
+        {
+            UITextureEditor ed = this.getCurrentEditor();
+            if (ed != null) ed.undo();
+        });
+        this.undoIcon.tooltip(UIKeys.TEXTURES_KEYS_UNDO, Direction.BOTTOM);
+        this.redoIcon = new UIIcon(Icons.REDO, (b) ->
+        {
+            UITextureEditor ed = this.getCurrentEditor();
+            if (ed != null) ed.redo();
+        });
+        this.redoIcon.tooltip(UIKeys.TEXTURES_KEYS_REDO, Direction.BOTTOM);
 
-                    this.addAfter(this.main, this.reference);
-                    this.resize();
-                }
-            });
+        this.saveIcon = new UIIcon(() ->
+        {
+            UITextureEditor ed = this.getCurrentEditor();
+            return ed != null && ed.isDirty() ? Icons.SAVE : Icons.SAVED;
+        }, (b) ->
+        {
+            UITextureEditor ed = this.getCurrentEditor();
+            if (ed != null) ed.openSaveOverlay();
         });
 
-        this.savebar.add(open);
-
-        this.main = new UITextureEditor().saveCallback(saveCallback);
-        this.main
-            .colorSupplier(() -> this.primary.picker.color)
-            .backgroundSupplier(() -> (float) this.brightness.getValue());
-        this.main.full(this);
-        this.main.toolbar.prepend(this.secondary.marginRight(10));
-        this.main.toolbar.prepend(this.primary);
-        this.main.setBrushSize((int) this.brushSize.getValue());
-
-        this.add(this.main, this.savebar);
+        this.savebar.add(this.primary, this.secondary, this.undoIcon, this.redoIcon, this.saveIcon, this.resizeIcon, this.extractIcon);
+        this.content.add(this.savebar);
+        this.add(this.tabsContainer, this.content);
         this.add(this.brightness, this.brushSize);
+
+        this.rebuildTabButtons();
+        this.showCurrentEditor();
 
         IKey category = UIKeys.TEXTURES_KEYS_CATEGORY;
 
@@ -121,6 +167,169 @@ public class UITexturePainter extends UIElement
         this.setBrushSize(n);
     }
 
+    private UITextureEditor createEditor(Link link, Pixels pixels)
+    {
+        UITextureEditor editor = new UITextureEditor().saveCallback(this.saveCallback);
+        editor.colorSupplier(() -> this.primary.picker.color);
+        editor.backgroundSupplier(() -> (float) this.brightness.getValue());
+        editor.setBrushSize((int) this.brushSize.getValue());
+        editor.setDocument(link, pixels);
+        editor.full(this.content);
+        return editor;
+    }
+
+    private void showCurrentEditor()
+    {
+        if (documents.isEmpty())
+        {
+            return;
+        }
+
+        List<IUIElement> children = this.content.getChildren();
+
+        if (!children.isEmpty() && children.get(0) instanceof UITextureEditor currentInContent)
+        {
+            this.content.remove(currentInContent);
+        }
+
+        UITextureEditor toShow = documents.get(currentIndex).editor;
+
+        toShow.removeFromParent();
+        this.content.prepend(toShow);
+        toShow.full(this.content);
+        toShow.setBrushSize((int) this.brushSize.getValue());
+
+        this.resize();
+    }
+
+    private UITextureEditor getCurrentEditor()
+    {
+        return documents.isEmpty() || currentIndex < 0 || currentIndex >= documents.size()
+            ? null
+            : documents.get(currentIndex).editor;
+    }
+
+    private void openNewTab()
+    {
+        UITextureEditor current = this.getCurrentEditor();
+        Link currentLink = current != null ? current.getTexture() : null;
+        UITexturePicker.findAllTextures(this.getContext(), currentLink, this::addTabFromPath);
+    }
+
+    private void addTabFromPath(String path)
+    {
+        Link link = Link.create(path);
+
+        for (int i = 0; i < documents.size(); i++)
+        {
+            if (documents.get(i).link.toString().equals(path))
+            {
+                currentIndex = i;
+                this.rebuildTabButtons();
+                this.showCurrentEditor();
+                return;
+            }
+        }
+
+        Texture t = BBSModClient.getTextures().getTexture(link);
+        Pixels pixels = Texture.pixelsFromTexture(t);
+
+        if (pixels == null)
+        {
+            return;
+        }
+
+        UITextureEditor editor = this.createEditor(link, pixels);
+        Document doc = new Document(link, pixels, editor);
+
+        documents.add(doc);
+        currentIndex = documents.size() - 1;
+
+        this.rebuildTabButtons();
+        this.showCurrentEditor();
+    }
+
+    private void closeTab(int index)
+    {
+        if (documents.size() <= 1)
+        {
+            return;
+        }
+
+        Document doc = documents.get(index);
+        doc.editor.removeFromParent();
+        doc.pixels.delete();
+        documents.remove(index);
+
+        if (currentIndex >= documents.size())
+        {
+            currentIndex = documents.size() - 1;
+        }
+        else if (index < currentIndex)
+        {
+            currentIndex--;
+        }
+
+        this.rebuildTabButtons();
+        this.showCurrentEditor();
+    }
+
+    private void rebuildTabButtons()
+    {
+        int primary = BBSSettings.primaryColor.get() | Colors.A100;
+
+        this.tabsContainer.removeAll();
+
+        for (int i = 0; i < documents.size(); i++)
+        {
+            Document doc = documents.get(i);
+            final int index = i;
+
+            UIButton tab = new UIButton(IKey.raw(StringUtils.fileName(doc.link.path)), (b) ->
+            {
+                currentIndex = index;
+                this.showCurrentEditor();
+
+                List<UIButton> children = this.tabsContainer.getChildren(UIButton.class);
+
+                for (int j = 0; j < children.size(); j++)
+                {
+                    UIButton bb = children.get(j);
+
+                    if (j == currentIndex)
+                    {
+                        bb.color(Colors.mulRGB(primary, 0.25F), Colors.mulRGB(primary, 0.35F));
+                    }
+                    else
+                    {
+                        bb.color(0, 0);
+                    }
+                }
+            });
+
+            tab.tooltip(IKey.raw(doc.link.path), Direction.BOTTOM);
+
+            if (i == currentIndex)
+            {
+                tab.color(Colors.mulRGB(primary, 0.25F), Colors.mulRGB(primary, 0.35F));
+            }
+            else
+            {
+                tab.color(0, 0);
+            }
+
+            tab.context((menu) ->
+            {
+                if (documents.size() > 1) menu.action(Icons.REMOVE, UIKeys.GENERAL_REMOVE, () -> this.closeTab(index));
+            });
+
+            this.tabsContainer.add(tab);
+        }
+
+        this.tabsContainer.add(this.addTabButton);
+        this.resize();
+    }
+
     private void swapColors()
     {
         int swap = this.primary.picker.color.getRGBColor();
@@ -129,17 +338,15 @@ public class UITexturePainter extends UIElement
         this.secondary.setColor(swap);
     }
 
-    private UITextureEditor getHoverEditor(UIContext context)
-    {
-        return this.main.area.isInside(context) ? this.main : (this.reference != null && this.reference.area.isInside(context) ? this.reference : null);
-    }
-
     private void pickColor()
     {
+        UITextureEditor editor = this.getCurrentEditor();
+        if (editor == null)
+        {
+            return;
+        }
         UIContext context = this.getContext();
-        UITextureEditor editor = this.getHoverEditor(context);
-
-        if (editor != null)
+        if (editor.area.isInside(context))
         {
             Vector2i pixel = editor.getHoverPixel(context.mouseX, context.mouseY);
             Color color = editor.getPixels().getColor(pixel.x, pixel.y);
@@ -153,41 +360,92 @@ public class UITexturePainter extends UIElement
 
     private void fillColor()
     {
+        UITextureEditor editor = this.getCurrentEditor();
+        if (editor == null)
+        {
+            return;
+        }
         UIContext context = this.getContext();
-        UITextureEditor editor = this.getHoverEditor(context);
-
-        if (editor != null)
+        if (editor.area.isInside(context))
         {
             Vector2i pixel = editor.getHoverPixel(context.mouseX, context.mouseY);
-
             editor.fillColor(pixel, this.primary.picker.color, Window.isShiftPressed());
         }
     }
 
     private void setBrushSize(int size)
     {
-        this.main.setBrushSize(size);
-
-        if (this.reference != null)
+        UITextureEditor editor = this.getCurrentEditor();
+        if (editor != null)
         {
-            this.reference.setBrushSize(size);
+            editor.setBrushSize(size);
         }
     }
 
     public void fillTexture(Link current)
     {
-        this.main.fillTexture(current);
-        this.main.setEditing(true);
+        if (current == null)
+        {
+            return;
+        }
+
+        String path = current.toString();
+
+        if (documents.isEmpty())
+        {
+            Texture t = BBSModClient.getTextures().getTexture(current);
+            Pixels pixels = Texture.pixelsFromTexture(t);
+
+            if (pixels != null)
+            {
+                UITextureEditor editor = this.createEditor(current, pixels);
+                documents.add(new Document(current, pixels, editor));
+                currentIndex = 0;
+                this.rebuildTabButtons();
+                this.showCurrentEditor();
+                editor.setEditing(true);
+            }
+
+            return;
+        }
+
+        for (int i = 0; i < documents.size(); i++)
+        {
+            if (documents.get(i).link.toString().equals(path))
+            {
+                currentIndex = i;
+                this.rebuildTabButtons();
+                this.showCurrentEditor();
+                this.getCurrentEditor().setEditing(true);
+                return;
+            }
+        }
+
+        Texture t = BBSModClient.getTextures().getTexture(current);
+        Pixels pixels = Texture.pixelsFromTexture(t);
+
+        if (pixels != null)
+        {
+            UITextureEditor editor = this.createEditor(current, pixels);
+            documents.add(new Document(current, pixels, editor));
+            currentIndex = documents.size() - 1;
+            this.rebuildTabButtons();
+            this.showCurrentEditor();
+            editor.setEditing(true);
+        }
     }
 
     @Override
     public void render(UIContext context)
     {
+        int primary = BBSSettings.primaryColor.get();
+
+        this.tabsContainer.area.render(context.batcher, Colors.mulRGB(primary | Colors.A100, 0.1F));
+
         super.render(context);
 
-        UITextureEditor editor = this.getHoverEditor(context);
-
-        if (editor != null)
+        UITextureEditor editor = this.getCurrentEditor();
+        if (editor != null && editor.area.isInside(context) && editor.getPixels() != null)
         {
             Vector2i pixel = editor.getHoverPixel(context.mouseX, context.mouseY);
             Color color = editor.getPixels().getColor(pixel.x, pixel.y);
@@ -211,7 +469,7 @@ public class UITexturePainter extends UIElement
             };
 
             int x = this.area.x + 10;
-            int y = this.area.ey() - context.batcher.getFont().getHeight() - 10 - (information.length - 1)* 14;
+            int y = this.area.ey() - context.batcher.getFont().getHeight() - 10 - (information.length - 1) * 14;
 
             for (String line : information)
             {

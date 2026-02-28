@@ -469,7 +469,6 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
         }
         else
         {
-            this.pixelEditor.fillTexture(null);
             this.pixelEditor.removeFromParent();
             this.pixelEditor = null;
         }

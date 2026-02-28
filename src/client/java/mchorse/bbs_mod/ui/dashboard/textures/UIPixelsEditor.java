@@ -8,13 +8,11 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.dashboard.textures.undo.PixelsUndo;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
-import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.utils.UICanvasEditor;
 import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.MathUtils;
-import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.interps.Lerps;
@@ -33,10 +31,6 @@ import java.util.function.Supplier;
 public class UIPixelsEditor extends UICanvasEditor
 {
     public UIElement toolbar;
-
-    /* Tools */
-    public UIIcon undo;
-    public UIIcon redo;
 
     private int brushSize = 1;
 
@@ -59,13 +53,6 @@ public class UIPixelsEditor extends UICanvasEditor
 
         this.toolbar = new UIElement();
         this.toolbar.relative(this).w(1F).h(30).row(0).resize().padding(5);
-
-        this.undo = new UIIcon(Icons.UNDO, (b) -> this.undo());
-        this.undo.tooltip(UIKeys.TEXTURES_KEYS_UNDO, Direction.BOTTOM);
-        this.redo = new UIIcon(Icons.REDO, (b) -> this.redo());
-        this.redo.tooltip(UIKeys.TEXTURES_KEYS_REDO, Direction.BOTTOM);
-
-        this.toolbar.add(this.undo, this.redo);
 
         this.add(this.toolbar);
 
@@ -184,17 +171,17 @@ public class UIPixelsEditor extends UICanvasEditor
         this.temporary.updateTexture(this.pixels);
     }
 
-    private void undo()
+    public void undo()
     {
-        if (this.undoManager.undo(this.pixels))
+        if (this.undoManager != null && this.undoManager.undo(this.pixels))
         {
             UIUtils.playClick();
         }
     }
 
-    private void redo()
+    public void redo()
     {
-        if (this.undoManager.redo(this.pixels))
+        if (this.undoManager != null && this.undoManager.redo(this.pixels))
         {
             UIUtils.playClick();
         }
