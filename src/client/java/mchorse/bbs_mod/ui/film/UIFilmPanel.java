@@ -115,6 +115,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public UIIcon openCameraEditor;
     public UIIcon openReplayEditor;
     public UIIcon openActionEditor;
+    public UIIcon lockLayoutButton;
+
+    /** When true, docking and resizing are disabled; drag handles and their top offset are hidden. */
+    private boolean layoutLocked = true;
 
     private Camera camera = new Camera();
     private boolean entered;
@@ -145,6 +149,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private static final int DROP_ZONE_CENTER = -1;
     private static final float DROP_EDGE_MARGIN = 0.2F;
     private static final int EDITOR_MIN_SIZE_FOR_PX_HANDLES = 10;
+    /** Top offset (px) for parameters panels when layout is unlocked (space for drag icon). Used for lock button size too. */
+    public static final int EDIT_PANEL_TOP_OFFSET_PX = 20;
 
     private String draggingPanelId;
     private String dropTargetPanelId;
@@ -198,9 +204,13 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.openReplayEditor.tooltip(UIKeys.FILM_OPEN_REPLAY_EDITOR, Direction.LEFT);
         this.openActionEditor = new UIIcon(Icons.ACTION, (b) -> this.showPanel(this.actionEditor));
         this.openActionEditor.tooltip(UIKeys.FILM_OPEN_ACTION_EDITOR, Direction.LEFT);
+        this.lockLayoutButton = new UIIcon(() -> this.layoutLocked ? Icons.LOCKED : Icons.UNLOCKED, (b) -> this.toggleLayoutLock());
+        this.updateLockButtonTooltip();
+        this.lockLayoutButton.relative(this.iconBar).x(0).y(1F, -EDIT_PANEL_TOP_OFFSET_PX).w(EDIT_PANEL_TOP_OFFSET_PX).h(EDIT_PANEL_TOP_OFFSET_PX);
 
         /* Setup elements */
         this.iconBar.add(this.openFilmMenu, this.openCameraEditor.marginTop(9), this.openReplayEditor, this.openActionEditor);
+        this.add(this.lockLayoutButton);
 
         this.editor.add(this.main, new UIRenderable(this::renderIcons), new UIRenderable(this::renderDropZoneHighlight));
         for (String id : this.panelById.keySet())
@@ -281,13 +291,45 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.add(element);
     }
 
+    public boolean isLayoutLocked()
+    {
+        return this.layoutLocked;
+    }
+
+    /** Top offset (px) for parameters panels; 0 when layout locked. */
+    public int getEditPanelTopOffsetPx()
+    {
+        return this.layoutLocked ? 0 : EDIT_PANEL_TOP_OFFSET_PX;
+    }
+
+    private void toggleLayoutLock()
+    {
+        this.layoutLocked = !this.layoutLocked;
+        this.clearPanelDragState();
+        this.updateLockButtonTooltip();
+        this.setupEditorFlex(true);
+        this.refreshEditPanelOffsets();
+    }
+
+    private void updateLockButtonTooltip()
+    {
+        this.lockLayoutButton.tooltip(this.layoutLocked ? UIKeys.FILM_LAYOUT_UNLOCK : UIKeys.FILM_LAYOUT_LOCK, Direction.LEFT);
+    }
+
+    private void refreshEditPanelOffsets()
+    {
+        this.cameraEditor.refreshEditPanelOffset();
+        this.actionEditor.refreshEditPanelOffset();
+        this.replayEditor.refreshEditPanelOffset();
+    }
+
     private void setupEditorFlex(boolean resize)
     {
         ValueEditorLayout layout = BBSSettings.editorLayoutSettings;
         EditorLayoutNode root = layout.getFilmLayoutRoot();
         List<EditorLayoutNode.SplitterNode> splitters = layout.getFilmSplitters();
 
-        if (resize && splitters.size() == this.splitterHandles.size())
+        if (!this.layoutLocked && resize && splitters.size() == this.splitterHandles.size())
         {
             this.updateEditorFlexBoundsOnly(layout, root);
             this.resize();
@@ -313,30 +355,45 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         this.applyPanelBoundsFromMap(bounds);
 
-        this.splitterHandleInfos.clear();
-        EditorLayoutNode.computeSplitterHandles(root, 0F, 0F, 1F, 1F, this.splitterHandleInfos);
-        for (int i = 0; i < splitters.size(); i++)
+        if (this.layoutLocked)
         {
-            final int index = i;
-            UIDraggable handle = new UIDraggable((context) ->
+            for (UIDraggable h : this.dragHandlesById.values())
             {
-                float ratio = this.getSplitterRatioFromMouse(index, context.mouseX, context.mouseY);
-                if (ratio >= 0F)
-                {
-                    layout.setFilmSplitterRatio(index, ratio);
-                    this.setupEditorFlex(true);
-                }
-            });
-            handle.hoverOnly().dragEnd(this::applyPreviewSizeToBBS);
-            handle.reference(() -> this.getSplitterHandleReferencePosition(index, splitters));
-            handle.rendering((context) -> this.renderSplitter(context, index));
-            this.applySplitterHandleBounds(handle, this.splitterHandleInfos.get(index));
-            this.splitterHandles.add(handle);
-            IUIElement insertAfter = index == 0 ? this.main : this.splitterHandles.get(index - 1);
-            this.editor.addAfter(insertAfter, handle);
+                h.setVisible(false);
+            }
         }
+        else
+        {
+            for (UIDraggable h : this.dragHandlesById.values())
+            {
+                h.setVisible(true);
+            }
 
-        this.applyDragHandleBoundsFromMap(bounds);
+            this.splitterHandleInfos.clear();
+            EditorLayoutNode.computeSplitterHandles(root, 0F, 0F, 1F, 1F, this.splitterHandleInfos);
+            for (int i = 0; i < splitters.size(); i++)
+            {
+                final int index = i;
+                UIDraggable handle = new UIDraggable((context) ->
+                {
+                    float ratio = this.getSplitterRatioFromMouse(index, context.mouseX, context.mouseY);
+                    if (ratio >= 0F)
+                    {
+                        layout.setFilmSplitterRatio(index, ratio);
+                        this.setupEditorFlex(true);
+                    }
+                });
+                handle.hoverOnly().dragEnd(this::applyPreviewSizeToBBS);
+                handle.reference(() -> this.getSplitterHandleReferencePosition(index, splitters));
+                handle.rendering((context) -> this.renderSplitter(context, index));
+                this.applySplitterHandleBounds(handle, this.splitterHandleInfos.get(index));
+                this.splitterHandles.add(handle);
+                IUIElement insertAfter = index == 0 ? this.main : this.splitterHandles.get(index - 1);
+                this.editor.addAfter(insertAfter, handle);
+            }
+
+            this.applyDragHandleBoundsFromMap(bounds);
+        }
 
         if (resize)
         {
@@ -542,7 +599,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
     private void renderDropZoneHighlight(UIContext context)
     {
-        if (this.draggingPanelId == null || this.dropTargetPanelId == null)
+        if (this.layoutLocked || this.draggingPanelId == null || this.dropTargetPanelId == null)
         {
             return;
         }
@@ -716,9 +773,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     {
         super.resize();
 
-        if (this.editor.area.w >= EDITOR_MIN_SIZE_FOR_PX_HANDLES && this.editor.area.h >= EDITOR_MIN_SIZE_FOR_PX_HANDLES && this.splitterHandles.size() == this.splitterHandleInfos.size())
+        if (this.editor.area.w >= EDITOR_MIN_SIZE_FOR_PX_HANDLES && this.editor.area.h >= EDITOR_MIN_SIZE_FOR_PX_HANDLES)
         {
-            this.syncSplitterHandleBounds();
+            if (!this.layoutLocked && this.splitterHandles.size() == this.splitterHandleInfos.size())
+            {
+                this.syncSplitterHandleBounds();
+            }
             this.editor.resize();
         }
 

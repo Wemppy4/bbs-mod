@@ -152,7 +152,8 @@ public class UIClipsPanel extends UIElement implements IUIClipsDelegate
             }
             else
             {
-                this.panel.relative(this.target).x(0).y(0, 20).w(1F).h(1F, -20);
+                int top = this.filmPanel.getEditPanelTopOffsetPx();
+                this.panel.relative(this.target).x(0).y(0, top).w(1F).h(1F, -top);
             }
 
             this.add(this.panel);
@@ -173,6 +174,18 @@ public class UIClipsPanel extends UIElement implements IUIClipsDelegate
         this.resize();
 
         this.filmPanel.pickClip(clip, this);
+    }
+
+    /** Re-applies edit panel position (e.g. after layout lock toggle). */
+    public void refreshEditPanelOffset()
+    {
+        if (this.panel == null || this.target == null)
+        {
+            return;
+        }
+        int top = this.filmPanel.getEditPanelTopOffsetPx();
+        this.panel.relative(this.target).x(0).y(0, top).w(1F).h(1F, -top);
+        this.resize();
     }
 
     @Override

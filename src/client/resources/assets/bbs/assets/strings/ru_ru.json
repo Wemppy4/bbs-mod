@@ -476,6 +476,8 @@
 	"bbs.ui.film.open_camera_editor": "Открыть редактор камеры",
 	"bbs.ui.film.open_history": "Открыть историю изменений...",
 	"bbs.ui.film.open_replay_editor": "Открыть редактор записей",
+	"bbs.ui.film.layout_lock": "Заблокировать раскладку",
+	"bbs.ui.film.layout_unlock": "Разблокировать раскладку",
 	"bbs.ui.film.options": "Настройки фильма",
 	"bbs.ui.film.swap_small_panels": "Поменять местами два окна",
 	"bbs.ui.film.recording": "Запись %s",

@@ -477,6 +477,8 @@
 	"bbs.ui.film.open_camera_editor": "Open camera editor",
 	"bbs.ui.film.open_history": "Open undo/redo history...",
 	"bbs.ui.film.open_replay_editor": "Open replay editor",
+	"bbs.ui.film.layout_lock": "Lock layout",
+	"bbs.ui.film.layout_unlock": "Unlock layout",
 	"bbs.ui.film.options": "Film options",
 	"bbs.ui.film.swap_small_panels": "Swap small panels",
 	"bbs.ui.film.recording": "Recording %s",

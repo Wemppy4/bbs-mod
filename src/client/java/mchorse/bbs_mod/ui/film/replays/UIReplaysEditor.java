@@ -490,7 +490,9 @@ public class UIReplaysEditor extends UIElement
 
         if (!sheets.isEmpty())
         {
-            this.keyframeEditor = new UIKeyframeEditor((consumer) -> new UIFilmKeyframes(this.filmPanel.cameraEditor, consumer).absolute()).target(this.filmPanel.editArea);
+            this.keyframeEditor = new UIKeyframeEditor((consumer) -> new UIFilmKeyframes(this.filmPanel.cameraEditor, consumer).absolute())
+                .target(this.filmPanel.editArea)
+                .editPanelTopOffset(this.filmPanel::getEditPanelTopOffsetPx);
             this.keyframeEditor.relative(this).x(20).w(1F, -20).h(1F);
             this.keyframeEditor.setUndoId("replay_keyframe_editor");
 
@@ -624,6 +626,15 @@ public class UIReplaysEditor extends UIElement
                     sheets.add(boneSheet);
                 }
             }
+        }
+    }
+
+    /** Re-applies keyframe parameters panel position (e.g. after layout lock toggle). */
+    public void refreshEditPanelOffset()
+    {
+        if (this.keyframeEditor != null)
+        {
+            this.keyframeEditor.refreshEditPanelOffset();
         }
     }
 
