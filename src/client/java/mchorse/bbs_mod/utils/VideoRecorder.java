@@ -246,9 +246,12 @@ public class VideoRecorder
 
         this.recording = false;
 
-        if (BBSModClient.getSounds().play(RENDER_COMPLETE_SOUND) == null)
+        if (BBSSettings.videoSettings.playSoundAfterExport.get())
         {
-            UIUtils.playClick(0.5F);
+            if (BBSModClient.getSounds().play(RENDER_COMPLETE_SOUND) == null)
+            {
+                UIUtils.playClick(0.5F);
+            }
         }
 
         if (BBSSettings.videoSettings.openFolderAfterExport.get())

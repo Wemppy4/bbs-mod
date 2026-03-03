@@ -20,6 +20,7 @@ public class ValueVideoSettings extends ValueGroup
     public final ValueInt heldFrames = new ValueInt("heldFrames", 1, 1, 1000);
     public final ValueString path = new ValueString("exportPath", "");
     public final ValueBoolean openFolderAfterExport = new ValueBoolean("openFolderAfterExport", false);
+    public final ValueBoolean playSoundAfterExport = new ValueBoolean("playSoundAfterExport", true);
 
     public ValueVideoSettings(String id)
     {
@@ -35,5 +36,6 @@ public class ValueVideoSettings extends ValueGroup
         this.add(this.heldFrames);
         this.add(this.path);
         this.add(this.openFolderAfterExport);
+        this.add(this.playSoundAfterExport);
     }
 }
