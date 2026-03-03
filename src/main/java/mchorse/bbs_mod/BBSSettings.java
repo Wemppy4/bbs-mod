@@ -81,7 +81,6 @@ public class BBSSettings
     public static ValueBoolean editorClipPreview;
     public static ValueBoolean editorRewind;
     public static ValueBoolean editorHorizontalClipEditor;
-    public static ValueBoolean editorHorizontalClipEditorFollowsLayout;
     public static ValueBoolean editorMinutesBackup;
     public static ValueInt editorTrackWidth;
     public static ValueBoolean editorPreviewAutoSize;
@@ -138,10 +137,6 @@ public class BBSSettings
 
     public static boolean isHorizontalClipEditorEffective()
     {
-        if (editorHorizontalClipEditorFollowsLayout.get())
-        {
-            return !editorLayoutSettings.isHorizontal();
-        }
         return editorHorizontalClipEditor.get();
     }
 
@@ -242,7 +237,6 @@ public class BBSSettings
         editorClipPreview = builder.getBoolean("clip_preview", true);
         editorRewind = builder.getBoolean("rewind", true);
         editorHorizontalClipEditor = builder.getBoolean("horizontal_clip_editor", true);
-        editorHorizontalClipEditorFollowsLayout = builder.getBoolean("horizontal_clip_editor_follows_layout", true);
         editorMinutesBackup = builder.getBoolean("minutes_backup", true);
         editorPreviewAutoSize = builder.getBoolean("preview_auto_size", true);
         editorPreviewResolutionScale = builder.getFloat("preview_resolution_scale", 2F, 1F, 3F);

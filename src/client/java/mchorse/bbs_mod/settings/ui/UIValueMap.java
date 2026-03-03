@@ -51,18 +51,8 @@ public class UIValueMap
     {
         register(ValueBoolean.class, (value, ui) ->
         {
-            Consumer<UIToggle> callback = null;
-            if (value == BBSSettings.editorHorizontalClipEditorFollowsLayout && ui instanceof UISettingsOverlayPanel)
-            {
-                callback = (t) -> ((UISettingsOverlayPanel) ui).refresh();
-            }
-            UIToggle toggle = UIValueFactory.booleanUI(value, callback);
-            if (value == BBSSettings.editorHorizontalClipEditor)
-            {
-                toggle.setEnabled(!BBSSettings.editorHorizontalClipEditorFollowsLayout.get());
-            }
+            UIToggle toggle = UIValueFactory.booleanUI(value, null);
             toggle.resetFlex();
-
             return Arrays.asList(toggle);
         });
 

@@ -5,16 +5,15 @@ import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.utils.MathUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ValueEditorLayout extends BaseValue
 {
-    private boolean horizontal;
-    private float mainSizeH = 0.66F;
-    private float mainSizeV = 0.66F;
-    private float editorSizeH = 0.5F;
-    private float editorSizeV = 0.5F;
+    private EditorLayoutNode filmLayoutRoot = EditorLayoutNode.defaultFilmLayout();
+    private List<EditorLayoutNode.SplitterNode> filmSplitters = new ArrayList<>();
     private float stateEditorSizeH = 0.7F;
     private float stateEditorSizeV = 0.25F;
-    private boolean smallPanelsSwapped;
     private int keyframeLabelWidth = 120;
 
     public ValueEditorLayout(String id)
@@ -22,64 +21,109 @@ public class ValueEditorLayout extends BaseValue
         super(id);
     }
 
-    public void setHorizontal(boolean horizontal)
+    public EditorLayoutNode getFilmLayoutRoot()
     {
-        BaseValue.edit(this, (v) -> this.horizontal = horizontal);
+        return this.filmLayoutRoot;
     }
 
-    public void setMainSizeH(float mainSizeH)
+    public void setFilmLayoutRoot(EditorLayoutNode root)
     {
-        BaseValue.edit(this, (v) -> this.mainSizeH = mainSizeH);
+        BaseValue.edit(this, (v) ->
+        {
+            this.filmLayoutRoot = root;
+            this.filmSplitters.clear();
+            EditorLayoutNode.collectSplitters(root, this.filmSplitters);
+        });
     }
 
-    public void setMainSizeV(float mainSizeV)
+    public List<EditorLayoutNode.SplitterNode> getFilmSplitters()
     {
-        BaseValue.edit(this, (v) -> this.mainSizeV = mainSizeV);
+        return this.filmSplitters;
     }
 
-    public void setEditorSizeH(float editorSizeH)
+    public void setFilmSplitterRatio(int index, float ratio)
     {
-        BaseValue.edit(this, (v) -> this.editorSizeH = editorSizeH);
+        if (index < 0 || index >= this.filmSplitters.size())
+        {
+            return;
+        }
+        int i = index;
+        BaseValue.edit(this, (v) -> this.filmSplitters.get(i).setRatio(MathUtils.clamp(ratio, 0.05F, 0.95F)));
     }
 
-    public void setEditorSizeV(float editorSizeV)
+    public float getFilmMainRatio()
     {
-        BaseValue.edit(this, (v) -> this.editorSizeV = editorSizeV);
+        if (this.filmLayoutRoot instanceof EditorLayoutNode.SplitterNode)
+        {
+            return ((EditorLayoutNode.SplitterNode) this.filmLayoutRoot).getRatio();
+        }
+        return 0.66F;
     }
 
-    public void setStateEditorSizeH(float editorSizeH)
+    public float getFilmSmallRatio()
     {
-        BaseValue.edit(this, (v) -> this.stateEditorSizeH = editorSizeH);
+        if (this.filmLayoutRoot instanceof EditorLayoutNode.SplitterNode)
+        {
+            EditorLayoutNode second = ((EditorLayoutNode.SplitterNode) this.filmLayoutRoot).getSecond();
+            if (second instanceof EditorLayoutNode.SplitterNode)
+            {
+                return ((EditorLayoutNode.SplitterNode) second).getRatio();
+            }
+        }
+        return 0.5F;
     }
 
-    public void setStateEditorSizeV(float editorSizeV)
+    public void setFilmRatios(float mainRatio, float smallRatio)
     {
-        BaseValue.edit(this, (v) -> this.stateEditorSizeV = editorSizeV);
+        BaseValue.edit(this, (v) ->
+        {
+            if (this.filmLayoutRoot instanceof EditorLayoutNode.SplitterNode)
+            {
+                EditorLayoutNode.SplitterNode root = (EditorLayoutNode.SplitterNode) this.filmLayoutRoot;
+                root.setRatio(MathUtils.clamp(mainRatio, 0.05F, 0.95F));
+                EditorLayoutNode second = root.getSecond();
+                if (second instanceof EditorLayoutNode.SplitterNode)
+                {
+                    ((EditorLayoutNode.SplitterNode) second).setRatio(MathUtils.clamp(smallRatio, 0.05F, 0.95F));
+                }
+            }
+        });
     }
 
-    public boolean isHorizontal()
+    public void setFilmMainRatio(float mainRatio)
     {
-        return this.horizontal;
+        BaseValue.edit(this, (v) ->
+        {
+            if (this.filmLayoutRoot instanceof EditorLayoutNode.SplitterNode)
+            {
+                ((EditorLayoutNode.SplitterNode) this.filmLayoutRoot).setRatio(MathUtils.clamp(mainRatio, 0.05F, 0.95F));
+            }
+        });
     }
 
-    public float getMainSizeH()
+    public void setFilmSmallRatio(float smallRatio)
     {
-        return this.mainSizeH;
+        BaseValue.edit(this, (v) ->
+        {
+            if (this.filmLayoutRoot instanceof EditorLayoutNode.SplitterNode)
+            {
+                EditorLayoutNode second = ((EditorLayoutNode.SplitterNode) this.filmLayoutRoot).getSecond();
+                if (second instanceof EditorLayoutNode.SplitterNode)
+                {
+                    ((EditorLayoutNode.SplitterNode) second).setRatio(MathUtils.clamp(smallRatio, 0.05F, 0.95F));
+                }
+            }
+        });
     }
 
-    public float getMainSizeV()
+    public void setStateEditorSizeH(float stateEditorSizeH)
     {
-        return this.mainSizeV;
+        BaseValue.edit(this, (v) -> this.stateEditorSizeH = stateEditorSizeH);
     }
 
-    public float getEditorSizeH()
+    public void setStateEditorSizeV(float stateEditorSizeV)
     {
-        return this.editorSizeH;
-    }
-
-    public float getEditorSizeV()
-    {
-        return this.editorSizeV;
+        BaseValue.edit(this, (v) -> this.stateEditorSizeV = stateEditorSizeV);
     }
 
     public float getStateEditorSizeH()
@@ -90,16 +134,6 @@ public class ValueEditorLayout extends BaseValue
     public float getStateEditorSizeV()
     {
         return MathUtils.clamp(this.stateEditorSizeV, 0.1F, 0.9F);
-    }
-
-    public boolean isSmallPanelsSwapped()
-    {
-        return this.smallPanelsSwapped;
-    }
-
-    public void setSmallPanelsSwapped(boolean smallPanelsSwapped)
-    {
-        BaseValue.edit(this, (v) -> this.smallPanelsSwapped = smallPanelsSwapped);
     }
 
     public int getKeyframeLabelWidth()
@@ -116,17 +150,10 @@ public class ValueEditorLayout extends BaseValue
     public BaseType toData()
     {
         MapType data = new MapType();
-
-        data.putBool("horizontal", this.horizontal);
-        data.putFloat("main_size_h", this.mainSizeH);
-        data.putFloat("main_size_v", this.mainSizeV);
-        data.putFloat("editor_size_h", this.editorSizeH);
-        data.putFloat("editor_size_v", this.editorSizeV);
+        data.put("film_layout", this.filmLayoutRoot.toData());
         data.putFloat("state_editor_size_h", this.stateEditorSizeH);
         data.putFloat("state_editor_size_v", this.stateEditorSizeV);
-        data.putBool("small_panels_swapped", this.smallPanelsSwapped);
         data.putInt("keyframe_label_width", this.keyframeLabelWidth);
-
         return data;
     }
 
@@ -137,14 +164,37 @@ public class ValueEditorLayout extends BaseValue
         {
             MapType map = data.asMap();
 
-            this.horizontal = map.getBool("horizontal");
-            this.mainSizeH = map.getFloat("main_size_h", 0.66F);
-            this.mainSizeV = map.getFloat("main_size_v", 0.66F);
-            this.editorSizeH = map.getFloat("editor_size_h", 0.5F);
-            this.editorSizeV = map.getFloat("editor_size_v", 0.5F);
+            if (map.has("film_layout"))
+            {
+                this.filmLayoutRoot = EditorLayoutNode.fromData(map.get("film_layout"));
+                if (this.filmLayoutRoot == null)
+                {
+                    this.filmLayoutRoot = EditorLayoutNode.defaultFilmLayout();
+                }
+                this.filmSplitters.clear();
+                EditorLayoutNode.collectSplitters(this.filmLayoutRoot, this.filmSplitters);
+            }
+            else
+            {
+                float mainV = map.getFloat("main_size_v", 0.66F);
+                float editorV = map.getFloat("editor_size_v", 0.5F);
+                this.filmLayoutRoot = EditorLayoutNode.defaultFilmLayout();
+                if (this.filmLayoutRoot instanceof EditorLayoutNode.SplitterNode)
+                {
+                    EditorLayoutNode.SplitterNode root = (EditorLayoutNode.SplitterNode) this.filmLayoutRoot;
+                    root.setRatio(MathUtils.clamp(mainV, 0.05F, 0.95F));
+                    EditorLayoutNode second = root.getSecond();
+                    if (second instanceof EditorLayoutNode.SplitterNode)
+                    {
+                        ((EditorLayoutNode.SplitterNode) second).setRatio(MathUtils.clamp(editorV, 0.05F, 0.95F));
+                    }
+                }
+                this.filmSplitters.clear();
+                EditorLayoutNode.collectSplitters(this.filmLayoutRoot, this.filmSplitters);
+            }
+
             this.stateEditorSizeH = map.getFloat("state_editor_size_h", 0.7F);
             this.stateEditorSizeV = map.getFloat("state_editor_size_v", 0.25F);
-            this.smallPanelsSwapped = map.getBool("small_panels_swapped", false);
             this.keyframeLabelWidth = map.getInt("keyframe_label_width", 120);
         }
     }
