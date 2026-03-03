@@ -1075,6 +1075,7 @@
 	"bbs.ui.transforms.editing": "Редактируеться...",
 	"bbs.ui.transforms.keys.category": "Трансформации",
 	"bbs.ui.transforms.keys.toggle_axes": "Переключить XYZ оси",
+	"bbs.ui.transforms.keys.toggle_fix": "Переключить фиксацию (0 / 1)",
 	"bbs.ui.transforms.rotate": "Поворот",
 	"bbs.ui.transforms.rotate2": "Вращение (2-ое)",
 	"bbs.ui.transforms.scale": "Размер",

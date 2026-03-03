@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
+import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
@@ -36,6 +37,8 @@ public class UIPoseTransformKeyframeFactory extends UIKeyframeFactory<PoseTransf
         this.transform.enableHotkeys();
         this.transform.setTransform(keyframe.getValue());
 
+        this.keys().register(Keys.TRANSFORMATIONS_TOGGLE_FIX, this::toggleFix).category(UIKeys.TRANSFORMS_KEYS_CATEGORY);
+
         this.fix = new UITrackpad((v) ->
         {
             if (this.transform.getTransform() instanceof PoseTransform)
@@ -68,6 +71,17 @@ public class UIPoseTransformKeyframeFactory extends UIKeyframeFactory<PoseTransf
         this.lighting.setValue(keyframe.getValue().lighting == 0F);
 
         this.scroll.add(UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, UI.row(this.color, this.lighting), this.transform.marginTop(4));
+    }
+
+    private void toggleFix()
+    {
+        if (!(this.transform.getTransform() instanceof PoseTransform))
+        {
+            return;
+        }
+        float next = this.fix.getValue() >= 0.5F ? 0F : 1F;
+        this.fix.setValue(next);
+        UIPoseTransforms.apply(this.editor, this.keyframe, (poseT) -> poseT.fix = next);
     }
 
     public static class UIPoseTransforms extends UIPropTransform
