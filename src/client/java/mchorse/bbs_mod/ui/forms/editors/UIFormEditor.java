@@ -182,6 +182,17 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
             this.updateFormListButtons();
         });
         this.formsList.context(this::createFormContextMenu);
+        this.formsList.keys().register(Keys.COPY, () -> this.copyPasteController.copy())
+            .inside().label(UIKeys.FORMS_EDITOR_CONTEXT_COPY).active(this.copyPasteController::canCopy);
+        this.formsList.keys().register(Keys.PASTE, () -> this.copyPasteController.paste(0, 0))
+            .inside().label(UIKeys.FORMS_EDITOR_CONTEXT_PASTE).active(this.copyPasteController::canPaste);
+        this.formsList.keys().register(Keys.DELETE, this::removeBodyPart)
+            .inside().label(UIKeys.FORMS_EDITOR_CONTEXT_REMOVE)
+            .active(() ->
+            {
+                UIForms.FormEntry current = this.formsList.getCurrentFirst();
+                return current != null && current.part != null;
+            });
 
         UIElement listSection = new UIElement();
         listSection.relative(this.forms).w(1F).h(0.5F);
