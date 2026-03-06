@@ -137,14 +137,14 @@ public class UIForms extends UIList<UIForms.FormEntry>
         {
             if (this.part == null)
             {
-                return this.form.getFormIdOrName();
+                return this.form.getDisplayName();
             }
             else if (this.part.getForm() == null)
             {
                 return "-";
             }
 
-            return this.part.getForm().getFormIdOrName();
+            return this.part.getForm().getDisplayName();
         }
     }
 }
