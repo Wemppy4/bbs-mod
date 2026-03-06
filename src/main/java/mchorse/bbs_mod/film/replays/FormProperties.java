@@ -300,6 +300,7 @@ public class FormProperties extends ValueGroup
     {
         super.fromData(data);
 
+        this.removeAll();
         this.properties.clear();
 
         if (!data.isMap())

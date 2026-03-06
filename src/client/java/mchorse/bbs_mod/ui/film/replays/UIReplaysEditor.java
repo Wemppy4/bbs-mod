@@ -558,12 +558,13 @@ public class UIReplaysEditor extends UIElement
                         && (sheet.id.equals("pose") || sheet.id.endsWith(FormUtils.PATH_SEPARATOR + "pose"))
                         && !sheet.id.contains("pose_overlay");
 
-                    if (isPoseTrack && !sheet.channel.isEmpty())
+                    if (isPoseTrack && sheet.selection.hasAny())
                     {
                         menu.action(Icons.LIMB, UIKeys.FILM_REPLAY_CONTEXT_POSES_TO_LIMBS, () ->
                         {
                             UIReplaysEditorUtils.posesToLimbTracks(this.replay, sheet, modelForm);
-                            
+
+                            sheet.selection.removeSelected();
                             this.updateChannelsList();
                         });
                     }

@@ -411,9 +411,14 @@ public class UIReplaysEditorUtils
 
         bones.removeIf(model.disabledBones::contains);
 
-        List<Keyframe<Pose>> keyframes = (List<Keyframe<Pose>>) (List<?>) poseSheet.channel.getKeyframes();
+        List<Keyframe<Pose>> selectedKeyframes = (List<Keyframe<Pose>>) (List<?>) poseSheet.selection.getSelected();
 
-        for (Keyframe<Pose> keyframe : keyframes)
+        if (selectedKeyframes.isEmpty())
+        {
+            return;
+        }
+
+        for (Keyframe<Pose> keyframe : selectedKeyframes)
         {
             Pose pose = keyframe.getValue();
 
@@ -439,7 +444,6 @@ public class UIReplaysEditorUtils
                 int index = limbChannel.insert(tick, copy);
                 Keyframe<PoseTransform> limbKf = limbChannel.get(index);
 
-                limbKf.preNotify();
                 limbKf.getInterpolation().copy(keyframe.getInterpolation());
                 limbKf.setShape(keyframe.getShape());
                 limbKf.setColor(keyframe.getColor() != null ? keyframe.getColor().copy() : null);
@@ -452,11 +456,8 @@ public class UIReplaysEditorUtils
                 limbKf.ly_m = keyframe.ly_m != null ? new ArrayList<>(keyframe.ly_m) : null;
                 limbKf.rx_m = keyframe.rx_m != null ? new ArrayList<>(keyframe.rx_m) : null;
                 limbKf.ry_m = keyframe.ry_m != null ? new ArrayList<>(keyframe.ry_m) : null;
-                limbKf.postNotify();
             }
         }
-
-        poseSheet.channel.removeAll();
     }
 
     /* Offer bone hierarchy options */
