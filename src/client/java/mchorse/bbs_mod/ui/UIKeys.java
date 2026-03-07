@@ -276,6 +276,7 @@ public class UIKeys
     public static final IKey FILM_PLAYER_SETTINGS_TITLE = L10n.lang("bbs.ui.film.player_settings-title");
     public static final IKey FILM_PLAYER_SETTINGS_XP_LEVEL = L10n.lang("bbs.ui.film.player_settings.xp_level");
     public static final IKey FILM_PLAYER_SETTINGS_XP_PROGRESS = L10n.lang("bbs.ui.film.player_settings.xp_progress");
+    public static final IKey FILM_APPLY_PLAYER_SETTINGS_TO_PLAYER = L10n.lang("bbs.ui.film.apply_player_settings_to_player");
     public static final IKey FILM_REPLACE_INVENTORY = L10n.lang("bbs.ui.film.replace_inventory");
     public static final IKey FILM_REPLAY_ACTOR = L10n.lang("bbs.ui.film.replay.actor");
     public static final IKey FILM_REPLAY_ACTOR_TOOLTIP = L10n.lang("bbs.ui.film.replay.actor-tooltip");

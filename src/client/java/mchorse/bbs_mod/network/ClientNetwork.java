@@ -553,4 +553,21 @@ public class ClientNetwork
 
         ClientPlayNetworking.send(ServerNetwork.SERVER_PAUSE_FILM, buf);
     }
+
+    public static void sendApplyFilmPlayerSettingsToPlayer(Film film)
+    {
+        PacketByteBuf buf = PacketByteBufs.create();
+
+        buf.writeFloat(film.hp.get());
+        buf.writeFloat(film.hunger.get());
+        buf.writeInt(film.xpLevel.get());
+        buf.writeFloat(film.xpProgress.get());
+
+        byte[] invBytes = DataStorageUtils.writeToBytes(film.inventory.toData());
+
+        buf.writeInt(invBytes.length);
+        buf.writeBytes(invBytes);
+
+        ClientPlayNetworking.send(ServerNetwork.SERVER_APPLY_FILM_PLAYER_SETTINGS, buf);
+    }
 }
