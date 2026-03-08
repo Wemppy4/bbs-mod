@@ -54,9 +54,19 @@ public class OrbitFilmCameraController implements ICameraController
 
     public void start(UIContext context)
     {
-        if (context.mouseButton != 2)
+        if (this.controller.panel.isFlying())
         {
-            return;
+            if (context.mouseButton != 0 && !(context.mouseButton == 2 && Window.isKeyPressed(Keys.FLIGHT_ORBIT.getMainKey())))
+            {
+                return;
+            }
+        }
+        else
+        {
+            if (context.mouseButton != 2 || !Window.isKeyPressed(Keys.FLIGHT_ORBIT.getMainKey()))
+            {
+                return;
+            }
         }
 
         this.center = Window.isKeyPressed(Keys.FLIGHT_ORBIT.getMainKey());
@@ -100,6 +110,11 @@ public class OrbitFilmCameraController implements ICameraController
 
         if (area.isInside(context) || (!this.velocityPosition.equals(0, 0, 0) && context.getKeyAction() == KeyAction.RELEASED))
         {
+            if (!this.controller.panel.isFlying())
+            {
+                return false;
+            }
+
             int x = this.getFactor(context, Keys.FLIGHT_LEFT, Keys.FLIGHT_RIGHT, this.velocityPosition.x);
             int y = this.getFactor(context, Keys.FLIGHT_UP, Keys.FLIGHT_DOWN, this.velocityPosition.y);
             int z = this.getFactor(context, Keys.FLIGHT_FORWARD, Keys.FLIGHT_BACKWARD, this.velocityPosition.z);
@@ -153,6 +168,13 @@ public class OrbitFilmCameraController implements ICameraController
     {
         if (!this.enabled || context.isFocused())
         {
+            return false;
+        }
+
+        if (!this.controller.panel.isFlying())
+        {
+            this.velocityPosition.set(0, 0, 0);
+
             return false;
         }
 

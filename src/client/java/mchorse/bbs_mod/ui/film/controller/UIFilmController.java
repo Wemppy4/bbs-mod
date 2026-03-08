@@ -604,6 +604,11 @@ public class UIFilmController extends UIElement
 
         this.orbit.stop();
 
+        if (this.panel.isFlying() && context.mouseButton == 2)
+        {
+            this.panel.dashboard.orbit.release();
+        }
+
         return super.subMouseReleased(context);
     }
 
@@ -775,7 +780,10 @@ public class UIFilmController extends UIElement
             {
                 this.orbit.setup(camera, transition);
 
-                camera.fov = BBSSettings.getFov();
+                if (!this.panel.isFlying())
+                {
+                    camera.fov = BBSSettings.getFov();
+                }
             }
             else if (mode != CAMERA_MODE_FREE)
             {

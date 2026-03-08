@@ -1,5 +1,15 @@
 package mchorse.bbs_mod.ui.film.replays;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import org.joml.Vector3d;
+
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.audio.SoundBuffer;
@@ -12,7 +22,6 @@ import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.data.DataStorageUtils;
 import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.film.Film;
-import mchorse.bbs_mod.film.replays.PerLimbService;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.film.replays.ReplayKeyframes;
 import mchorse.bbs_mod.forms.FormUtils;
@@ -26,7 +35,6 @@ import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
-import mchorse.bbs_mod.settings.values.core.ValueTransform;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIClipsPanel;
@@ -63,21 +71,11 @@ import mchorse.bbs_mod.utils.clips.Clips;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
-import mchorse.bbs_mod.utils.pose.PoseTransform;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
-import org.joml.Vector3d;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 public class UIReplaysEditor extends UIElement
 {
@@ -637,6 +635,29 @@ public class UIReplaysEditor extends UIElement
 
     public boolean clickViewport(UIContext context, Area area)
     {
+        if (this.filmPanel.isFlying() && area.isInside(context))
+        {
+            if (context.mouseButton == 0 && this.filmPanel.getController().orbit.enabled)
+            {
+                this.filmPanel.getController().orbit.start(context);
+
+                return true;
+            }
+            if (context.mouseButton == 2)
+            {
+                if (Window.isKeyPressed(Keys.FLIGHT_ORBIT.getMainKey()) && this.filmPanel.getController().orbit.enabled)
+                {
+                    this.filmPanel.getController().orbit.start(context);
+                }
+                else
+                {
+                    this.filmPanel.dashboard.orbit.start(2, context.mouseX, context.mouseY);
+                }
+
+                return true;
+            }
+        }
+
         if (this.filmPanel.isFlying())
         {
             return false;

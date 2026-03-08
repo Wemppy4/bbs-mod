@@ -1304,18 +1304,33 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     {
         if (!this.isRunning() || !flight)
         {
-            this.runner.setManual(flight ? this.position : null);
-            this.dashboard.orbitUI.setControl(flight);
-
-            /* Marking the latest undo as unmergeable */
-            if (this.undoHandler != null && !flight)
+            if (!flight)
             {
-                this.undoHandler.getUndoManager().markLastUndoNoMerging();
+                this.persistFlightFov();
+                if (this.undoHandler != null)
+                {
+                    this.undoHandler.getUndoManager().markLastUndoNoMerging();
+                }
+                else
+                {
+                    this.lastPosition.set(Position.ZERO);
+                }
             }
             else
             {
                 this.lastPosition.set(Position.ZERO);
             }
+
+            this.runner.setManual(flight ? this.position : null);
+            this.dashboard.orbitUI.setControl(flight);
+        }
+    }
+
+    private void persistFlightFov()
+    {
+        if (BBSSettings.fov != null)
+        {
+            BBSSettings.fov.set(this.position.angle.fov);
         }
     }
 
