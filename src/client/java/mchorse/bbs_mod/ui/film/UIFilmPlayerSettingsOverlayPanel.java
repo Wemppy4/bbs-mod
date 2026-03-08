@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.film;
 
 import mchorse.bbs_mod.film.Film;
+import mchorse.bbs_mod.network.ClientNetwork;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
@@ -21,6 +22,7 @@ public class UIFilmPlayerSettingsOverlayPanel extends UIMessageBarOverlayPanel
     public final UITrackpad xpProgress;
 
     public final UIButton replaceInventory;
+    public final UIButton applyToPlayer;
     public final UIScrollView editor;
 
     public UIFilmPlayerSettingsOverlayPanel(Film film)
@@ -45,14 +47,13 @@ public class UIFilmPlayerSettingsOverlayPanel extends UIMessageBarOverlayPanel
         this.xpProgress.limit(0, 1).increment(0.01D).setValue(this.film.xpProgress.get());
 
         this.replaceInventory = new UIButton(UIKeys.FILM_REPLACE_INVENTORY, (b) ->
-        {
-            if (MinecraftClient.getInstance().player != null)
-            {
-                BaseValue.edit(this.film.inventory, (inv) -> inv.fromPlayer(MinecraftClient.getInstance().player));
-            }
-        });
+            BaseValue.edit(this.film.inventory, (inv) -> inv.fromPlayer(MinecraftClient.getInstance().player)));
         this.replaceInventory.setEnabled(MinecraftClient.getInstance().player != null);
         this.replaceInventory.w(1F);
+
+        this.applyToPlayer = new UIButton(UIKeys.FILM_APPLY_PLAYER_SETTINGS_TO_PLAYER, (b) -> ClientNetwork.sendApplyFilmPlayerSettingsToPlayer(this.film));
+        this.applyToPlayer.setEnabled(MinecraftClient.getInstance().player != null);
+        this.applyToPlayer.w(1F);
 
         this.editor = UI.scrollView(5, 6,
             UI.label(UIKeys.FILM_PLAYER_SETTINGS_HP),
@@ -63,7 +64,8 @@ public class UIFilmPlayerSettingsOverlayPanel extends UIMessageBarOverlayPanel
             this.xpLevel,
             UI.label(UIKeys.FILM_PLAYER_SETTINGS_XP_PROGRESS).marginTop(UIConstants.SECTION_GAP),
             this.xpProgress,
-            this.replaceInventory.marginTop(10)
+            this.replaceInventory.marginTop(10),
+            this.applyToPlayer.marginTop(4)
         );
         this.editor.relative(this.message).x(0).w(1F).y(1F, 6).hTo(this.bar.area, -6);
 

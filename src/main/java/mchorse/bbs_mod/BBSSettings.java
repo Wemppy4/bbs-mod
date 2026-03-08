@@ -37,6 +37,7 @@ public class BBSSettings
     public static ValueBoolean uniformScale;
     public static ValueBoolean clickSound;
     public static ValueBoolean gizmos;
+    public static ValueBoolean transformLocalDefault;
 
     public static ValueBoolean enableCursorRendering;
     public static ValueBoolean enableMouseButtonRendering;
@@ -180,6 +181,7 @@ public class BBSSettings
         uniformScale = builder.getBoolean("uniform_scale", false);
         clickSound = builder.getBoolean("click_sound", false);
         gizmos = builder.getBoolean("gizmos", true);
+        transformLocalDefault = builder.getBoolean("transform_local_default", false);
         editorTrackWidth = builder.getInt("track_width", 2, 1, 10);
         favoriteColors = new ValueColors("favorite_colors");
         disabledSheets = new ValueStringKeys("disabled_sheets");

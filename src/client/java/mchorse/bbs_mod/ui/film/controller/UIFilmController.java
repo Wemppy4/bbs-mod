@@ -1,7 +1,22 @@
 package mchorse.bbs_mod.ui.film.controller;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import org.joml.Matrix3f;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
+
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import mchorse.bbs_mod.BBSModClient;
@@ -33,15 +48,16 @@ import mchorse.bbs_mod.settings.values.ui.ValueOnionSkin;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
-import mchorse.bbs_mod.ui.film.replays.UIReplayList;
-import mchorse.bbs_mod.ui.film.replays.UIReplaysEditorUtils;
 import mchorse.bbs_mod.ui.film.replays.UIRecordOverlayPanel;
+import mchorse.bbs_mod.ui.film.replays.UIReplayList;
+import mchorse.bbs_mod.ui.film.replays.UIReplaysEditor;
+import mchorse.bbs_mod.ui.film.replays.UIReplaysEditorUtils;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
+import mchorse.bbs_mod.ui.framework.elements.context.UISimpleContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeEditor;
-import mchorse.bbs_mod.ui.framework.elements.context.UISimpleContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.framework.elements.utils.StencilMap;
@@ -71,19 +87,6 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
-import org.joml.Matrix3f;
-import org.joml.Vector2f;
-import org.joml.Vector2i;
-import org.joml.Vector3d;
-import org.joml.Vector3f;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 
 public class UIFilmController extends UIElement
 {
@@ -603,6 +606,11 @@ public class UIFilmController extends UIElement
 
         this.orbit.stop();
 
+        if (this.panel.isFlying() && context.mouseButton == 2)
+        {
+            this.panel.dashboard.orbit.release();
+        }
+
         return super.subMouseReleased(context);
     }
 
@@ -774,7 +782,10 @@ public class UIFilmController extends UIElement
             {
                 this.orbit.setup(camera, transition);
 
-                camera.fov = BBSSettings.getFov();
+                if (!this.panel.isFlying())
+                {
+                    camera.fov = BBSSettings.getFov();
+                }
             }
             else if (mode != CAMERA_MODE_FREE)
             {
@@ -848,6 +859,20 @@ public class UIFilmController extends UIElement
             return;
         }
 
+        UIReplaysEditor.ReplayCategory category = this.panel.replayEditor.getCategory();
+
+        if (category == UIReplaysEditor.ReplayCategory.MODEL)
+        {
+            return;
+        }
+
+        if (category == UIReplaysEditor.ReplayCategory.POSE)
+        {
+            UIReplaysEditorUtils.insertPoseKeyframesAtTick(replay, this.getTick());
+            return;
+        }
+
+        /* PLAYER */
         if (Window.isCtrlPressed())
         {
             this.toggleMousePointer(false);

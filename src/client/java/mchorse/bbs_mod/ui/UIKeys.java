@@ -276,6 +276,7 @@ public class UIKeys
     public static final IKey FILM_PLAYER_SETTINGS_TITLE = L10n.lang("bbs.ui.film.player_settings-title");
     public static final IKey FILM_PLAYER_SETTINGS_XP_LEVEL = L10n.lang("bbs.ui.film.player_settings.xp_level");
     public static final IKey FILM_PLAYER_SETTINGS_XP_PROGRESS = L10n.lang("bbs.ui.film.player_settings.xp_progress");
+    public static final IKey FILM_APPLY_PLAYER_SETTINGS_TO_PLAYER = L10n.lang("bbs.ui.film.apply_player_settings_to_player");
     public static final IKey FILM_REPLACE_INVENTORY = L10n.lang("bbs.ui.film.replace_inventory");
     public static final IKey FILM_REPLAY_ACTOR = L10n.lang("bbs.ui.film.replay.actor");
     public static final IKey FILM_REPLAY_ACTOR_TOOLTIP = L10n.lang("bbs.ui.film.replay.actor-tooltip");
@@ -379,6 +380,8 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_GENERAL = L10n.lang("bbs.ui.forms.editors.general");
     public static final IKey FORMS_EDITORS_GENERAL_ANIMATABLE = L10n.lang("bbs.ui.forms.editors.general.animatable");
     public static final IKey FORMS_EDITORS_GENERAL_ANIMATABLE_TOOLTIP = L10n.lang("bbs.ui.forms.editors.general.animatable-tooltip");
+    public static final IKey FORMS_EDITORS_GENERAL_BONE_TRACKS = L10n.lang("bbs.ui.forms.editors.general.bone_tracks");
+    public static final IKey FORMS_EDITORS_GENERAL_BONE_TRACKS_TOOLTIP = L10n.lang("bbs.ui.forms.editors.general.bone_tracks-tooltip");
     public static final IKey FORMS_EDITORS_GENERAL_DISPLAY = L10n.lang("bbs.ui.forms.editors.general.display");
     public static final IKey FORMS_EDITORS_GENERAL_HITBOX = L10n.lang("bbs.ui.forms.editors.general.hitbox");
     public static final IKey FORMS_EDITORS_GENERAL_HITBOX_EYE_HEIGHT = L10n.lang("bbs.ui.forms.editors.general.hitbox_eye_height");

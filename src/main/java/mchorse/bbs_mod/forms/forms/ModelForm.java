@@ -9,6 +9,7 @@ import mchorse.bbs_mod.settings.values.core.ValueColor;
 import mchorse.bbs_mod.settings.values.core.ValueLink;
 import mchorse.bbs_mod.settings.values.core.ValuePose;
 import mchorse.bbs_mod.settings.values.core.ValueString;
+import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.pose.Pose;
 
@@ -24,6 +25,7 @@ public class ModelForm extends Form
     public final ValueActionsConfig actions = new ValueActionsConfig("actions", new ActionsConfig());
     public final ValueColor color = new ValueColor("color", Color.white());
     public final ValueShapeKeys shapeKeys = new ValueShapeKeys("shape_keys", new ShapeKeys());
+    public final ValueBoolean boneTracks = new ValueBoolean("bone_tracks", true);
 
     public final List<ValuePose> additionalOverlays = new ArrayList<>();
 
@@ -47,6 +49,8 @@ public class ModelForm extends Form
         this.add(this.actions);
         this.add(this.color);
         this.add(this.shapeKeys);
+        this.boneTracks.invisible();
+        this.add(this.boneTracks);
     }
 
     @Override

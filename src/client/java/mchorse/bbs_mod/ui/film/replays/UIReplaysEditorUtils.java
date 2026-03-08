@@ -31,6 +31,7 @@ import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
+import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.utils.pose.Pose;
 import mchorse.bbs_mod.utils.pose.PoseTransform;
 
@@ -47,8 +48,45 @@ public class UIReplaysEditorUtils
 {
     private static final int BONE_TRACK_HUE_COUNT = 12;
 
+    public static void insertPoseKeyframesAtTick(Replay replay, float tick)
+    {
+        if (replay == null)
+        {
+            return;
+        }
+
+        BaseValue.edit(replay.properties, (props) ->
+        {
+            for (KeyframeChannel<?> channel : props.properties.values())
+            {
+                if (!PerLimbService.isPoseBoneChannel(channel.getId()))
+                {
+                    continue;
+                }
+
+                KeyframeChannel<PoseTransform> poseChannel = (KeyframeChannel<PoseTransform>) channel;
+                KeyframeSegment<PoseTransform> segment = poseChannel.find(tick);
+                PoseTransform value = segment != null ? segment.createInterpolated() : new PoseTransform();
+
+                int index = poseChannel.insert(tick, value);
+                Keyframe<PoseTransform> kf = poseChannel.get(index);
+
+                Keyframe<PoseTransform> template = segment != null ? segment.a : null;
+                if (template != null && template != kf)
+                {
+                    kf.copyOverExtra(template);
+                }
+            }
+        });
+    }
+
     public static void addBoneTrackSheets(ModelForm modelForm, FormProperties properties, List<UIKeyframeSheet> out)
     {
+        if (!modelForm.boneTracks.get())
+        {
+            return;
+        }
+
         ModelInstance model = ModelFormRenderer.getModel(modelForm);
 
         if (model == null)
@@ -378,9 +416,14 @@ public class UIReplaysEditorUtils
 
         bones.removeIf(model.disabledBones::contains);
 
-        List<Keyframe<Pose>> keyframes = (List<Keyframe<Pose>>) (List<?>) poseSheet.channel.getKeyframes();
+        List<Keyframe<Pose>> selectedKeyframes = (List<Keyframe<Pose>>) (List<?>) poseSheet.selection.getSelected();
 
-        for (Keyframe<Pose> keyframe : keyframes)
+        if (selectedKeyframes.isEmpty())
+        {
+            return;
+        }
+
+        for (Keyframe<Pose> keyframe : selectedKeyframes)
         {
             Pose pose = keyframe.getValue();
 
@@ -406,7 +449,6 @@ public class UIReplaysEditorUtils
                 int index = limbChannel.insert(tick, copy);
                 Keyframe<PoseTransform> limbKf = limbChannel.get(index);
 
-                limbKf.preNotify();
                 limbKf.getInterpolation().copy(keyframe.getInterpolation());
                 limbKf.setShape(keyframe.getShape());
                 limbKf.setColor(keyframe.getColor() != null ? keyframe.getColor().copy() : null);
@@ -419,11 +461,8 @@ public class UIReplaysEditorUtils
                 limbKf.ly_m = keyframe.ly_m != null ? new ArrayList<>(keyframe.ly_m) : null;
                 limbKf.rx_m = keyframe.rx_m != null ? new ArrayList<>(keyframe.rx_m) : null;
                 limbKf.ry_m = keyframe.ry_m != null ? new ArrayList<>(keyframe.ry_m) : null;
-                limbKf.postNotify();
             }
         }
-
-        poseSheet.channel.removeAll();
     }
 
     /* Offer bone hierarchy options */

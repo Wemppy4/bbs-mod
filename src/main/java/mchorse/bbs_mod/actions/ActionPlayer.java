@@ -90,11 +90,16 @@ public class ActionPlayer
             this.cacheXpLevel = this.serverPlayer.experienceLevel;
             this.cacheXpProgress = this.serverPlayer.experienceProgress;
 
-            this.serverPlayer.setHealth(this.film.hp.get());
-            this.serverPlayer.getHungerManager().setFoodLevel(this.film.hunger.get().intValue());
-            this.serverPlayer.experienceProgress = this.film.xpProgress.get();
-            this.serverPlayer.setExperienceLevel(this.film.xpLevel.get());
+            applyFilmPlayerSettingsTo(this.serverPlayer, this.film.hp.get(), this.film.hunger.get(), this.film.xpLevel.get(), this.film.xpProgress.get());
         }
+    }
+
+    public static void applyFilmPlayerSettingsTo(ServerPlayerEntity player, float hp, float hunger, int xpLevel, float xpProgress)
+    {
+        player.setHealth(hp);
+        player.getHungerManager().setFoodLevel((int) hunger);
+        player.setExperienceLevel(xpLevel);
+        player.experienceProgress = xpProgress;
     }
 
     public void updateReplayEntities()

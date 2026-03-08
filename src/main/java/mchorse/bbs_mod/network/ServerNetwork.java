@@ -3,6 +3,7 @@ package mchorse.bbs_mod.network;
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.actions.ActionManager;
 import mchorse.bbs_mod.actions.ActionPlayer;
+import mchorse.bbs_mod.film.replays.Inventory;
 import mchorse.bbs_mod.actions.ActionRecorder;
 import mchorse.bbs_mod.actions.ActionState;
 import mchorse.bbs_mod.actions.PlayerType;
@@ -84,6 +85,7 @@ public class ServerNetwork
     public static final Identifier SERVER_SHARED_FORM = new Identifier(BBSMod.MOD_ID, "s11");
     public static final Identifier SERVER_ZOOM = new Identifier(BBSMod.MOD_ID, "s12");
     public static final Identifier SERVER_PAUSE_FILM = new Identifier(BBSMod.MOD_ID, "s13");
+    public static final Identifier SERVER_APPLY_FILM_PLAYER_SETTINGS = new Identifier(BBSMod.MOD_ID, "s14");
 
     private static ServerPacketCrusher crusher = new ServerPacketCrusher();
 
@@ -107,6 +109,7 @@ public class ServerNetwork
         ServerPlayNetworking.registerGlobalReceiver(SERVER_SHARED_FORM, (server, player, handler, buf, responder) -> handleSharedFormPacket(server, player, buf));
         ServerPlayNetworking.registerGlobalReceiver(SERVER_ZOOM, (server, player, handler, buf, responder) -> handleZoomPacket(server, player, buf));
         ServerPlayNetworking.registerGlobalReceiver(SERVER_PAUSE_FILM, (server, player, handler, buf, responder) -> handlePauseFilmPacket(server, player, buf));
+        ServerPlayNetworking.registerGlobalReceiver(SERVER_APPLY_FILM_PLAYER_SETTINGS, (server, player, handler, buf, responder) -> handleApplyFilmPlayerSettings(server, player, buf));
     }
 
     /* Handlers */
@@ -527,6 +530,43 @@ public class ServerNetwork
         {
             sendPauseFilm(playerEntity, filmId);
         }
+    }
+
+    private static void handleApplyFilmPlayerSettings(MinecraftServer server, ServerPlayerEntity player, PacketByteBuf buf)
+    {
+        if (!PermissionUtils.arePanelsAllowed(server, player))
+        {
+            return;
+        }
+
+        float hp = buf.readFloat();
+        float hunger = buf.readFloat();
+        int xpLevel = buf.readInt();
+        float xpProgress = buf.readFloat();
+        int invSize = buf.readInt();
+        byte[] invBytes = invSize > 0 ? new byte[invSize] : null;
+
+        if (invBytes != null)
+        {
+            buf.readBytes(invBytes);
+        }
+
+        final byte[] invBytesFinal = invBytes;
+
+        server.execute(() ->
+        {
+            ActionPlayer.applyFilmPlayerSettingsTo(player, hp, hunger, xpLevel, xpProgress);
+
+            if (invBytesFinal != null)
+            {
+                BaseType invData = DataStorageUtils.readFromBytes(invBytesFinal);
+
+                if (invData.isList())
+                {
+                    Inventory.applyToPlayer(player, invData.asList());
+                }
+            }
+        });
     }
 
     /* API */

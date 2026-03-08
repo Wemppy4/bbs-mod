@@ -48,6 +48,7 @@ public class UIPropTransform extends UITransform
     public UIPropTransform()
     {
         this.handler = new UITransformHandler(this);
+        this.local = BBSSettings.transformLocalDefault.get();
 
         this.context((menu) ->
         {
@@ -63,7 +64,7 @@ public class UIPropTransform extends UITransform
         this.iconT.callback = (b) -> this.toggleLocal();
         this.iconT.hoverColor = Colors.LIGHTEST_GRAY;
         this.iconT.setEnabled(true);
-        this.iconT.tooltip(this.local ? UIKeys.TRANSFORMS_CONTEXT_SWITCH_GLOBAL : UIKeys.TRANSFORMS_CONTEXT_SWITCH_LOCAL);
+        this.updateLocalUI();
 
         this.noCulling();
     }
@@ -108,11 +109,16 @@ public class UIPropTransform extends UITransform
     {
         this.local = !this.local;
 
-        if (!this.local)
+        if (!this.local && this.transform != null)
         {
             this.fillT(this.transform.translate.x, this.transform.translate.y, this.transform.translate.z);
         }
 
+        this.updateLocalUI();
+    }
+
+    private void updateLocalUI()
+    {
         this.tx.forcedLabel(this.local ? UIKeys.GENERAL_X : null);
         this.ty.forcedLabel(this.local ? UIKeys.GENERAL_Y : null);
         this.tz.forcedLabel(this.local ? UIKeys.GENERAL_Z : null);

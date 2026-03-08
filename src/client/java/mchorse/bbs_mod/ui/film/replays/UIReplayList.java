@@ -107,11 +107,14 @@ public class UIReplayList extends UIList<Replay>
                 menu.action(Icons.PASTE, UIKeys.SCENE_REPLAYS_CONTEXT_PASTE, () -> this.pasteReplay(copyReplay));
             }
 
-            int duration = this.panel.getData().camera.calculateDuration();
-
-            if (duration > 0)
+            if (this.panel.getData() != null)
             {
-                menu.action(Icons.PLAY, UIKeys.SCENE_REPLAYS_CONTEXT_FROM_CAMERA, () -> this.fromCamera(duration));
+                int duration = this.panel.getData().camera.calculateDuration();
+
+                if (duration > 0)
+                {
+                    menu.action(Icons.PLAY, UIKeys.SCENE_REPLAYS_CONTEXT_FROM_CAMERA, () -> this.fromCamera(duration));
+                }
             }
 
             menu.action(Icons.BLOCK, UIKeys.SCENE_REPLAYS_CONTEXT_FROM_MODEL_BLOCK, this::fromModelBlock);
@@ -704,6 +707,12 @@ public class UIReplayList extends UIList<Replay>
     public void addReplay(Vector3d position, float pitch, float yaw)
     {
         Film film = this.panel.getData();
+
+        if (film == null)
+        {
+            return;
+        }
+
         Replay replay = film.replays.addReplay();
 
         replay.keyframes.x.insert(0, position.x);
