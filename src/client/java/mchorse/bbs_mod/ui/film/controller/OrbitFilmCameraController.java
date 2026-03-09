@@ -51,6 +51,7 @@ public class OrbitFilmCameraController implements ICameraController
     public OrbitFilmCameraController(UIFilmController controller)
     {
         this.controller = controller;
+        this.reset();
     }
 
     public void start(UIContext context)

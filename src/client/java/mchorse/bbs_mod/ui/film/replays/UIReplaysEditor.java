@@ -273,7 +273,7 @@ public class UIReplaysEditor extends UIElement
     public UIReplaysEditor(UIFilmPanel filmPanel)
     {
         this.filmPanel = filmPanel;
-        this.replays = new UIReplaysOverlayPanel(filmPanel, (replay) -> this.setReplay(replay, false, true));
+        this.replays = new UIReplaysOverlayPanel(filmPanel, (replay) -> this.setReplay(replay, false, false));
 
         this.iconBar = new UIElement();
         this.iconBar.relative(this).x(0).w(20).h(1F).column(0).stretch();
@@ -340,7 +340,8 @@ public class UIReplaysEditor extends UIElement
             }
 
             this.replays.replays.setList(replays);
-            this.setReplay(replays.isEmpty() ? null : replays.get(index));
+            this.setReplay(replays.isEmpty() ? null : replays.get(index), true, false);
+            this.filmPanel.getController().orbit.reset();
         }
     }
 
@@ -351,7 +352,7 @@ public class UIReplaysEditor extends UIElement
 
     public void setReplay(Replay replay)
     {
-        this.setReplay(replay, true, true);
+        this.setReplay(replay, true, false);
     }
 
     public void setReplay(Replay replay, boolean select, boolean resetOrbit)

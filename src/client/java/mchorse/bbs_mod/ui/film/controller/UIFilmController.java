@@ -753,7 +753,7 @@ public class UIFilmController extends UIElement
 
                 manager.action(new ReplayContextAction(replay, IKey.raw(replay.getName()), () ->
                 {
-                    this.panel.replayEditor.setReplay(replay, false, true);
+                    this.panel.replayEditor.setReplay(replay, false, false);
 
                     UIReplayList list = this.panel.replayEditor.replays.replays;
 
