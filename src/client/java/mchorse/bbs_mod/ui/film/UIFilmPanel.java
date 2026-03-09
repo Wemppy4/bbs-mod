@@ -1557,7 +1557,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private void renderIcons(UIContext context)
     {
         int x = this.iconBar.area.ex() - 18;
-        int y = this.iconBar.area.ey() - 18;
+        int y = this.iconBar.area.ey() - EDIT_PANEL_TOP_OFFSET_PX * 2 - 20;
 
         if (BBSSettings.editorLoop.get())
         {
