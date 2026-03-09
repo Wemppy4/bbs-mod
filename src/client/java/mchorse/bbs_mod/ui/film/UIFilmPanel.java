@@ -306,6 +306,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         };
 
         this.add(element);
+        this.add(new UIFilmPanelUndoKeys(this).full(this));
     }
 
     public boolean isLayoutLocked()

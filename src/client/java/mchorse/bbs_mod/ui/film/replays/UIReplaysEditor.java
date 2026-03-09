@@ -273,7 +273,7 @@ public class UIReplaysEditor extends UIElement
     public UIReplaysEditor(UIFilmPanel filmPanel)
     {
         this.filmPanel = filmPanel;
-        this.replays = new UIReplaysOverlayPanel(filmPanel, (replay) -> this.setReplay(replay, false, false));
+this.replays = new UIReplaysOverlayPanel(filmPanel, (replay) -> this.setReplay(replay, false, false));
 
         this.iconBar = new UIElement();
         this.iconBar.relative(this).x(0).w(20).h(1F).column(0).stretch();
