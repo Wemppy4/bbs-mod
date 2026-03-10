@@ -2,6 +2,8 @@ package mchorse.bbs_mod.ui.film.clips.renderer;
 
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.camera.clips.ClipFactoryData;
+import mchorse.bbs_mod.resources.Link;
+import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIClips;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
@@ -66,7 +68,7 @@ public class UIClipRenderer <T extends Clip> implements IUIClipRenderer<T>
         }
 
         FontRenderer font = context.batcher.getFont();
-        String label = font.limitToWidth(clip.title.get(), right - 6 - left);
+        String label = font.limitToWidth(clips.getClipDisplayName(clip), right - 6 - left);
 
         if (right - left >= 20)
         {
@@ -196,5 +198,12 @@ public class UIClipRenderer <T extends Clip> implements IUIClipRenderer<T>
         vector.y = (1 - MathUtils.clamp(value, 0, 1)) * height + y1;
 
         return vector;
+    }
+
+    @Override
+    public String getDefaultLabel(UIClips clips, T clip)
+    {
+        Link type = clips.getFactory().getType(clip);
+        return UIKeys.C_CLIP.get(type).get();
     }
 }

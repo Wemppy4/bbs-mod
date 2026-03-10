@@ -241,6 +241,12 @@ public class UIClips extends UIElement
         return this.factory;
     }
 
+    public String getClipDisplayName(Clip clip)
+    {
+        if (!clip.title.get().isEmpty()) return clip.title.get();
+        return this.renderers.get(clip).getDefaultLabel(this, clip);
+    }
+
     /* Tools */
 
     private void showAdds(int mouseX, int mouseY)

@@ -229,6 +229,7 @@ public abstract class UIClip <T extends Clip> extends UIElement
 
         this.enabled.setValue(this.clip.enabled.get());
         this.title.setText(this.clip.title.get());
+        this.title.placeholder(IKey.constant(this.editor.getClipDisplayName(this.clip)));
         this.layer.setValue(this.clip.layer.get());
         this.tick.setValue(TimeUtils.toTime(this.clip.tick.get()));
         this.duration.setValue(TimeUtils.toTime(this.clip.duration.get()));
