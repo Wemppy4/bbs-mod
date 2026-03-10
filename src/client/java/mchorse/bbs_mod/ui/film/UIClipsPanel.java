@@ -110,6 +110,12 @@ public class UIClipsPanel extends UIElement implements IUIClipsDelegate
     }
 
     @Override
+    public String getClipDisplayName(Clip clip)
+    {
+        return clip != null ? this.clips.getClipDisplayName(clip) : "";
+    }
+
+    @Override
     public void pickClip(Clip clip)
     {
         UIClip.saveScroll(this.panel);
