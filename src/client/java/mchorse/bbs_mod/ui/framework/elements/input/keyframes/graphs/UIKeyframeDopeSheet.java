@@ -462,9 +462,18 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
         {
             this.dopeSheet.mouseScroll(context);
         }
-        else if (Window.isAltPressed())
+        else if (Window.isAltPressed() && context.mouseWheel != 0D)
         {
-            this.setTrackHeight(this.trackHeight - context.mouseWheel);
+            if (this.getSelected() != null)
+            {
+                float step = 5F;
+                float delta = (float) (context.mouseWheel * step);
+                this.moveSelectedBy(delta, true);
+            }
+            else
+            {
+                this.setTrackHeight(this.trackHeight - context.mouseWheel);
+            }
         }
         else if (context.mouseWheel != 0D)
         {

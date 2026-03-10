@@ -196,6 +196,15 @@ public interface IUIKeyframeGraph
         }
     }
 
+    /** Move all selected keyframes on all sheets by the given tick delta. */
+    public default void moveSelectedBy(float diff, boolean dirty)
+    {
+        for (UIKeyframeSheet sheet : this.getSheets())
+        {
+            sheet.setTickBy(diff, dirty);
+        }
+    }
+
     public default void setDuration(float duration)
     {
         for (UIKeyframeSheet sheet : this.getSheets())

@@ -284,6 +284,12 @@ public class UIKeyframeGraph implements IUIKeyframeGraph
 
             this.keyframes.getXAxis().setShift(this.keyframes.getXAxis().getShift() - offsetX);
         }
+        else if (Window.isAltPressed() && context.mouseWheel != 0D && this.getSelected() != null)
+        {
+            float step = 5F;
+            float delta = (float) (context.mouseWheel * step);
+            this.moveSelectedBy(delta, true);
+        }
         else
         {
             boolean x = Window.isShiftPressed();
