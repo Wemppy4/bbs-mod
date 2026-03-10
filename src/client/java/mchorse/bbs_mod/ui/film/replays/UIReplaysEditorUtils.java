@@ -178,7 +178,10 @@ public class UIReplaysEditorUtils
                 Keyframe closest = getClosestKeyframe(currentSheet, tick);
                 if (closest != null)
                 {
-                    forceSelectInSheet(graph, currentSheet, closest);
+                    if (currentSheet.selection.getSelected().size() <= 1)
+                    {
+                        forceSelectInSheet(graph, currentSheet, closest);
+                    }
                     cursor.setCursor((int) closest.getTick());
                 }
                 updatePoseEditorBoneSelection(keyframeEditor, bone);
@@ -289,7 +292,10 @@ public class UIReplaysEditorUtils
 
         if (closest != null)
         {
-            forceSelectInSheet(graph, sheet, closest);
+            if (sheet.selection.getSelected().size() <= 1)
+            {
+                forceSelectInSheet(graph, sheet, closest);
+            }
             updatePoseEditorBoneSelection(keyframeEditor, boneForEditor);
             filmPanel.setCursor((int) closest.getTick());
         }
