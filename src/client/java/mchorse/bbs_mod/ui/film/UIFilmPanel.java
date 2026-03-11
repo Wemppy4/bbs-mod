@@ -307,6 +307,13 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         this.add(element);
         this.add(new UIFilmPanelUndoKeys(this).full(this));
+
+        IValueListener refreshPreviewOnVideoResolution = (v, f) ->
+        {
+            if (this.isVisible()) this.applyPreviewSizeToBBS();
+        };
+        BBSSettings.videoSettings.width.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.videoSettings.height.postCallback(refreshPreviewOnVideoResolution);
     }
 
     public boolean isLayoutLocked()
