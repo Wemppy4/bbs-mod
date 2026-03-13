@@ -47,9 +47,6 @@ import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
 import mchorse.bbs_mod.utils.keyframes.factories.IKeyframeFactory;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 import mchorse.bbs_mod.utils.keyframes.factories.Vector3fKeyframeFactory;
-import mchorse.bbs_mod.utils.pose.Pose;
-import mchorse.bbs_mod.utils.pose.PoseTransform;
-import mchorse.bbs_mod.utils.pose.Transform;
 import mchorse.bbs_mod.utils.presets.PresetManager;
 
 public class UIKeyframes extends UIElement
@@ -187,10 +184,6 @@ public class UIKeyframes extends UIElement
                         sheet.channel.postNotify();
                     }
                 });
-                if (this.hasSelectedTransformKeyframes())
-                {
-                    menu.action(Icons.CLOSE, UIKeys.TRANSFORMS_CONTEXT_RESET, this::resetSelectedTransforms);
-                }
                 menu.action(Icons.REMOVE, UIKeys.KEYFRAMES_CONTEXT_REMOVE, () -> this.currentGraph.removeSelected());
             }
         });
@@ -527,76 +520,6 @@ public class UIKeyframes extends UIElement
     public float getStackOffset()
     {
         return this.stackOffset;
-    }
-
-    private boolean hasSelectedTransformKeyframes()
-    {
-        for (UIKeyframeSheet sheet : this.currentGraph.getSheets())
-        {
-            for (Keyframe kf : sheet.selection.getSelected())
-            {
-                Object value = kf.getValue();
-                if (value instanceof Transform || value instanceof Pose)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private void resetSelectedTransforms()
-    {
-        for (UIKeyframeSheet sheet : this.currentGraph.getSheets())
-        {
-            List<Keyframe> selected = sheet.selection.getSelected();
-
-            if (selected.isEmpty())
-            {
-                continue;
-            }
-
-            boolean anyTransform = false;
-            for (Keyframe kf : selected)
-            {
-                if (kf.getValue() instanceof Transform || kf.getValue() instanceof Pose)
-                {
-                    anyTransform = true;
-                    break;
-                }
-            }
-
-            if (!anyTransform)
-            {
-                continue;
-            }
-
-            sheet.channel.preNotify();
-
-            for (Keyframe kf : selected)
-            {
-                Object value = kf.getValue();
-                if (value instanceof Transform t)
-                {
-                    t.translate.set(0, 0, 0);
-                    t.scale.set(1, 1, 1);
-                    t.rotate.set(0, 0, 0);
-                    t.rotate2.set(0, 0, 0);
-                }
-                else if (value instanceof Pose pose)
-                {
-                    for (PoseTransform pt : pose.transforms.values())
-                    {
-                        pt.translate.set(0, 0, 0);
-                        pt.scale.set(1, 1, 1);
-                        pt.rotate.set(0, 0, 0);
-                        pt.rotate2.set(0, 0, 0);
-                    }
-                }
-            }
-
-            sheet.channel.postNotify();
-        }
     }
 
     private void spreadKeyframes()
