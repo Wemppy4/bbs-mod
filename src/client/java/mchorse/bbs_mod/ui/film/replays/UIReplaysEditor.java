@@ -606,9 +606,13 @@ public class UIReplaysEditor extends UIElement {
 							sheet.id.endsWith(FormUtils.PATH_SEPARATOR + "pose")) &&
 						!sheet.id.contains("pose_overlay");
 
-					if (isPoseTrack && sheet.selection.hasAny()) {
+					Form sheetForm = sheet != null && sheet.property != null ? FormUtils.getForm(sheet.property) : null;
+					boolean limbTracksOn = sheetForm instanceof ModelForm m && m.boneTracks.get();
+
+					if (isPoseTrack && sheet.selection.hasAny() && limbTracksOn) {
+						ModelForm poseModelForm = sheetForm instanceof ModelForm m ? m : modelForm;
 						menu.action(Icons.LIMB, UIKeys.FILM_REPLAY_CONTEXT_POSES_TO_LIMBS, () -> {
-							UIReplaysEditorUtils.posesToLimbTracks(this.replay, sheet, modelForm);
+							UIReplaysEditorUtils.posesToLimbTracks(this.replay, sheet, poseModelForm);
 
 							sheet.selection.removeSelected();
 							this.updateChannelsList();
