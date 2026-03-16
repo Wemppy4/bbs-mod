@@ -4,6 +4,7 @@ import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.forms.ModelForm;
 import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
@@ -39,6 +40,11 @@ public class UIBodyPartEditor extends UIScrollView
                 current.part.setForm(FormUtils.copy(f));
 
                 Form partForm = current.part.getForm();
+
+                if (partForm instanceof ModelForm m)
+                {
+                    m.boneTracks.set(false);
+                }
 
                 if (partForm != null && partForm.getFormId().contains("particle"))
                 {

@@ -86,6 +86,7 @@ public class BBSSettings {
 	public static ValueInt editorTrackWidth;
 	public static ValueBoolean editorPreviewAutoSize;
 	public static ValueFloat editorPreviewResolutionScale;
+	public static ValueBoolean editorClipAutoName;
 
 	public static ValueFloat recordingCountdown;
 	public static ValueBoolean recordingSwipeDamage;
@@ -181,6 +182,7 @@ public class BBSSettings {
 		disabledSheets.set(defaultFilters);
 		builder.register(favoriteColors);
 		builder.register(disabledSheets);
+		editorClipAutoName = builder.getBoolean("clip_auto_name", true);
 
 		builder.category("tutorials");
 		enableCursorRendering = builder.getBoolean("cursor", false);

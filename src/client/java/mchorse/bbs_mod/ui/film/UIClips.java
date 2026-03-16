@@ -60,7 +60,8 @@ public class UIClips extends UIElement
     public static final IKey KEYS_CATEGORY = UIKeys.CAMERA_EDITOR_KEYS_CLIPS_TITLE;
 
     private static final int MARGIN = 10;
-    private static final int LAYER_HEIGHT = 20;
+    private static final int LAYER_HEIGHT_MIN = 12;
+    private static final int LAYER_HEIGHT_MAX = 48;
 
     private static final Area CLIP_AREA = new Area();
 
@@ -107,6 +108,8 @@ public class UIClips extends UIElement
     private List<Vector3i> grabbedData = new ArrayList<>();
 
     private UICopyPasteController copyPasteController;
+
+    private int layerHeight = 20;
 
     /**
      * Render cursor that displays the full duration of the camera work,
@@ -244,6 +247,7 @@ public class UIClips extends UIElement
     public String getClipDisplayName(Clip clip)
     {
         if (!clip.title.get().isEmpty()) return clip.title.get();
+        if (!BBSSettings.editorClipAutoName.get()) return "";
         return this.renderers.get(clip).getDefaultLabel(this, clip);
     }
 
@@ -886,12 +890,12 @@ public class UIClips extends UIElement
 
         mouseY -= this.getScroll();
 
-        return (bottom - mouseY) / LAYER_HEIGHT;
+        return (bottom - mouseY) / this.getLayerHeight();
     }
 
     public int toLayerY(int layer)
     {
-        int h = LAYER_HEIGHT;
+        int h = this.getLayerHeight();
 
         return this.area.ey() - MARGIN - (layer + 1) * h + this.getScroll();
     }
@@ -904,6 +908,11 @@ public class UIClips extends UIElement
         }
 
         return this.vertical.scrollSize - this.vertical.area.h - (int) this.vertical.getScroll();
+    }
+
+    private int getLayerHeight()
+    {
+        return this.layerHeight;
     }
 
     public void updateLayers()
@@ -989,7 +998,7 @@ public class UIClips extends UIElement
     {
         this.updateLayers();
 
-        this.vertical.scrollSize = this.clips == null ? 0 : this.layers * LAYER_HEIGHT;
+        this.vertical.scrollSize = this.clips == null ? 0 : this.layers * this.getLayerHeight();
         this.vertical.clamp();
     }
 
@@ -1063,7 +1072,7 @@ public class UIClips extends UIElement
                     }
                 }
 
-                this.grabMode = this.getClipHandle(clip, context, LAYER_HEIGHT);
+                this.grabMode = this.getClipHandle(clip, context, this.getLayerHeight());
                 this.canGrab = false;
                 this.grabbing = true;
                 this.grabbedClips = this.getClipsFromSelection();
@@ -1187,6 +1196,11 @@ public class UIClips extends UIElement
             if (context.mouseWheelHorizontal != 0D)
             {
                 this.scale.setShift(this.scale.getShift() - (25F * BBSSettings.scrollingSensitivityHorizontal.get() * context.mouseWheelHorizontal) / this.scale.getZoom());
+            }
+            else if (Window.isAltPressed() && context.mouseWheel != 0D)
+            {
+                int step = (int) Math.copySign(2, context.mouseWheel);
+                this.layerHeight = MathUtils.clamp(this.layerHeight + step, LAYER_HEIGHT_MIN, LAYER_HEIGHT_MAX);
             }
             else if (Window.isShiftPressed())
             {
@@ -1503,7 +1517,7 @@ public class UIClips extends UIElement
             int x = this.toGraphX(clip.tick.get());
             int y = this.toLayerY(clip.layer.get());
 
-            clipArea.set(x, y, this.toGraphX(clip.tick.get() + clip.duration.get()) - x, LAYER_HEIGHT);
+            clipArea.set(x, y, this.toGraphX(clip.tick.get() + clip.duration.get()) - x, this.getLayerHeight());
 
             if (area.intersects(clipArea))
             {
@@ -1535,7 +1549,7 @@ public class UIClips extends UIElement
     {
         Batcher2D batcher = context.batcher;
         Area area = this.area;
-        int h = LAYER_HEIGHT;
+        int h = this.getLayerHeight();
         int leftEdge = this.toGraphX(0);
 
         if (leftEdge > this.area.x)

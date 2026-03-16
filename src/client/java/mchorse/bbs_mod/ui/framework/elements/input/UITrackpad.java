@@ -53,10 +53,10 @@ public class UITrackpad extends UIBaseTextbox
     protected double value;
 
     /* Trackpad options */
-    public double strong = 0.5D;
-    public double normal = 0.1D;
-    public double weak = 0.025D;
-    public double increment = 0.25D;
+    public double strong = 1D;
+    public double normal = 0.25D;
+    public double weak = 0.05D;
+    public double increment = 1D;
     public double min = Float.NEGATIVE_INFINITY;
     public double max = Float.POSITIVE_INFINITY;
     public boolean integer;

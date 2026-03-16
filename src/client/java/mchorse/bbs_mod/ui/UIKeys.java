@@ -598,6 +598,7 @@ public class UIKeys
     public static final IKey KEYFRAMES_SHAPES_TRI_STAR = L10n.lang("bbs.ui.keyframes.shapes.tri_star");
     public static final IKey KEYFRAMES_TICK = L10n.lang("bbs.ui.keyframes.tick");
     public static final IKey KEYFRAMES_VALUE = L10n.lang("bbs.ui.keyframes.value");
+    public static final IKey KEYFRAMES_RECORD_VALUE = L10n.lang("bbs.ui.keyframes.record_value");
     public static final IKey KEYS_LIST = L10n.lang("bbs.ui.keys.list");
     public static final IKey LANGUAGE_CREDITS = L10n.lang("bbs.ui.language.credits");
     public static final IKey LANGUAGE_EDITOR_CONTEXT_COPY_KEY = L10n.lang("studio.ui.language.editor.context.copy_key");
