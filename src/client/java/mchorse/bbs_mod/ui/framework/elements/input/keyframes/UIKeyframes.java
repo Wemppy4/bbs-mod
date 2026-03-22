@@ -158,7 +158,6 @@ public class UIKeyframes extends UIElement
 
             menu.action(Icons.MAXIMIZE, UIKeys.KEYFRAMES_CONTEXT_MAXIMIZE, this::resetView);
             menu.action(Icons.FULLSCREEN, UIKeys.KEYFRAMES_CONTEXT_SELECT_ALL, () -> this.currentGraph.selectAll());
-            menu.action(Icons.FULLSCREEN, UIKeys.KEYFRAMES_KEYS_SELECT_TRACK, this::selectAllOnTrackUnderCursor);
 
             if (hasSelected)
             {
