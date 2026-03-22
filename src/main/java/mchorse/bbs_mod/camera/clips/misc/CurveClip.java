@@ -8,6 +8,7 @@ import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.ClipContext;
+import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 
 import java.util.HashMap;
@@ -17,11 +18,23 @@ public class CurveClip extends CameraClip
 {
     public static final String SHADER_CURVES_PREFIX = "curve.";
 
+    public static final String CHROMA_SKY_COLOR = "chroma_sky_color";
+
+    public static boolean isColorChannelId(String id)
+    {
+        return CHROMA_SKY_COLOR.equals(id);
+    }
+
     public final ValueChannels channels = new ValueChannels("channels");
 
     public static Map<String, Double> getValues(ClipContext context)
     {
         return context.clipData.get("curve_data", HashMap::new);
+    }
+
+    public static Map<String, Integer> getColorValues(ClipContext context)
+    {
+        return context.clipData.get("curve_color_data", HashMap::new);
     }
 
     public CurveClip()
@@ -40,6 +53,21 @@ public class CurveClip extends CameraClip
             if (!channel.isEmpty())
             {
                 values.put(channel.getId(), channel.interpolate(context.relativeTick + context.transition));
+            }
+        }
+
+        Map<String, Integer> colorValues = getColorValues(context);
+
+        for (KeyframeChannel<Color> channel : this.channels.getColorChannels())
+        {
+            if (!channel.isEmpty())
+            {
+                var color = channel.interpolate(context.relativeTick + context.transition, null);
+
+                if (color != null)
+                {
+                    colorValues.put(channel.getId(), color.getARGBColor());
+                }
             }
         }
     }

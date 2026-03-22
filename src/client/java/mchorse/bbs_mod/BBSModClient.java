@@ -419,7 +419,8 @@ public class BBSModClient implements ClientModInitializer
                 if (d > 0)
                 {
                     MatrixStack stack = context.matrixStack();
-                    Color color = Colors.COLOR.set(BBSSettings.chromaSkyColor.get());
+                    Integer fromCurve = BBSRendering.getChromaSkyColorArgb();
+                    Color color = Colors.COLOR.set(fromCurve != null ? fromCurve : BBSSettings.chromaSkyColor.get());
 
                     stack.push();
 

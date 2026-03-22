@@ -309,6 +309,7 @@
 	"bbs.ui.camera.panels.curves.brightness": "Brightness",
 	"bbs.ui.camera.panels.curves.sun_rotation": "Sun rotation",
 	"bbs.ui.camera.panels.curves.weather": "Weather",
+	"bbs.ui.camera.panels.curves.chroma_sky_color": "Chroma sky color",
 	"bbs.ui.camera.panels.deterministic": "Deterministic",
 	"bbs.ui.camera.panels.deterministic_tooltip": "When enabled, deterministic algorithm would be used to calculate reproducible smoothed out camera movement.",
 	"bbs.ui.camera.panels.distance": "Distance",

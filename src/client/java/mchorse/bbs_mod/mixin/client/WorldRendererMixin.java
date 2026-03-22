@@ -27,7 +27,9 @@ public class WorldRendererMixin
     {
         if (BBSSettings.chromaSkyEnabled.get())
         {
-            Color color = Color.rgb(BBSSettings.chromaSkyColor.get());
+            Integer fromCurve = BBSRendering.getChromaSkyColorArgb();
+            int argb = fromCurve != null ? fromCurve : BBSSettings.chromaSkyColor.get();
+            Color color = Color.rgba(argb);
 
             GL11.glClearColor(color.r, color.g, color.b, 1F);
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);

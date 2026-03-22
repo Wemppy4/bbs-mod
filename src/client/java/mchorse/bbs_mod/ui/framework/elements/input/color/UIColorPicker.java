@@ -103,11 +103,16 @@ public class UIColorPicker extends UIElement
 
         this.callback = callback;
 
-        this.input = new UITextbox(7, (string) ->
+        this.input = new UITextbox(7, this::applyColorFromHexInput)
         {
-            this.setValue(Colors.parse(string));
-            this.notifyColorChanged();
-        });
+            @Override
+            public void unfocus(UIContext context)
+            {
+                super.unfocus(context);
+
+                UIColorPicker.this.syncHexInputAfterEdit();
+            }
+        };
         this.input.context((menu) -> menu.action(Icons.FAVORITE, UIKeys.COLOR_CONTEXT_FAVORITES_ADD, () -> this.addToFavorites(this.color)));
 
         this.recent = new UIColorPalette((color) ->
@@ -155,7 +160,45 @@ public class UIColorPicker extends UIElement
 
     public void updateField()
     {
+        if (this.input.isFocused())
+        {
+            return;
+        }
+
+        this.syncHexInputAfterEdit();
+    }
+
+    private void syncHexInputAfterEdit()
+    {
         this.input.setText(this.color.stringify(this.editAlpha));
+    }
+
+    private void applyColorFromHexInput(String string)
+    {
+        if (!this.isCompleteHexColorInput(string))
+        {
+            return;
+        }
+
+        this.setValue(Colors.parse(string));
+        this.notifyColorChanged();
+    }
+
+    private boolean isCompleteHexColorInput(String raw)
+    {
+        if (raw == null)
+        {
+            return false;
+        }
+
+        String t = raw.trim();
+
+        if (t.startsWith("#"))
+        {
+            t = t.substring(1);
+        }
+
+        return t.length() == 6 || t.length() == 8;
     }
 
     protected void callback()
