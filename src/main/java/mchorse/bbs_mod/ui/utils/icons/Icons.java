@@ -186,6 +186,9 @@ public class Icons
     public static final Icon LIKE = register(new Icon(ATLAS, "like", 208, 144));
     public static final Icon DISLIKE = register(new Icon(ATLAS, "dislike", 224, 144));
 
+    public static final Icon HORIZONTAL = register(new Icon(ATLAS, "horizontal", 0, 160));
+    public static final Icon VERTICAL = register(new Icon(ATLAS, "vertical", 16, 160));
+
     public static final Icon INTERP_LINEAR = register(new Icon(ATLAS, "interp_linear", 0, 192));
     public static final Icon INTERP_CONST = register(new Icon(ATLAS, "interp_const", 16, 192));
     public static final Icon INTERP_STEP = register(new Icon(ATLAS, "interp_step", 32, 192));
