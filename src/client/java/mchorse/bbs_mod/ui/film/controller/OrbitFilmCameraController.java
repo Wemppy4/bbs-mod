@@ -56,7 +56,14 @@ public class OrbitFilmCameraController implements ICameraController
 
     public void start(UIContext context)
     {
-        if (this.controller.panel.isFlying())
+        if (!BBSSettings.editorOrbitMovementRequiresFlight.get() && !this.controller.panel.isFlying())
+        {
+            if (context.mouseButton != 2)
+            {
+                return;
+            }
+        }
+        else if (this.controller.panel.isFlying())
         {
             if (context.mouseButton != 0 && !(context.mouseButton == 2 && Window.isKeyPressed(Keys.FLIGHT_ORBIT.getMainKey())))
             {
@@ -110,14 +117,14 @@ public class OrbitFilmCameraController implements ICameraController
             return false;
         }
 
-        if (area.isInside(context) || (!this.velocityPosition.equals(0, 0, 0) && context.getKeyAction() == KeyAction.RELEASED))
-        {
-            if (!this.controller.panel.isFlying())
-            {
-                return false;
-            }
+		if (area.isInside(context) || (!this.velocityPosition.equals(0, 0, 0) && context.getKeyAction() == KeyAction.RELEASED))
+		{
+			if (BBSSettings.editorOrbitMovementRequiresFlight.get() && !this.controller.panel.isFlying())
+			{
+				return false;
+			}
 
-            int x = this.getFactor(context, Keys.FLIGHT_LEFT, Keys.FLIGHT_RIGHT, this.velocityPosition.x);
+			int x = this.getFactor(context, Keys.FLIGHT_LEFT, Keys.FLIGHT_RIGHT, this.velocityPosition.x);
             int y = this.getFactor(context, Keys.FLIGHT_UP, Keys.FLIGHT_DOWN, this.velocityPosition.y);
             int z = this.getFactor(context, Keys.FLIGHT_FORWARD, Keys.FLIGHT_BACKWARD, this.velocityPosition.z);
             boolean changed = x != this.velocityPosition.x || y != this.velocityPosition.y || z != this.velocityPosition.z;
@@ -173,16 +180,16 @@ public class OrbitFilmCameraController implements ICameraController
             return false;
         }
 
-        if (!this.controller.panel.isFlying())
-        {
-            this.velocityPosition.set(0, 0, 0);
+		if (BBSSettings.editorOrbitMovementRequiresFlight.get() && !this.controller.panel.isFlying())
+		{
+			this.velocityPosition.set(0, 0, 0);
 
-            return false;
-        }
+			return false;
+		}
 
-        boolean changed = false;
+		boolean changed = false;
 
-        if (this.velocityPosition.lengthSquared() > 0 && !this.center)
+		if (this.velocityPosition.lengthSquared() > 0 && !this.center)
         {
             this.position.add(this.rotateVector(-this.velocityPosition.x, this.velocityPosition.y, -this.velocityPosition.z, this.rotation.y, this.rotation.x).mul(this.getSpeed()));
 
