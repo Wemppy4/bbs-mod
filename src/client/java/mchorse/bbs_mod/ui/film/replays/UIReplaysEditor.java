@@ -381,7 +381,7 @@ public class UIReplaysEditor extends UIElement {
                 index = 0;
             }
 
-            this.replays.replays.setList(replays);
+            this.replays.replays.refreshReplayList();
             this.setReplay(replays.isEmpty() ? null : replays.get(index), true, false);
             this.filmPanel.getController().orbit.reset();
         }
@@ -406,8 +406,8 @@ public class UIReplaysEditor extends UIElement {
         this.filmPanel.actionEditor.setClips(replay == null ? null : replay.actions);
         this.updateChannelsList();
 
-        if (select) {
-            this.replays.replays.setCurrentScroll(replay);
+        if (select && replay != null) {
+            this.replays.replays.scrollToReplay(replay);
         }
     }
 
@@ -866,7 +866,9 @@ public class UIReplaysEditor extends UIElement {
     public void close() {
         if (this.film != null) {
             lastFilm = this.film.getId();
-            lastReplay = this.replays.replays.getIndex();
+            Replay r = this.getReplay();
+
+            lastReplay = r == null ? 0 : this.film.replays.getList().indexOf(r);
         }
     }
 

@@ -689,6 +689,12 @@ public class UIKeys
     public static final IKey SCENE_REPLAYS_CONTEXT_PROCESS_EXPRESSION_TOOLTIP = L10n.lang("bbs.ui.scene.replays.context.process.expression-tooltip");
     public static final IKey SCENE_REPLAYS_CONTEXT_PROCESS_TITLE = L10n.lang("bbs.ui.scene.replays.context.process-title");
     public static final IKey SCENE_REPLAYS_CONTEXT_REMOVE = L10n.lang("bbs.ui.scene.replays.context.remove");
+    public static final IKey SCENE_REPLAYS_CONTEXT_ADD_CATEGORY = L10n.lang("bbs.ui.scene.replays.context.add_category");
+    public static final IKey SCENE_REPLAYS_CONTEXT_MOVE_TO_CATEGORY = L10n.lang("bbs.ui.scene.replays.context.move_to_category");
+    public static final IKey SCENE_REPLAYS_ADD_CATEGORY_TITLE = L10n.lang("bbs.ui.scene.replays.add_category.title");
+    public static final IKey SCENE_REPLAYS_ADD_CATEGORY_DESCRIPTION = L10n.lang("bbs.ui.scene.replays.add_category.description");
+    public static final IKey SCENE_REPLAYS_ADD_CATEGORY_PLACEHOLDER = L10n.lang("bbs.ui.scene.replays.add_category.placeholder");
+    public static final IKey SCENE_REPLAYS_CATEGORY_NONE = L10n.lang("bbs.ui.scene.replays.category.none");
     public static final IKey SCENE_REPLAYS_CONTEXT_RANDOM_TEXTURES = L10n.lang("bbs.ui.scene.replays.context.random_textures");
     public static final IKey SCENE_REPLAYS_RANDOM_TEXTURES_TITLE = L10n.lang("bbs.ui.scene.replays.random_textures.title");
     public static final IKey SCENE_REPLAYS_RANDOM_TEXTURES_DESCRIPTION = L10n.lang("bbs.ui.scene.replays.random_textures.description");

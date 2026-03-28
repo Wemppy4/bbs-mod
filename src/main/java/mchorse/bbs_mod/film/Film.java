@@ -6,6 +6,7 @@ import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.film.replays.Replays;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueString;
+import mchorse.bbs_mod.settings.values.ui.ValueStringKeys;
 import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
 import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 import mchorse.bbs_mod.settings.values.numeric.ValueLong;
@@ -15,6 +16,11 @@ public class Film extends ValueGroup
 {
     public final Clips camera = new Clips("camera", BBSMod.getFactoryCameraClips());
     public final Replays replays = new Replays("replays");
+    /**
+     * Names of replay categories that exist even with no replay assigned (empty groups).
+     * Union with {@link Replay#category} on each replay defines all categories in the UI.
+     */
+    public final ValueStringKeys replayCategoryNames = new ValueStringKeys("replay_categories");
 
     public final Inventory inventory = new Inventory("inventory");
     public final ValueFloat hp = new ValueFloat("hp", 20F);
@@ -31,6 +37,7 @@ public class Film extends ValueGroup
 
         this.add(this.camera);
         this.add(this.replays);
+        this.add(this.replayCategoryNames);
 
         this.add(this.inventory);
         this.add(this.hp);

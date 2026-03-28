@@ -246,7 +246,7 @@ public class UIFilmController extends UIElement
 
     private Replay getReplay()
     {
-        return this.panel.replayEditor.replays.replays.getCurrentFirst();
+        return this.panel.replayEditor.getReplay();
     }
 
     public StencilFormFramebuffer getStencil()
@@ -256,7 +256,16 @@ public class UIFilmController extends UIElement
 
     public IEntity getCurrentEntity()
     {
-        return this.getEntities().get(this.panel.replayEditor.replays.replays.getIndex());
+        Replay r = this.panel.replayEditor.getReplay();
+
+        if (r == null)
+        {
+            return null;
+        }
+
+        int idx = this.panel.getData().replays.getList().indexOf(r);
+
+        return idx < 0 ? null : this.getEntities().get(idx);
     }
 
     public int getPovMode()
@@ -757,14 +766,7 @@ public class UIFilmController extends UIElement
 
                     UIReplayList list = this.panel.replayEditor.replays.replays;
 
-                    list.setCurrentDirect(replay);
-
-                    int index = list.getIndex();
-
-                    if (index != -1)
-                    {
-                        list.scroll.scrollTo(index * list.scroll.scrollItemSize);
-                    }
+                    list.scrollToReplay(replay);
 
                     UIUtils.playClick();
                 }, color));
@@ -1296,7 +1298,7 @@ public class UIFilmController extends UIElement
         }
         else
         {
-            Replay replay = CollectionUtils.getSafe(this.panel.getData().replays.getList(), this.panel.replayEditor.replays.replays.getIndex());
+            Replay replay = this.panel.replayEditor.getReplay();
             Pair<String, Boolean> bone = this.getBone();
 
             BaseFilmController.renderEntity(FilmControllerContext.instance
