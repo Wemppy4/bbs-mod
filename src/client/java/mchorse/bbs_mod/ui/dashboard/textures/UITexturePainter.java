@@ -13,6 +13,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Direction;
+import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import org.joml.Vector2i;
@@ -103,6 +104,21 @@ public class UITexturePainter extends UIElement
         this.keys().register(Keys.PIXEL_SWAP, this::swapColors).inside().category(category);
         this.keys().register(Keys.PIXEL_PICK, this::pickColor).inside().category(category);
         this.keys().register(Keys.PIXEL_FILL, this::fillColor).inside().category(category);
+        this.keys().register(Keys.PIXEL_BRUSH_DEC, () -> this.adjustBrushSize(-1)).inside().category(category);
+        this.keys().register(Keys.PIXEL_BRUSH_INC, () -> this.adjustBrushSize(1)).inside().category(category);
+    }
+
+    private void adjustBrushSize(int delta)
+    {
+        int n = MathUtils.clamp((int) this.brushSize.getValue() + delta, 1, 64);
+
+        if (n == (int) this.brushSize.getValue())
+        {
+            return;
+        }
+
+        this.brushSize.setValue(n);
+        this.setBrushSize(n);
     }
 
     private void swapColors()

@@ -1074,6 +1074,8 @@
 	"bbs.ui.textures.keys.redo": "Повторить",
 	"bbs.ui.textures.keys.swap": "Поменять цвета местами",
 	"bbs.ui.textures.keys.undo": "Отменить",
+	"bbs.ui.textures.keys.brush_dec": "Уменьшить размер кисти",
+	"bbs.ui.textures.keys.brush_inc": "Увеличить размер кисти",
 	"bbs.ui.textures.linear": "Линейная",
 	"bbs.ui.textures.mipmap": "Мипмап",
 	"bbs.ui.textures.resize": "Изменить размер",

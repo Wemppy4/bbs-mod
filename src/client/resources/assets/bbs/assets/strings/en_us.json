@@ -1081,6 +1081,8 @@
 	"bbs.ui.textures.keys.redo": "Redo",
 	"bbs.ui.textures.keys.swap": "Swap colors",
 	"bbs.ui.textures.keys.undo": "Undo",
+	"bbs.ui.textures.keys.brush_dec": "Decrease brush size",
+	"bbs.ui.textures.keys.brush_inc": "Increase brush size",
 	"bbs.ui.textures.linear": "Linear",
 	"bbs.ui.textures.mipmap": "Mipmap",
 	"bbs.ui.textures.resize": "Resize",
