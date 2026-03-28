@@ -373,7 +373,16 @@ public class UIFilmPreview extends UIElement
                 }
             }
 
-            AudioRenderer.renderAll(context.batcher, this.clips, tick, x, area.y + 10, w, BBSSettings.audioWaveformHeight.get(), context.menu.width, context.menu.height);
+            int h = BBSSettings.audioWaveformHeight.get();
+
+            if (BBSSettings.audioWaveformPreviewCombined.get())
+            {
+                AudioRenderer.renderPreviewCombined(context.batcher, this.clips, tick, x, area.y + 10, w, h, context.menu.width, context.menu.height);
+            }
+            else
+            {
+                AudioRenderer.renderAll(context.batcher, this.clips, tick, x, area.y + 10, w, h, context.menu.width, context.menu.height);
+            }
         }
 
         Area a = this.icons.area;

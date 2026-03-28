@@ -53,6 +53,8 @@
 	"bbs.config.audio.waveform_visible_preview-comment": "Показывать аудиодорожку в блоке превью",
 	"bbs.config.audio.waveform_visible_keyframes": "Аудио полоса в кейфреймах",
 	"bbs.config.audio.waveform_visible_keyframes-comment": "Показывать аудиодорожку в блоке с кейфреймами",
+	"bbs.config.audio.waveform_preview_combined": "Одна аудио полоса в превью",
+	"bbs.config.audio.waveform_preview_combined-comment": "Если включено, в превью одна полоса со всеми аудиоклипами в том же режиме прокрутки, что и отдельные полосы (плейхед по центру, прошлое затемнено), вместо стопки полос по одному на активный клип",
 	"bbs.config.audio.waveform_width": "Ширина аудио полосы",
 	"bbs.config.audio.waveform_width-comment": "Ширина аудио полосы в формате нормализованых процентах (от 0 до 1)",
 	"bbs.config.background.color": "Цвет",

@@ -53,6 +53,8 @@
 	"bbs.config.audio.waveform_visible_preview-comment": "Show the audio waveform in the film preview block",
 	"bbs.config.audio.waveform_visible_keyframes": "Audio bar in keyframes",
 	"bbs.config.audio.waveform_visible_keyframes-comment": "Show the audio waveform in the keyframes block",
+	"bbs.config.audio.waveform_preview_combined": "Single audio bar in preview",
+	"bbs.config.audio.waveform_preview_combined-comment": "When on, the film preview shows one waveform strip with all clips layered in the same scrolling window as separate bars (center playhead, past dimmed) instead of stacking one bar per active clip",
 	"bbs.config.audio.waveform_width": "Audio bar width",
 	"bbs.config.audio.waveform_width-comment": "Width of an audio bar in floating point percentage (between 0 and 1)",
 	"bbs.config.background.color": "Color",
