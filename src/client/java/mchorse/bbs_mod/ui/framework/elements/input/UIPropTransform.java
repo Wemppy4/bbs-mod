@@ -130,6 +130,11 @@ public class UIPropTransform extends UITransform
 
     private Vector3f calculateLocalVector(double factor, Axis axis)
     {
+        if (this.transform == null)
+        {
+            return new Vector3f();
+        }
+
         Vector3f vector3f = new Vector3f(
             (float) (axis == Axis.X ? factor : 0D),
             (float) (axis == Axis.Y ? factor : 0D),
@@ -179,6 +184,17 @@ public class UIPropTransform extends UITransform
     {
         this.transform = transform;
 
+        if (transform == null)
+        {
+            this.disable();
+            this.fillT(0, 0, 0);
+            this.fillS(1, 1, 1);
+            this.fillR(0, 0, 0);
+            this.fillR2(0, 0, 0);
+
+            return;
+        }
+
         float minScale = Math.min(transform.scale.x, Math.min(transform.scale.y, transform.scale.z));
         float maxScale = Math.max(transform.scale.x, Math.max(transform.scale.y, transform.scale.z));
 
@@ -216,6 +232,11 @@ public class UIPropTransform extends UITransform
             return;
         }
 
+        if (this.transform == null)
+        {
+            return;
+        }
+
         if (this.editing)
         {
             Axis[] values = Axis.values();
@@ -243,6 +264,11 @@ public class UIPropTransform extends UITransform
 
     private Vector3f getValue()
     {
+        if (this.transform == null)
+        {
+            return new Vector3f();
+        }
+
         if (this.mode == 1)
         {
             return this.transform.scale;
@@ -285,6 +311,12 @@ public class UIPropTransform extends UITransform
     public void rejectChanges()
     {
         this.disable();
+
+        if (this.transform == null)
+        {
+            return;
+        }
+
         this.restore(true);
         this.setTransform(this.transform);
     }
@@ -292,6 +324,11 @@ public class UIPropTransform extends UITransform
     @Override
     protected void internalSetT(double x, Axis axis)
     {
+        if (this.transform == null)
+        {
+            return;
+        }
+
         if (this.local)
         {
             try
@@ -318,6 +355,11 @@ public class UIPropTransform extends UITransform
     @Override
     public void setT(Axis axis, double x, double y, double z)
     {
+        if (this.transform == null)
+        {
+            return;
+        }
+
         this.preCallback();
         this.transform.translate.set((float) x, (float) y, (float) z);
         this.postCallback();
@@ -326,6 +368,11 @@ public class UIPropTransform extends UITransform
     @Override
     public void setS(Axis axis, double x, double y, double z)
     {
+        if (this.transform == null)
+        {
+            return;
+        }
+
         this.preCallback();
         this.transform.scale.set((float) x, (float) y, (float) z);
         this.postCallback();
@@ -334,6 +381,11 @@ public class UIPropTransform extends UITransform
     @Override
     public void setR(Axis axis, double x, double y, double z)
     {
+        if (this.transform == null)
+        {
+            return;
+        }
+
         this.preCallback();
         this.transform.rotate.set(MathUtils.toRad((float) x), MathUtils.toRad((float) y), MathUtils.toRad((float) z));
         this.postCallback();
@@ -342,6 +394,11 @@ public class UIPropTransform extends UITransform
     @Override
     public void setR2(Axis axis, double x, double y, double z)
     {
+        if (this.transform == null)
+        {
+            return;
+        }
+
         this.preCallback();
         this.transform.rotate2.set(MathUtils.toRad((float) x), MathUtils.toRad((float) y), MathUtils.toRad((float) z));
         this.postCallback();

@@ -23,6 +23,7 @@ import mchorse.bbs_mod.utils.clips.Clips;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.iris.ShaderCurves;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
+import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +67,7 @@ public class UICurveClip extends UIClip<CurveClip>
         if (!existing.contains(ShaderCurves.BRIGHTNESS)) list.add(new Label<>(UIKeys.CAMERA_PANELS_CURVES_BRIGHTNESS, ShaderCurves.BRIGHTNESS));
         if (!existing.contains(ShaderCurves.SUN_ROTATION)) list.add(new Label<>(UIKeys.CAMERA_PANELS_CURVES_SUN_ROTATION, ShaderCurves.SUN_ROTATION));
         if (!existing.contains(ShaderCurves.WEATHER)) list.add(new Label<>(UIKeys.CAMERA_PANELS_CURVES_WEATHER, ShaderCurves.WEATHER));
+        if (!existing.contains(CurveClip.CHROMA_SKY_COLOR)) list.add(new Label<>(UIKeys.CAMERA_PANELS_CURVES_CHROMA_SKY_COLOR, CurveClip.CHROMA_SKY_COLOR));
 
         UILabelListOverlayPanel panel = new UILabelListOverlayPanel(UIKeys.CAMERA_PANELS_PICK_KEY, list, callback);
 
@@ -93,14 +95,22 @@ public class UICurveClip extends UIClip<CurveClip>
             {
                 List<String> existing = new ArrayList<>();
 
-                for (KeyframeChannel<Double> channel : this.clip.channels.getChannels())
+                for (KeyframeChannel<?> channel : this.clip.channels.getAllKeyframeChannels())
                 {
                     existing.add(channel.getId());
                 }
 
                 offerCurveKeys(this.getContext(), existing, (s) ->
                 {
-                    this.clip.channels.addChannel(s);
+                    if (CurveClip.isColorChannelId(s))
+                    {
+                        this.clip.channels.addChannel(s, KeyframeFactories.COLOR);
+                    }
+                    else
+                    {
+                        this.clip.channels.addChannel(s, KeyframeFactories.DOUBLE);
+                    }
+
                     this.fillData();
                 });
             }).order(-3);
@@ -126,9 +136,11 @@ public class UICurveClip extends UIClip<CurveClip>
         this.edit.keys().register(Keys.FORMS_EDIT, () -> this.edit.clickItself());
     }
 
-    private void addChannel(KeyframeChannel<Double> channel)
+    private void addKeyframeSheet(KeyframeChannel<?> channel)
     {
-        this.keyframes.view.addSheet(new UIKeyframeSheet(channel.getId(), IKey.constant(channel.getId()), channel.getId().hashCode() & Colors.RGB, false, channel, null));
+        int sheetColor = channel.getId().hashCode() & Colors.RGB;
+
+        this.keyframes.view.addSheet(new UIKeyframeSheet(channel.getId(), IKey.constant(channel.getId()), sheetColor, false, channel, null));
     }
 
     @Override
@@ -146,9 +158,9 @@ public class UICurveClip extends UIClip<CurveClip>
 
         this.keyframes.view.removeAllSheets();
 
-        for (KeyframeChannel<Double> channel : this.clip.channels.getChannels())
+        for (KeyframeChannel<?> channel : this.clip.channels.getAllKeyframeChannels())
         {
-            this.addChannel(channel);
+            this.addKeyframeSheet(channel);
         }
     }
 

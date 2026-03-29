@@ -20,6 +20,7 @@ import mchorse.bbs_mod.utils.colors.Colors;
 public class BBSSettings {
 
 	public static ValueColors favoriteColors;
+	public static ValueColors recentColors;
 	public static ValueStringKeys disabledSheets;
 	public static ValueLanguage language;
 	public static ValueInt primaryColor;
@@ -76,6 +77,7 @@ public class BBSSettings {
 	public static ValueBoolean editorSeconds;
 	public static ValueInt editorPeriodicSave;
 	public static ValueBoolean editorHorizontalFlight;
+	public static ValueBoolean editorOrbitMovementRequiresFlight;
 	public static ValueEditorLayout editorLayoutSettings;
 	public static ValueOnionSkin editorOnionSkin;
 	public static ValueBoolean editorSnapToMarkers;
@@ -113,6 +115,7 @@ public class BBSSettings {
 	public static ValueInt audioWaveformHeight;
 	public static ValueBoolean audioWaveformFilename;
 	public static ValueBoolean audioWaveformTime;
+	public static ValueBoolean audioWaveformPreviewCombined;
 
 	public static ValueString cdnUrl;
 	public static ValueString cdnToken;
@@ -178,9 +181,11 @@ public class BBSSettings {
 		transformLocalDefault = builder.getBoolean("transform_local_default", false);
 		editorTrackWidth = builder.getInt("track_width", 2, 1, 10);
 		favoriteColors = new ValueColors("favorite_colors");
+		recentColors = new ValueColors("recent_colors");
 		disabledSheets = new ValueStringKeys("disabled_sheets");
 		disabledSheets.set(defaultFilters);
 		builder.register(favoriteColors);
+		builder.register(recentColors);
 		builder.register(disabledSheets);
 		editorClipAutoName = builder.getBoolean("clip_auto_name", true);
 
@@ -230,6 +235,7 @@ public class BBSSettings {
 		editorSeconds = builder.getBoolean("seconds", false);
 		editorPeriodicSave = builder.getInt("periodic_save", 60, 0, 3600);
 		editorHorizontalFlight = builder.getBoolean("horizontal_flight", false);
+		editorOrbitMovementRequiresFlight = builder.getBoolean("orbit_movement_requires_flight", true);
 		builder.register(editorLayoutSettings = new ValueEditorLayout("layout"));
 		builder.register(editorOnionSkin = new ValueOnionSkin("onion_skin"));
 		editorSnapToMarkers = builder.getBoolean("snap_to_markers", false);
@@ -269,6 +275,7 @@ public class BBSSettings {
 		audioWaveformHeight = builder.getInt("waveform_height", 24, 10, 40);
 		audioWaveformFilename = builder.getBoolean("waveform_filename", false);
 		audioWaveformTime = builder.getBoolean("waveform_time", false);
+		audioWaveformPreviewCombined = builder.getBoolean("waveform_preview_combined", false);
 
 		builder.category("cdn");
 		cdnUrl = builder.getString("url", "");

@@ -15,6 +15,7 @@ import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.presets.UIDataContextMenu;
+import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.pose.Pose;
@@ -32,7 +33,7 @@ public class UIPoseEditor extends UIElement
 {
     private static String lastLimb = "";
 
-    public UIStringList groups;
+    public UIPoseBoneStringList groups;
     public UITrackpad fix;
     public UIColor color;
     public UIToggle lighting;
@@ -43,9 +44,11 @@ public class UIPoseEditor extends UIElement
     protected IModel model;
     protected Map<String, String> flippedParts;
 
+    private int suppressPoseSync;
+
     public UIPoseEditor()
     {
-        this.groups = new UIStringList((l) -> this.pickBone(l.get(0)));
+        this.groups = new UIPoseBoneStringList(this::pickBones);
         this.groups.background().h(UIStringList.DEFAULT_HEIGHT * 8 - 8);
         this.groups.scroll.cancelScrolling();
         this.groups.context(() ->
@@ -58,13 +61,7 @@ public class UIPoseEditor extends UIElement
 
             return menu;
         });
-        this.fix = new UITrackpad((v) ->
-        {
-            if (this.transform.getTransform() instanceof PoseTransform poseTransform)
-            {
-                this.setFix(poseTransform, v.floatValue());
-            }
-        });
+        this.fix = new UITrackpad((v) -> this.applyFixToSelection(v.floatValue()));
         this.fix.limit(0D, 1D).increment(1D).values(0.1, 0.05D, 0.2D);
         this.fix.tooltip(UIKeys.POSE_CONTEXT_FIX_TOOLTIP);
         this.fix.context((menu) ->
@@ -74,13 +71,7 @@ public class UIPoseEditor extends UIElement
                 this.applyChildren((p) -> this.setFix(p, (float) this.fix.getValue()));
             });
         });
-        this.color = new UIColor((c) ->
-        {
-            if (this.transform.getTransform() instanceof PoseTransform poseTransform)
-            {
-                this.setColor(poseTransform, c);
-            }
-        });
+        this.color = new UIColor((c) -> this.applyColorToSelection(c));
         this.color.withAlpha();
         this.color.context((menu) ->
         {
@@ -89,13 +80,7 @@ public class UIPoseEditor extends UIElement
                 this.applyChildren((p) -> this.setColor(p, this.color.picker.color.getARGBColor()));
             });
         });
-        this.lighting = new UIToggle(UIKeys.FORMS_EDITORS_GENERAL_LIGHTING, (b) ->
-        {
-            if (this.transform.getTransform() instanceof PoseTransform poseTransform)
-            {
-                this.setLighting(poseTransform, b.getValue());
-            }
-        });
+        this.lighting = new UIToggle(UIKeys.FORMS_EDITORS_GENERAL_LIGHTING, (b) -> this.applyLightingToSelection(b.getValue()));
         this.lighting.h(UIConstants.CONTROL_HEIGHT);
         this.lighting.context((menu) ->
         {
@@ -120,12 +105,14 @@ public class UIPoseEditor extends UIElement
             return;
         }
 
-        PoseTransform t = (PoseTransform) this.transform.getTransform();
-        Collection<String> keys = this.model.getAllChildrenKeys(CollectionUtils.getKey(this.pose.transforms, t));
-
-        for (String key : keys)
+        for (String bone : this.groups.getCurrent())
         {
-            consumer.accept(this.pose.get(key));
+            Collection<String> keys = this.model.getAllChildrenKeys(bone);
+
+            for (String key : keys)
+            {
+                consumer.accept(this.pose.get(key));
+            }
         }
     }
 
@@ -134,25 +121,41 @@ public class UIPoseEditor extends UIElement
         return this.pose;
     }
 
+    /**
+     * First selected bone name (for keyframe paths and legacy callers).
+     */
     public String getGroup()
     {
         return this.groups.getCurrentFirst();
     }
 
+    private void beginSuppressPoseSync()
+    {
+        this.suppressPoseSync++;
+    }
+
+    private void endSuppressPoseSync()
+    {
+        this.suppressPoseSync--;
+    }
+
     protected void pastePose(MapType data)
     {
-        String current = this.groups.getCurrentFirst();
-
-        this.pose.fromData(data);
-        this.pickBone(current);
+        this.restoreSelectionAfter(() -> this.pose.fromData(data));
     }
 
     protected void flipPose()
     {
-        String current = this.groups.getCurrentFirst();
+        this.restoreSelectionAfter(() -> this.pose.flip(this.flippedParts));
+    }
 
-        this.pose.flip(this.flippedParts);
-        this.pickBone(current);
+    private void restoreSelectionAfter(Runnable action)
+    {
+        List<String> current = new ArrayList<>(this.groups.getCurrent());
+
+        action.run();
+        this.groups.setCurrent(current);
+        this.pickBones(this.groups.getCurrent());
     }
 
     public void setPose(Pose pose, String group)
@@ -210,7 +213,7 @@ public class UIPoseEditor extends UIElement
         int i = Math.max(reset ? 0 : list.indexOf(lastLimb), 0);
 
         this.groups.setCurrentScroll(CollectionUtils.getSafe(list, i));
-        this.pickBone(this.groups.getCurrentFirst());
+        this.pickBones(this.groups.getCurrent());
     }
 
     public void selectBone(String bone)
@@ -218,47 +221,174 @@ public class UIPoseEditor extends UIElement
         lastLimb = bone;
 
         this.groups.setCurrentScroll(bone);
-        this.pickBone(bone);
+        this.pickBones(this.groups.getCurrent());
     }
 
     /* Subclass overridable methods */
 
     protected UIPropTransform createTransformEditor()
     {
-        return new UIPropTransform().enableHotkeys();
+        return new UIPosePropTransform();
+    }
+
+    /**
+     * Applies transform edits from the primary bone to the rest of the multi-selection.
+     */
+    private class UIPosePropTransform extends UIPropTransform
+    {
+        UIPosePropTransform()
+        {
+            this.enableHotkeys();
+        }
+
+        @Override
+        public void rejectChanges()
+        {
+            UIPoseEditor.this.beginSuppressPoseSync();
+
+            try
+            {
+                super.rejectChanges();
+            }
+            finally
+            {
+                UIPoseEditor.this.endSuppressPoseSync();
+            }
+
+            UIPoseEditor.this.syncPoseTransformToSelection();
+        }
+
+        @Override
+        public void setT(Axis axis, double x, double y, double z)
+        {
+            super.setT(axis, x, y, z);
+            UIPoseEditor.this.syncPoseTransformToSelection();
+        }
+
+        @Override
+        public void setS(Axis axis, double x, double y, double z)
+        {
+            super.setS(axis, x, y, z);
+            UIPoseEditor.this.syncPoseTransformToSelection();
+        }
+
+        @Override
+        public void setR(Axis axis, double x, double y, double z)
+        {
+            super.setR(axis, x, y, z);
+            UIPoseEditor.this.syncPoseTransformToSelection();
+        }
+
+        @Override
+        public void setR2(Axis axis, double x, double y, double z)
+        {
+            super.setR2(axis, x, y, z);
+            UIPoseEditor.this.syncPoseTransformToSelection();
+        }
     }
 
     protected void pickBone(String bone)
     {
-        lastLimb = bone;
-
-        PoseTransform poseTransform = this.pose.get(bone);
-
-        if (poseTransform != null)
+        if (bone == null || bone.isEmpty())
         {
-            this.fix.setValue(poseTransform.fix);
-            this.color.setColor(poseTransform.color.getARGBColor());
-            this.lighting.setValue(poseTransform.lighting == 0F);
-            this.transform.setTransform(poseTransform);
+            this.pickBones(Collections.emptyList());
+            return;
         }
-        else
+
+        this.pickBones(Collections.singletonList(bone));
+    }
+
+    protected void pickBones(List<String> bones)
+    {
+        if (bones == null || bones.isEmpty())
         {
+            lastLimb = "";
             this.fix.setValue(0F);
             this.color.setColor(Colors.WHITE);
             this.lighting.setValue(false);
             this.transform.setTransform(null);
+
+            return;
         }
+
+        String primary = bones.get(0);
+
+        lastLimb = primary;
+
+        PoseTransform poseTransform = this.pose.get(primary);
+
+        this.fix.setValue(poseTransform.fix);
+        this.color.setColor(poseTransform.color.getARGBColor());
+        this.lighting.setValue(poseTransform.lighting == 0F);
+        this.transform.setTransform(poseTransform);
+    }
+
+    private void syncPoseTransformToSelection()
+    {
+        if (this.suppressPoseSync > 0)
+        {
+            return;
+        }
+
+        List<String> bones = this.groups.getCurrent();
+
+        if (bones.size() <= 1)
+        {
+            return;
+        }
+
+        if (!(this.transform.getTransform() instanceof PoseTransform primary))
+        {
+            return;
+        }
+
+        for (String bone : bones)
+        {
+            PoseTransform pt = this.pose.get(bone);
+
+            if (pt != primary)
+            {
+                pt.copy(primary);
+            }
+        }
+    }
+
+    private void forEachSelectedPose(Consumer<PoseTransform> consumer)
+    {
+        for (String bone : this.groups.getCurrent())
+        {
+            consumer.accept(this.pose.get(bone));
+        }
+    }
+
+    private void applyFixToSelection(float value)
+    {
+        this.forEachSelectedPose((pt) -> this.setFix(pt, value));
+        this.fix.setValue(value);
+    }
+
+    private void applyColorToSelection(int argb)
+    {
+        this.forEachSelectedPose((pt) -> this.setColor(pt, argb));
+        this.color.setColor(argb);
+    }
+
+    private void applyLightingToSelection(boolean value)
+    {
+        this.forEachSelectedPose((pt) -> this.setLighting(pt, value));
+        this.lighting.setValue(value);
     }
 
     private void toggleFix()
     {
-        if (!(this.transform.getTransform() instanceof PoseTransform pt))
+        if (this.groups.getCurrent().isEmpty())
         {
             return;
         }
+
         float next = this.fix.getValue() >= 0.5F ? 0F : 1F;
-        this.fix.setValue(next);
-        this.setFix(pt, next);
+
+        this.applyFixToSelection(next);
     }
 
     protected void setFix(PoseTransform transform, float value)

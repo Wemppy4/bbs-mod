@@ -336,7 +336,17 @@ public class Films
                 x = sw / 2 - w / 2;
                 y = sh / 2 + 100;
 
-                AudioRenderer.renderAll(batcher2D, audioClips, recorder.getTick() + tickDelta, x, y, w, BBSSettings.audioWaveformHeight.get(), sw, sh);
+                int barH = BBSSettings.audioWaveformHeight.get();
+                float playTick = recorder.getTick() + tickDelta;
+
+                if (BBSSettings.audioWaveformPreviewCombined.get())
+                {
+                    AudioRenderer.renderPreviewCombined(batcher2D, audioClips, playTick, x, y, w, barH, sw, sh);
+                }
+                else
+                {
+                    AudioRenderer.renderAll(batcher2D, audioClips, playTick, x, y, w, barH, sw, sh);
+                }
             }
         }
     }

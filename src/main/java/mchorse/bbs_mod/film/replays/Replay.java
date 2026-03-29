@@ -28,6 +28,10 @@ public class Replay extends ValueGroup
     public final Clips actions = new Clips("actions", BBSMod.getFactoryActionClips());
 
     public final ValueBoolean enabled = new ValueBoolean("enabled", true);
+    /**
+     * Single-level folder name for the replay list (empty = root). No {@code /} — see {@link #normalizeCategory(String)}.
+     */
+    public final ValueString category = new ValueString("category", "");
     public final ValueString label = new ValueString("label", "");
     public final ValueString nameTag = new ValueString("name_tag", "");
     public final ValueBoolean shadow = new ValueBoolean("shadow", true);
@@ -52,6 +56,7 @@ public class Replay extends ValueGroup
         this.add(this.actions);
 
         this.add(this.enabled);
+        this.add(this.category);
         this.add(this.label);
         this.add(this.nameTag);
         this.add(this.shadow);
@@ -65,6 +70,33 @@ public class Replay extends ValueGroup
 
         this.add(this.axesPreview);
         this.add(this.axesPreviewBone);
+    }
+
+    /**
+     * Normalizes a user-supplied category: trim, single segment (no {@code /}), empty = root.
+     */
+    public static String normalizeCategory(String raw)
+    {
+        if (raw == null)
+        {
+            return "";
+        }
+
+        String s = raw.trim();
+
+        if (s.isEmpty())
+        {
+            return "";
+        }
+
+        int slash = s.indexOf('/');
+
+        if (slash >= 0)
+        {
+            s = s.substring(0, slash).trim();
+        }
+
+        return s.isEmpty() ? "" : s;
     }
 
     public String getName()

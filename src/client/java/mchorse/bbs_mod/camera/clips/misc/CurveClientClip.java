@@ -5,7 +5,6 @@ import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.ClipContext;
 import mchorse.bbs_mod.utils.iris.ShaderCurves;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
-import mchorse.bbs_mod.utils.keyframes.KeyframeSegment;
 
 public class CurveClientClip extends CurveClip
 {
@@ -17,33 +16,48 @@ public class CurveClientClip extends CurveClip
     {
         super.breakDownClip(original, offset);
 
-        /* Clean up keyframes prior to broken apart */
-        for (KeyframeChannel<Double> channel : this.channels.getChannels())
+        for (KeyframeChannel<?> channel : this.channels.getAllKeyframeChannels())
         {
-            channel.moveX(-offset);
-
-            KeyframeSegment<Double> segment = channel.find(0);
-
-            if (segment != null)
-            {
-                while (segment.a != channel.get(0)) channel.remove(0);
-            }
+            breakDownTrimAfterSplit(channel, offset);
         }
 
         CurveClip curveClip = (CurveClip) original;
 
-        /* Clean up keyframes prior to broken apart */
-        for (KeyframeChannel<Double> channel : curveClip.channels.getChannels())
+        for (KeyframeChannel<?> channel : curveClip.channels.getAllKeyframeChannels())
         {
-            KeyframeSegment<Double> segment = channel.find(offset);
+            breakDownTrimOriginalTail(channel, offset);
+        }
+    }
 
-            if (segment != null)
+    /** Shift keyframes after splitting: drop everything before tick 0 on the new clip. */
+    private static void breakDownTrimAfterSplit(KeyframeChannel<?> channel, int offset)
+    {
+        channel.moveX(-offset);
+
+        var segment = channel.find(0);
+
+        if (segment != null)
+        {
+            while (segment.a != channel.get(0))
             {
-                while (segment.b != channel.get(channel.getKeyframes().size() - 1))
-                {
-                    channel.remove(channel.getKeyframes().size() - 1);
-                }
+                channel.remove(0);
             }
+        }
+    }
+
+    /** On the source clip, drop keyframes after the split point. */
+    private static void breakDownTrimOriginalTail(KeyframeChannel<?> channel, int offset)
+    {
+        var segment = channel.find(offset);
+
+        if (segment == null)
+        {
+            return;
+        }
+
+        while (segment.b != channel.get(channel.getKeyframes().size() - 1))
+        {
+            channel.remove(channel.getKeyframes().size() - 1);
         }
     }
 

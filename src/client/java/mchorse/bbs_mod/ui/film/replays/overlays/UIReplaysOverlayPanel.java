@@ -24,7 +24,6 @@ import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.UIDataUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 public class UIReplaysOverlayPanel extends UIOverlayPanel
@@ -72,10 +71,10 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
 
         this.keys().register(Keys.DELETE, () -> this.replays.removeReplay())
             .label(UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE)
-            .active(() -> this.replays.isSelected() || !this.replays.getCurrent().isEmpty());
+            .active(() -> this.replays.hasReplaySelection());
         this.keys().register(Keys.COPY, this.replays::copyReplay)
             .label(UIKeys.SCENE_REPLAYS_CONTEXT_COPY)
-            .active(() -> this.replays.isSelected() || !this.replays.getCurrent().isEmpty());
+            .active(() -> this.replays.hasReplaySelection());
         this.keys().register(Keys.PASTE, () ->
         {
             MapType data = Window.getClipboardMap("_CopyReplay");
@@ -83,11 +82,16 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
         }).label(UIKeys.SCENE_REPLAYS_CONTEXT_PASTE).active(() -> Window.getClipboardMap("_CopyReplay") != null);
         this.keys().register(Keys.REPLAYS_DUPE, () -> this.replays.dupeReplay())
             .label(UIKeys.SCENE_REPLAYS_CONTEXT_DUPE)
-            .active(() -> this.replays.isSelected() || !this.replays.getCurrent().isEmpty());
+            .active(() -> this.replays.hasReplaySelection());
 
         this.pickEdit = new UINestedEdit((editing) ->
         {
-            this.replays.openFormEditor(this.replays.getCurrent().get(0).form, editing, this.pickEdit::setForm);
+            Replay r = this.replays.getSelectedReplayFirst();
+
+            if (r != null)
+            {
+                this.replays.openFormEditor(r.form, editing, this.pickEdit::setForm);
+            }
         });
         this.pickEdit.keybinds();
         this.pickEdit.pick.tooltip(UIKeys.SCENE_REPLAYS_CONTEXT_PICK_FORM);
@@ -110,15 +114,23 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
         this.actor.tooltip(UIKeys.FILM_REPLAY_ACTOR_TOOLTIP);
         this.fp = new UIToggle(UIKeys.FILM_REPLAY_FP, (b) ->
         {
-            for (Replay replay : this.replays.getList())
+            if (filmPanel.getData() != null)
             {
-                if (replay.fp.get())
+                for (Replay replay : filmPanel.getData().replays.getList())
                 {
-                    replay.fp.set(false);
+                    if (replay.fp.get())
+                    {
+                        replay.fp.set(false);
+                    }
                 }
             }
 
-            this.replays.getCurrentFirst().fp.set(b.getValue());
+            Replay first = this.replays.getSelectedReplayFirst();
+
+            if (first != null)
+            {
+                first.fp.set(b.getValue());
+            }
         });
         this.relative = new UIToggle(UIKeys.CAMERA_PANELS_RELATIVE, (b) -> this.edit((replay) -> replay.relative.set(b.getValue())));
         this.relative.tooltip(UIKeys.FILM_REPLAY_RELATIVE_TOOLTIP);
@@ -167,9 +179,7 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
     {
         if (consumer != null)
         {
-            List<Replay> current = this.replays.getCurrent();
-
-            for (Replay replay : current)
+            for (Replay replay : this.replays.getSelectedReplays())
             {
                 consumer.accept(replay);
             }
@@ -180,7 +190,7 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
     {
         UIFilmPanel panel = this.replays.panel;
         boolean hasFilm = panel != null && panel.getData() != null;
-        boolean hasSelection = this.replays.isSelected() || !this.replays.getCurrent().isEmpty();
+        boolean hasSelection = this.replays.hasReplaySelection();
 
         this.addReplay.setEnabled(hasFilm);
         this.dupeReplay.setEnabled(hasSelection);

@@ -606,6 +606,26 @@ public class BBSRendering
         return null;
     }
 
+    public static Integer getChromaSkyColorArgb()
+    {
+        if (!MinecraftClient.getInstance().isOnThread())
+        {
+            return null;
+        }
+
+        if (BBSModClient.getCameraController().getCurrent() instanceof CameraWorkCameraController controller)
+        {
+            Map<String, Integer> values = CurveClip.getColorValues(controller.getContext());
+
+            if (values != null)
+            {
+                return values.get(CurveClip.CHROMA_SKY_COLOR);
+            }
+        }
+
+        return null;
+    }
+
     public static Function<VertexConsumer, VertexConsumer> getColorConsumer(Color color)
     {
         if (sodium)

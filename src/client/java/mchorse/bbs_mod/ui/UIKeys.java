@@ -92,6 +92,7 @@ public class UIKeys
     public static final IKey CAMERA_PANELS_CURVES_BRIGHTNESS = L10n.lang("bbs.ui.camera.panels.curves.brightness");
     public static final IKey CAMERA_PANELS_CURVES_SUN_ROTATION = L10n.lang("bbs.ui.camera.panels.curves.sun_rotation");
     public static final IKey CAMERA_PANELS_CURVES_WEATHER = L10n.lang("bbs.ui.camera.panels.curves.weather");
+    public static final IKey CAMERA_PANELS_CURVES_CHROMA_SKY_COLOR = L10n.lang("bbs.ui.camera.panels.curves.chroma_sky_color");
     public static final IKey CAMERA_PANELS_CURVE_ADD = L10n.lang("bbs.ui.camera.panels.curve.add");
     public static final IKey CAMERA_PANELS_CURVE_REMOVE = L10n.lang("bbs.ui.camera.panels.curve.remove");
     public static final IKey CAMERA_PANELS_DETERMINISTIC = L10n.lang("bbs.ui.camera.panels.deterministic");
@@ -688,6 +689,12 @@ public class UIKeys
     public static final IKey SCENE_REPLAYS_CONTEXT_PROCESS_EXPRESSION_TOOLTIP = L10n.lang("bbs.ui.scene.replays.context.process.expression-tooltip");
     public static final IKey SCENE_REPLAYS_CONTEXT_PROCESS_TITLE = L10n.lang("bbs.ui.scene.replays.context.process-title");
     public static final IKey SCENE_REPLAYS_CONTEXT_REMOVE = L10n.lang("bbs.ui.scene.replays.context.remove");
+    public static final IKey SCENE_REPLAYS_CONTEXT_ADD_CATEGORY = L10n.lang("bbs.ui.scene.replays.context.add_category");
+    public static final IKey SCENE_REPLAYS_CONTEXT_MOVE_TO_CATEGORY = L10n.lang("bbs.ui.scene.replays.context.move_to_category");
+    public static final IKey SCENE_REPLAYS_ADD_CATEGORY_TITLE = L10n.lang("bbs.ui.scene.replays.add_category.title");
+    public static final IKey SCENE_REPLAYS_ADD_CATEGORY_DESCRIPTION = L10n.lang("bbs.ui.scene.replays.add_category.description");
+    public static final IKey SCENE_REPLAYS_ADD_CATEGORY_PLACEHOLDER = L10n.lang("bbs.ui.scene.replays.add_category.placeholder");
+    public static final IKey SCENE_REPLAYS_CATEGORY_NONE = L10n.lang("bbs.ui.scene.replays.category.none");
     public static final IKey SCENE_REPLAYS_CONTEXT_RANDOM_TEXTURES = L10n.lang("bbs.ui.scene.replays.context.random_textures");
     public static final IKey SCENE_REPLAYS_RANDOM_TEXTURES_TITLE = L10n.lang("bbs.ui.scene.replays.random_textures.title");
     public static final IKey SCENE_REPLAYS_RANDOM_TEXTURES_DESCRIPTION = L10n.lang("bbs.ui.scene.replays.random_textures.description");
@@ -849,6 +856,8 @@ public class UIKeys
     public static final IKey TEXTURES_KEYS_REDO = L10n.lang("bbs.ui.textures.keys.redo");
     public static final IKey TEXTURES_KEYS_SWAP = L10n.lang("bbs.ui.textures.keys.swap");
     public static final IKey TEXTURES_KEYS_UNDO = L10n.lang("bbs.ui.textures.keys.undo");
+    public static final IKey TEXTURES_KEYS_BRUSH_DEC = L10n.lang("bbs.ui.textures.keys.brush_dec");
+    public static final IKey TEXTURES_KEYS_BRUSH_INC = L10n.lang("bbs.ui.textures.keys.brush_inc");
     public static final IKey TEXTURES_LINEAR = L10n.lang("bbs.ui.textures.linear");
     public static final IKey TEXTURES_MIPMAP = L10n.lang("bbs.ui.textures.mipmap");
     public static final IKey TEXTURES_RESIZE = L10n.lang("bbs.ui.textures.resize");
