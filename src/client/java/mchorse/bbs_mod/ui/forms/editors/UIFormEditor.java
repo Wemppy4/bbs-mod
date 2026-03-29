@@ -76,7 +76,7 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
 {
     private static Map<Class, Supplier<UIForm>> panels = new HashMap<>();
 
-    private static float treeWidth = 0F;
+    private static float treeWidth = 0.2F;
     private static boolean TOGGLED = true;
 
     /* Palette for picking a form for body parts */
