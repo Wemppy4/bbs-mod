@@ -294,6 +294,7 @@
 	"bbs.ui.camera.panels.at_block": "Смотреть на блок",
 	"bbs.ui.camera.panels.audio.extend_duration": "Удлинить продолжительность этого клипа до длины аудио файла",
 	"bbs.ui.camera.panels.audio.offset": "Аудио сдвиг",
+	"bbs.ui.camera.panels.audio.volume": "Громкость",
 	"bbs.ui.camera.panels.audio.pick_audio": "Выбрать аудио...",
 	"bbs.ui.camera.panels.block": "Координаты блока",
 	"bbs.ui.camera.panels.context.copy_angle": "Скопировать угол наклона",

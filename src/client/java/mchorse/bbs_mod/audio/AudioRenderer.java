@@ -312,7 +312,8 @@ public class AudioRenderer
                     finalWave.add(buffer, wave,
                         TimeUtils.toSeconds(clip.tick.get()),
                         TimeUtils.toSeconds(clip.offset.get()),
-                        TimeUtils.toSeconds(clip.duration.get())
+                        TimeUtils.toSeconds(clip.duration.get()),
+                        clip.volume.get()
                     );
                 }
             }
