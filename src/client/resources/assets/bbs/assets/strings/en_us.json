@@ -882,6 +882,7 @@
 	"bbs.ui.scene.replays.context.process.expression-tooltip": "Following variables are available:\n§ei§r - replay index\n§eo§r - relative replay index\n§ev§r - keyframe value\n§eki§r - keyframe index",
 	"bbs.ui.scene.replays.context.remove": "Remove replay(s)",
 	"bbs.ui.scene.replays.context.add_category": "Add category",
+	"bbs.ui.scene.replays.context.remove_category": "Remove category",
 	"bbs.ui.scene.replays.context.move_to_category": "Move to category…",
 	"bbs.ui.scene.replays.add_category.title": "New category",
 	"bbs.ui.scene.replays.add_category.description": "Enter a name for the new category (empty categories are kept in the film).",

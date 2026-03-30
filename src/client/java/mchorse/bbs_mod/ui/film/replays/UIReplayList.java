@@ -35,6 +35,7 @@ import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
 import mchorse.bbs_mod.ui.forms.UIFormPalette;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.context.UIContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIList;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
@@ -90,6 +91,9 @@ public class UIReplayList extends UIList<ReplayListEntry>
     /** Category names whose replay rows are hidden (headers stay visible). */
     private final Set<String> collapsedCategories = new HashSet<>();
 
+    /** Set while building the context menu when the cursor is on a category folder row. */
+    private String contextFolderCategoryName;
+
     public UIReplayList(Consumer<List<Replay>> callback, UIReplaysOverlayPanel overlay, UIFilmPanel panel)
     {
         super((entries) -> callback.accept(replaysFromEntries(entries)));
@@ -107,6 +111,13 @@ public class UIReplayList extends UIList<ReplayListEntry>
             if (film != null)
             {
                 menu.action(Icons.FOLDER, UIKeys.SCENE_REPLAYS_CONTEXT_ADD_CATEGORY, this::openAddCategoryOverlay);
+            }
+
+            if (film != null && this.contextFolderCategoryName != null)
+            {
+                String cat = this.contextFolderCategoryName;
+
+                menu.action(Icons.TRASH, UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE_CATEGORY, () -> this.removeReplayCategory(cat));
             }
 
             if (this.hasReplaySelection())
@@ -181,6 +192,68 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 menu.action(Icons.REMOVE, UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE, this::removeReplay);
             }
         });
+    }
+
+    @Override
+    public UIContextMenu createContextMenu(UIContext context)
+    {
+        this.contextFolderCategoryName = null;
+
+        int idx = this.getIndexAtCursor(context);
+
+        if (this.exists(idx))
+        {
+            ReplayListEntry e = this.list.get(idx);
+
+            if (e.isFolder())
+            {
+                String cat = Replay.normalizeCategory(e.folderName);
+
+                if (!cat.isEmpty())
+                {
+                    this.contextFolderCategoryName = cat;
+                }
+            }
+        }
+
+        try
+        {
+            return super.createContextMenu(context);
+        }
+        finally
+        {
+            this.contextFolderCategoryName = null;
+        }
+    }
+
+    /**
+     * Remove a category from the film and move all replays in it to root.
+     */
+    private void removeReplayCategory(String normalizedName)
+    {
+        Film film = this.panel.getData();
+
+        if (film == null || normalizedName.isEmpty())
+        {
+            return;
+        }
+
+        Set<String> names = new HashSet<>(film.replayCategoryNames.get());
+
+        names.remove(normalizedName);
+        film.replayCategoryNames.set(names);
+
+        for (Replay r : film.replays.getList())
+        {
+            if (normalizedName.equals(Replay.normalizeCategory(r.category.get())))
+            {
+                r.category.set("");
+            }
+        }
+
+        this.collapsedCategories.remove(normalizedName);
+        this.refreshReplayList();
+        this.updateFilmEditor();
     }
 
     private static List<Replay> replaysFromEntries(List<ReplayListEntry> entries)
