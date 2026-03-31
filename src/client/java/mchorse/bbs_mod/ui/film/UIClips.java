@@ -214,6 +214,8 @@ public class UIClips extends UIElement
         this.keys().register(Keys.CLIP_DURATION, this::shiftDurationToCursor).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.DELETE, this::removeSelected).label(UIKeys.CAMERA_TIMELINE_CONTEXT_REMOVE_CLIPS).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_ENABLE, this::toggleEnabled).category(KEYS_CATEGORY).active(canUseKeybinds);
+        this.keys().register(Keys.CLIP_SELECT_ALL, this::selectAll).category(KEYS_CATEGORY).active(canUseKeybinds);
+        this.keys().register(Keys.CLIP_SELECT_TRACK, this::selectTrack).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_SELECT_AFTER, this::selectAfter).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_SELECT_BEFORE, this::selectBefore).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.FADE_IN, () ->
@@ -736,6 +738,46 @@ public class UIClips extends UIElement
         }
 
         this.delegate.pickClip(this.selection.isEmpty() ? null : this.clips.get(this.selection.get(0)));
+    }
+
+    private void selectAll()
+    {
+        this.clearSelection();
+
+        for (Clip clip : this.clips.get())
+        {
+            this.addSelected(clip);
+        }
+
+        this.pickLastSelectedClip();
+    }
+
+    private void selectTrack()
+    {
+        Clip clip = this.delegate.getClip();
+        int layer = this.fromLayerY(this.getContext().mouseY);
+
+        if (layer < 0 && clip != null)
+        {
+            layer = clip.layer.get();
+        }
+
+        if (layer < 0)
+        {
+            return;
+        }
+
+        this.clearSelection();
+
+        for (Clip c : this.clips.get())
+        {
+            if (c.layer.get() == layer)
+            {
+                this.addSelected(c);
+            }
+        }
+
+        this.pickLastSelectedClip();
     }
 
     private void selectAfter()

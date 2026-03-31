@@ -253,6 +253,8 @@
 	"bbs.ui.camera.clips.bbs:use_block_item": "Использовать блок предметом",
 	"bbs.ui.camera.clips.bbs:use_item": "Использовать предмет",
 	"bbs.ui.camera.editor.keys.clips.deselect": "Убрать выделение данного клипа",
+	"bbs.ui.camera.editor.keys.clips.select_all": "Выделить все клипы",
+	"bbs.ui.camera.editor.keys.clips.select_track": "Выделить все клипы на текущей дорожке",
 	"bbs.ui.camera.editor.keys.clips.title": "Клипы",
 	"bbs.ui.camera.editor.keys.editor.fade_in": "Установить появление на месте курсора",
 	"bbs.ui.camera.editor.keys.editor.fade_out": "Установить затухание на месте курсора",

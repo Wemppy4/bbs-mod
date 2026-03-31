@@ -36,6 +36,8 @@ public class UIKeys
     public static final IKey AUDIO_CONTEXT_REMOVE = L10n.lang("bbs.ui.audio_editor.context.remove");
     public static final IKey AUDIO_TITLE = L10n.lang("bbs.ui.audio_editor.title");
     public static final IKey CAMERA_EDITOR_KEYS_CLIPS_DESELECT = L10n.lang("bbs.ui.camera.editor.keys.clips.deselect");
+    public static final IKey CAMERA_EDITOR_KEYS_CLIPS_SELECT_ALL = L10n.lang("bbs.ui.camera.editor.keys.clips.select_all");
+    public static final IKey CAMERA_EDITOR_KEYS_CLIPS_SELECT_TRACK = L10n.lang("bbs.ui.camera.editor.keys.clips.select_track");
     public static final IKey CAMERA_EDITOR_KEYS_CLIPS_TITLE = L10n.lang("bbs.ui.camera.editor.keys.clips.title");
     public static final IKey CAMERA_EDITOR_KEYS_EDITOR_FADE_IN = L10n.lang("bbs.ui.camera.editor.keys.editor.fade_in");
     public static final IKey CAMERA_EDITOR_KEYS_EDITOR_FADE_OUT = L10n.lang("bbs.ui.camera.editor.keys.editor.fade_out");

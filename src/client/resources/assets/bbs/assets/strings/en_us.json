@@ -253,6 +253,8 @@
 	"bbs.ui.camera.clips.bbs:use_block_item": "Use item on block",
 	"bbs.ui.camera.clips.bbs:use_item": "Use item",
 	"bbs.ui.camera.editor.keys.clips.deselect": "Deselect current clip",
+	"bbs.ui.camera.editor.keys.clips.select_all": "Select all clips",
+	"bbs.ui.camera.editor.keys.clips.select_track": "Select all clips on current track",
 	"bbs.ui.camera.editor.keys.clips.title": "Clips",
 	"bbs.ui.camera.editor.keys.editor.fade_in": "Set fade in from cursor",
 	"bbs.ui.camera.editor.keys.editor.fade_out": "Set fade out from cursor",
