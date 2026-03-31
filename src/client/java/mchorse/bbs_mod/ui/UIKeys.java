@@ -22,6 +22,7 @@ public class UIKeys
     public static final IKey ACTIONS_BLOCK_HIT = L10n.lang("bbs.ui.actions.block.hit");
     public static final IKey ACTIONS_BLOCK_INSIDE = L10n.lang("bbs.ui.actions.block.inside");
     public static final IKey ACTIONS_BLOCK_POSITION = L10n.lang("bbs.ui.actions.block.position");
+    public static final IKey ACTIONS_BLOCK_POSITION_FROM_LOOK = L10n.lang("bbs.ui.actions.block.position_from_look");
     public static final IKey ACTIONS_BLOCK_PROGRESS = L10n.lang("bbs.ui.actions.block.progress");
     public static final IKey ACTIONS_BLOCK_STATE = L10n.lang("bbs.ui.actions.block.state");
     public static final IKey ACTIONS_CHAT_MESSAGE = L10n.lang("bbs.ui.actions.chat.message");

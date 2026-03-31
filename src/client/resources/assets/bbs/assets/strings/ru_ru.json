@@ -210,6 +210,7 @@
 	"bbs.ui.actions.block.hit": "Позиция соприкосновения",
 	"bbs.ui.actions.block.inside": "Внутри",
 	"bbs.ui.actions.block.position": "Позиция блока",
+	"bbs.ui.actions.block.position_from_look": "Вставить блок под прицелом",
 	"bbs.ui.actions.block.progress": "Прогресс разрушение",
 	"bbs.ui.actions.block.state": "Состояние блока",
 	"bbs.ui.actions.chat.message": "Сообщение чата",

@@ -210,6 +210,7 @@
 	"bbs.ui.actions.block.hit": "Hit position",
 	"bbs.ui.actions.block.inside": "Inside",
 	"bbs.ui.actions.block.position": "Block position",
+	"bbs.ui.actions.block.position_from_look": "Paste block from look",
 	"bbs.ui.actions.block.progress": "Break progress",
 	"bbs.ui.actions.block.state": "Block state",
 	"bbs.ui.actions.chat.message": "Chat message",
