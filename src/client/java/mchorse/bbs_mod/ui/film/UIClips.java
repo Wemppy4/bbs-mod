@@ -1199,8 +1199,15 @@ public class UIClips extends UIElement
             }
             else if (Window.isAltPressed() && context.mouseWheel != 0D)
             {
-                int step = (int) Math.copySign(2, context.mouseWheel);
-                this.layerHeight = MathUtils.clamp(this.layerHeight + step, LAYER_HEIGHT_MIN, LAYER_HEIGHT_MAX);
+                if (this.isSelecting())
+                {
+                    this.moveSelectedBy((int) Math.copySign(1, context.mouseWheel));
+                }
+                else
+                {
+                    int step = (int) Math.copySign(2, context.mouseWheel);
+                    this.layerHeight = MathUtils.clamp(this.layerHeight + step, LAYER_HEIGHT_MIN, LAYER_HEIGHT_MAX);
+                }
             }
             else if (Window.isShiftPressed())
             {
@@ -1215,6 +1222,42 @@ public class UIClips extends UIElement
         }
 
         return super.subMouseScrolled(context);
+    }
+
+    private void moveSelectedBy(int dx)
+    {
+        List<Clip> selected = this.getClipsFromSelection();
+
+        if (selected.isEmpty())
+        {
+            return;
+        }
+
+        List<Vector3i> data = new ArrayList<>(selected.size());
+
+        for (Clip clip : selected)
+        {
+            data.add(new Vector3i(clip.tick.get(), clip.layer.get(), clip.duration.get()));
+        }
+
+        List<Clip> others = new ArrayList<>(this.clips.get());
+        others.removeIf(selected::contains);
+
+        int[] adjusted = this.resolveCollisions(others, data, dx, 0);
+
+        if (adjusted[0] == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < selected.size(); i++)
+        {
+            Vector3i clipData = data.get(i);
+
+            this.setClipData(selected.get(i), clipData.x() + adjusted[0], clipData.y(), clipData.z());
+        }
+
+        this.delegate.fillData();
     }
 
     @Override
