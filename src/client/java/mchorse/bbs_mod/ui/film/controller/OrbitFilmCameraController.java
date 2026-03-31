@@ -1,5 +1,8 @@
 package mchorse.bbs_mod.ui.film.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.joml.Intersectionf;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -13,6 +16,7 @@ import mchorse.bbs_mod.camera.Camera;
 import mchorse.bbs_mod.camera.controller.ICameraController;
 import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.film.BaseFilmController;
+import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
@@ -47,6 +51,7 @@ public class OrbitFilmCameraController implements ICameraController
     private boolean center;
 
     protected Vector3i velocityPosition = new Vector3i();
+    private final Map<String, OrbitState> replayStates = new HashMap<>();
 
     public OrbitFilmCameraController(UIFilmController controller)
     {
@@ -305,9 +310,70 @@ public class OrbitFilmCameraController implements ICameraController
         return 20;
     }
 
+    public void saveReplayState(Replay replay)
+    {
+        if (replay == null)
+        {
+            return;
+        }
+
+        this.replayStates.put(replay.getId(), new OrbitState(this.position, this.rotation, this.distance, this.offsetY, this.center));
+    }
+
+    public void restoreReplayState(Replay replay, boolean resetIfMissing)
+    {
+        if (replay == null)
+        {
+            if (resetIfMissing)
+            {
+                this.reset();
+            }
+
+            return;
+        }
+
+        OrbitState state = this.replayStates.get(replay.getId());
+
+        if (state == null)
+        {
+            if (resetIfMissing)
+            {
+                this.reset();
+            }
+
+            return;
+        }
+
+        this.position.set(state.position);
+        this.rotation.set(state.rotation);
+        this.distance = state.distance;
+        this.offsetY = state.offsetY;
+        this.center = state.center;
+    }
+
+    public void clearReplayStates()
+    {
+        this.replayStates.clear();
+    }
+
     public void reset()
     {
         this.position.set(0F, 0F, -4F);
         this.rotation.set(0F, Math.PI);
+        this.distance = this.position.length();
+        this.offsetY = 0F;
+        this.center = false;
+    }
+
+    private record OrbitState(Vector3f position, Vector2f rotation, float distance, float offsetY, boolean center)
+    {
+        private OrbitState(Vector3f position, Vector2f rotation, float distance, float offsetY, boolean center)
+        {
+            this.position = new Vector3f(position);
+            this.rotation = new Vector2f(rotation);
+            this.distance = distance;
+            this.offsetY = offsetY;
+            this.center = center;
+        }
     }
 }

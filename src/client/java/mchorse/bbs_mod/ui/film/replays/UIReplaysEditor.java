@@ -372,6 +372,7 @@ public class UIReplaysEditor extends UIElement {
 
     public void setFilm(Film film) {
         this.film = film;
+        this.filmPanel.getController().orbit.clearReplayStates();
 
         if (film != null) {
             List<Replay> replays = film.replays.getList();
@@ -383,7 +384,6 @@ public class UIReplaysEditor extends UIElement {
 
             this.replays.replays.refreshReplayList();
             this.setReplay(replays.isEmpty() ? null : replays.get(index), true, false);
-            this.filmPanel.getController().orbit.reset();
         }
     }
 
@@ -396,10 +396,17 @@ public class UIReplaysEditor extends UIElement {
     }
 
     public void setReplay(Replay replay, boolean select, boolean resetOrbit) {
+        Replay previousReplay = this.replay;
+
+        this.filmPanel.getController().orbit.saveReplayState(previousReplay);
         this.replay = replay;
 
         if (resetOrbit) {
             this.filmPanel.getController().orbit.reset();
+        }
+        else
+        {
+            this.filmPanel.getController().orbit.restoreReplayState(replay, true);
         }
 
         this.replays.setReplay(replay);
