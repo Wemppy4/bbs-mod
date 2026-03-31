@@ -144,6 +144,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private UIElement secretPlay;
 
     private boolean newFilm;
+    private double timelineXMin = Double.NaN;
+    private double timelineXMax = Double.NaN;
 
     /* Docking: layout panels and drag-to-swap/split */
     private final Map<String, UIElement> panelById = new LinkedHashMap<>();
@@ -932,17 +934,65 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
     public void showPanel(UIElement element)
     {
+        int index = this.getPanelIndex();
+
+        if (index >= 0)
+        {
+            this.captureTimelineViewport(this.panels.get(index));
+        }
+
         this.cameraEditor.setVisible(false);
         this.replayEditor.setVisible(false);
         this.actionEditor.setVisible(false);
 
         element.setVisible(true);
+        this.applyTimelineViewport(element);
 
         this.applyPreviewSizeToBBS();
 
         if (this.isFlying())
         {
             this.toggleFlight();
+        }
+    }
+
+    private void captureTimelineViewport(UIElement panel)
+    {
+        if (panel == this.cameraEditor)
+        {
+            this.timelineXMin = this.cameraEditor.clips.scale.getMinValue();
+            this.timelineXMax = this.cameraEditor.clips.scale.getMaxValue();
+        }
+        else if (panel == this.actionEditor)
+        {
+            this.timelineXMin = this.actionEditor.clips.scale.getMinValue();
+            this.timelineXMax = this.actionEditor.clips.scale.getMaxValue();
+        }
+        else if (panel == this.replayEditor && this.replayEditor.keyframeEditor != null)
+        {
+            this.timelineXMin = this.replayEditor.keyframeEditor.view.getXAxis().getMinValue();
+            this.timelineXMax = this.replayEditor.keyframeEditor.view.getXAxis().getMaxValue();
+        }
+    }
+
+    private void applyTimelineViewport(UIElement panel)
+    {
+        if (Double.isNaN(this.timelineXMin) || Double.isNaN(this.timelineXMax) || this.timelineXMin >= this.timelineXMax)
+        {
+            return;
+        }
+
+        if (panel == this.cameraEditor)
+        {
+            this.cameraEditor.clips.scale.view(this.timelineXMin, this.timelineXMax);
+        }
+        else if (panel == this.actionEditor)
+        {
+            this.actionEditor.clips.scale.view(this.timelineXMin, this.timelineXMax);
+        }
+        else if (panel == this.replayEditor && this.replayEditor.keyframeEditor != null)
+        {
+            this.replayEditor.keyframeEditor.view.getXAxis().view(this.timelineXMin, this.timelineXMax);
         }
     }
 
