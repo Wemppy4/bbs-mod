@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
+import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.utils.keyframes.UIFilmKeyframes;
 import mchorse.bbs_mod.ui.framework.UIContext;
@@ -7,10 +8,13 @@ import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.TrackpadRecorder;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.utils.UIBezierHandles;
+import mchorse.bbs_mod.ui.framework.elements.utils.FontRenderer;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.MathUtils;
+import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Base class for numeric keyframe factories (Double, Float, Integer) with recording support.
@@ -25,6 +29,8 @@ public abstract class UINumericKeyframeFactory<T extends Number> extends UIKeyfr
     private boolean recordingInitialized;
     private int lastMouseX;
     private double lastRecordedValue;
+    private boolean editingMode;
+    private double editingInitialValue;
 
     public UINumericKeyframeFactory(Keyframe<T> keyframe, UIKeyframes editor)
     {
@@ -35,6 +41,7 @@ public abstract class UINumericKeyframeFactory<T extends Number> extends UIKeyfr
         this.handles = new UIBezierHandles(keyframe);
 
         this.setupRecordingContextMenu();
+        this.keys().register(Keys.TRANSFORMATIONS_TRANSLATE, this::startEditingMode).category(UIKeys.TRANSFORMS_KEYS_CATEGORY);
         this.scroll.add(this.value, this.handles.createColumn());
     }
 
@@ -98,15 +105,66 @@ public abstract class UINumericKeyframeFactory<T extends Number> extends UIKeyfr
             this.trackpadRecorder = new TrackpadRecorder(channel, this.editor, this.createValueConverter());
         }
 
+        this.stopEditingMode(false);
         this.recordingMode = true;
         this.recordingInitialized = false;
         
         this.startPlaybackIfNeeded();
     }
+
+    private void startEditingMode()
+    {
+        if (this.recordingMode)
+        {
+            return;
+        }
+
+        UIContext context = this.getContext();
+        if (context == null)
+        {
+            return;
+        }
+
+        this.editingInitialValue = this.value.getValue();
+        this.lastMouseX = context.mouseX;
+        this.editingMode = true;
+    }
+
+    private void stopEditingMode(boolean accept)
+    {
+        if (!this.editingMode)
+        {
+            return;
+        }
+
+        this.editingMode = false;
+
+        if (!accept)
+        {
+            this.value.setValue(this.editingInitialValue);
+            this.setValue(this.editingInitialValue);
+        }
+    }
     
     @Override
     public boolean subMouseClicked(UIContext context)
     {
+        if (this.editingMode)
+        {
+            if (context.mouseButton == 0)
+            {
+                this.stopEditingMode(true);
+
+                return true;
+            }
+            else if (context.mouseButton == 1)
+            {
+                this.stopEditingMode(false);
+
+                return true;
+            }
+        }
+
         if (this.recordingMode && context.mouseButton == 0)
         {
             return true;
@@ -126,11 +184,53 @@ public abstract class UINumericKeyframeFactory<T extends Number> extends UIKeyfr
         
         return super.subMouseReleased(context);
     }
+
+    @Override
+    protected boolean subKeyPressed(UIContext context)
+    {
+        if (this.editingMode)
+        {
+            if (context.isPressed(GLFW.GLFW_KEY_ENTER))
+            {
+                this.stopEditingMode(true);
+
+                return true;
+            }
+            else if (context.isPressed(GLFW.GLFW_KEY_ESCAPE))
+            {
+                this.stopEditingMode(false);
+
+                return true;
+            }
+        }
+
+        return super.subKeyPressed(context);
+    }
     
     @Override
     public void render(UIContext context)
     {
         super.render(context);
+
+        if (this.editingMode)
+        {
+            int dx = context.mouseX - this.lastMouseX;
+
+            if (dx != 0)
+            {
+                double modifier = this.value.getValueModifier();
+                double newValue = MathUtils.clamp(this.value.getValue() + dx * modifier, this.value.min, this.value.max);
+
+                if (this.value.integer)
+                {
+                    newValue = (int) newValue;
+                }
+
+                this.value.setValue(newValue);
+                this.setValue(newValue);
+                this.lastMouseX = context.mouseX;
+            }
+        }
         
         if (this.recordingMode && this.isPlaybackRunning())
         {
@@ -167,6 +267,16 @@ public abstract class UINumericKeyframeFactory<T extends Number> extends UIKeyfr
         {
             this.recordingMode = false;
             this.recordingInitialized = false;
+        }
+
+        if (this.editingMode)
+        {
+            String label = UIKeys.TRANSFORMS_EDITING.get();
+            FontRenderer font = context.batcher.getFont();
+            int x = this.area.mx(font.getWidth(label));
+            int y = this.area.my(font.getHeight());
+
+            context.batcher.textCard(label, x, y, Colors.WHITE, Colors.A50);
         }
     }
     
