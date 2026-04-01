@@ -1,0 +1,332 @@
+package mchorse.bbs_mod.ui.forms.editors.panels.widgets;
+
+import com.mojang.brigadier.StringReader;
+import mchorse.bbs_mod.l10n.keys.IKey;
+import mchorse.bbs_mod.ui.UIKeys;
+import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
+import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
+import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
+import mchorse.bbs_mod.ui.framework.elements.input.text.UITextarea;
+import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
+import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
+import mchorse.bbs_mod.ui.utils.UI;
+import mchorse.bbs_mod.ui.utils.icons.Icons;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.StringNbtReader;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.state.property.Property;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
+{
+    private static final int PADDING = 6;
+    private static final int GAP = 6;
+    private static final int HEADER_HEIGHT = 20;
+
+    private static final List<String> ITEM_IDS = new ArrayList<>();
+    private static final List<String> BLOCK_IDS = new ArrayList<>();
+
+    static
+    {
+        for (RegistryKey<Item> key : Registries.ITEM.getKeys())
+        {
+            ITEM_IDS.add(key.getValue().toString());
+        }
+
+        for (RegistryKey<Block> key : Registries.BLOCK.getKeys())
+        {
+            BLOCK_IDS.add(key.getValue().toString());
+        }
+
+        ITEM_IDS.sort(String::compareToIgnoreCase);
+        BLOCK_IDS.sort(String::compareToIgnoreCase);
+    }
+
+    public enum PickerMode
+    {
+        ITEM,
+        BLOCK
+    }
+
+    private final PickerMode mode;
+    private final Consumer<ItemStack> itemCallback;
+    private final Consumer<BlockState> blockCallback;
+
+    private final UISearchList<String> list;
+    private final UIElement itemPanel;
+    private final UIElement itemDetailsWrap;
+    private final UIElement blockPanel;
+    private final UIElement blockPropertiesWrap;
+    private final UIElement blockProperties;
+    private final UITrackpad itemCount;
+    private final UITextbox itemName;
+    private final UITextarea itemNbt;
+
+    private ItemStack itemStack = ItemStack.EMPTY;
+    private BlockState blockState = Blocks.AIR.getDefaultState();
+    private String selectedId = "";
+
+    public static UIUnifiedPickOverlayPanel forItem(Consumer<ItemStack> callback, ItemStack current)
+    {
+        return new UIUnifiedPickOverlayPanel(PickerMode.ITEM, callback, null, current == null ? ItemStack.EMPTY : current.copy(), null);
+    }
+
+    public static UIUnifiedPickOverlayPanel forBlock(Consumer<BlockState> callback, BlockState current)
+    {
+        return new UIUnifiedPickOverlayPanel(PickerMode.BLOCK, null, callback, ItemStack.EMPTY, current == null ? Blocks.AIR.getDefaultState() : current);
+    }
+
+    private UIUnifiedPickOverlayPanel(PickerMode mode, Consumer<ItemStack> itemCallback, Consumer<BlockState> blockCallback, ItemStack itemStack, BlockState blockState)
+    {
+        super(mode == PickerMode.ITEM ? UIKeys.ACTIONS_ITEM_STACK : UIKeys.FORMS_EDITORS_BLOCK_TITLE);
+
+        this.mode = mode;
+        this.itemCallback = itemCallback;
+        this.blockCallback = blockCallback;
+        this.itemStack = itemStack;
+        this.blockState = blockState;
+
+        this.list = new UISearchList<>(new UIStringList((values) ->
+        {
+            if (values.isEmpty())
+            {
+                return;
+            }
+
+            this.selectId(values.get(0));
+        }));
+        this.list.label(UIKeys.GENERAL_SEARCH);
+        this.list.list.background();
+
+        this.itemPanel = new UIElement();
+        this.itemPanel.relative(this.content).xy(PADDING, PADDING).w(1F, -PADDING * 2).h(1F, -PADDING * 2);
+        this.itemPanel.setVisible(mode == PickerMode.ITEM);
+
+        this.itemDetailsWrap = new UIElement();
+        this.itemDetailsWrap.relative(this.itemPanel).x(0.5F, GAP).y(0).w(0.5F, -GAP).h(1F);
+        this.itemDetailsWrap.setVisible(mode == PickerMode.ITEM);
+
+        this.blockPanel = new UIElement();
+        this.blockPanel.relative(this.content).xy(PADDING, PADDING).w(1F, -PADDING * 2).h(1F, -PADDING * 2);
+        this.blockPanel.setVisible(mode == PickerMode.BLOCK);
+
+        this.blockPropertiesWrap = new UIElement();
+        this.blockPropertiesWrap.relative(this.blockPanel).x(0.5F, GAP).y(0).w(0.5F, -GAP).h(1F);
+
+        this.itemName = new UITextbox(1000, (value) ->
+        {
+            if (this.mode != PickerMode.ITEM)
+            {
+                return;
+            }
+
+            this.itemStack.setCustomName(value.isEmpty() ? null : Text.literal(value));
+            this.acceptItem(this.itemStack.copy());
+            this.updateItemNbt();
+        });
+        this.itemCount = new UITrackpad((v) ->
+        {
+            if (this.mode != PickerMode.ITEM)
+            {
+                return;
+            }
+
+            this.itemStack.setCount(v.intValue());
+            this.acceptItem(this.itemStack.copy());
+            this.updateItemNbt();
+        });
+        this.itemCount.integer().limit(1, 64, true);
+        this.itemNbt = new UITextarea((v) ->
+        {
+            if (this.mode != PickerMode.ITEM)
+            {
+                return;
+            }
+
+            try
+            {
+                NbtCompound nbt = new StringNbtReader(new StringReader(v.toString())).parseCompound();
+                ItemStack parsed = ItemStack.fromNbt(nbt);
+
+                this.acceptItem(parsed);
+                this.selectId(Registries.ITEM.getId(parsed.getItem()).toString());
+            }
+            catch (Exception e)
+            {}
+        }).background();
+        this.itemNbt.wrap();
+        this.itemNbt.relative(this.itemDetailsWrap).xy(0, 70).w(1F).h(1F, -70);
+
+        this.blockProperties = UI.column(4);
+        this.blockProperties.relative(this.blockPropertiesWrap).xy(0, 20).w(1F).h(1F, -20);
+
+        if (mode == PickerMode.ITEM)
+        {
+            UIElement fields = UI.column(5, 6, this.itemName, this.itemCount);
+
+            fields.relative(this.itemPanel).y(1F).w(0.5F, -GAP).anchorY(1F);
+            this.itemNbt.relative(this.itemPanel).x(0.5F, GAP).y(0).w(0.5F, -GAP).h(1F);
+            this.list.relative(this.itemPanel).xy(0, 0).w(0.5F, -GAP).hTo(fields.area, 0F, 0);
+
+            this.itemPanel.add(this.itemNbt, fields, this.list);
+        }
+        else
+        {
+            this.list.relative(this.blockPanel).xy(0, 0).w(0.5F, -GAP).h(1F);
+            this.blockPropertiesWrap.add(UI.label(UIKeys.FORMS_EDITORS_BLOCK_PROPERTIES).relative(this.blockPropertiesWrap).xy(0, 0).w(1F).h(HEADER_HEIGHT));
+            this.blockPropertiesWrap.add(this.blockProperties);
+            this.blockProperties.h(1F, -HEADER_HEIGHT);
+            this.blockPanel.add(this.list, this.blockPropertiesWrap);
+        }
+
+        this.content.add(this.itemPanel, this.blockPanel);
+
+        if (mode == PickerMode.ITEM)
+        {
+            this.selectId(Registries.ITEM.getId(this.itemStack.getItem()).toString());
+        }
+        else
+        {
+            this.selectId(Registries.BLOCK.getId(this.blockState.getBlock()).toString());
+            this.fillBlockProperties(this.blockState);
+        }
+
+        this.refreshEntries();
+    }
+
+    private void refreshEntries()
+    {
+        this.list.list.clear();
+
+        List<String> source = this.mode == PickerMode.ITEM ? ITEM_IDS : BLOCK_IDS;
+
+        for (String id : source)
+        {
+            this.list.list.add(id);
+        }
+
+        if (!this.selectedId.isEmpty())
+        {
+            this.list.list.setCurrentScroll(this.selectedId);
+        }
+    }
+
+    private void selectId(String id)
+    {
+        if (id == null || id.isEmpty())
+        {
+            return;
+        }
+
+        this.selectedId = id;
+
+        if (this.mode == PickerMode.ITEM)
+        {
+            Item item = Registries.ITEM.get(new Identifier(id));
+            ItemStack selected = new ItemStack(item);
+
+            selected.setCount(Math.max(1, this.itemStack.getCount()));
+            if (this.itemStack.hasCustomName())
+            {
+                selected.setCustomName(this.itemStack.getName());
+            }
+
+            this.acceptItem(selected);
+            this.itemCount.limit(1, selected.getMaxCount(), true).setValue(selected.getCount());
+            this.itemName.setText(selected.getName().getString());
+            this.updateItemNbt();
+        }
+        else
+        {
+            Block block = Registries.BLOCK.get(new Identifier(id));
+            this.acceptBlock(block.getDefaultState());
+            this.fillBlockProperties(this.blockState);
+        }
+    }
+
+    private void acceptItem(ItemStack stack)
+    {
+        this.itemStack = stack.copy();
+
+        if (this.itemCallback != null)
+        {
+            this.itemCallback.accept(this.itemStack.copy());
+        }
+    }
+
+    private void acceptBlock(BlockState state)
+    {
+        this.blockState = state;
+
+        if (this.blockCallback != null)
+        {
+            this.blockCallback.accept(this.blockState);
+        }
+    }
+
+    private void updateItemNbt()
+    {
+        this.itemNbt.setText(ItemStack.CODEC.encodeStart(NbtOps.INSTANCE, this.itemStack).result().map(Object::toString).orElse("{}"));
+    }
+
+    private void fillBlockProperties(BlockState state)
+    {
+        this.blockProperties.removeAll();
+
+        if (state.getProperties().isEmpty())
+        {
+            this.blockProperties.add(UI.label(IKey.constant("-")));
+        }
+        else
+        {
+            for (Property<?> property : state.getProperties())
+            {
+                UIButton button = new UIButton(this.propertyLabel(state, property), (b) ->
+                {
+                    this.getContext().replaceContextMenu((menu) ->
+                    {
+                        for (Object value : property.getValues())
+                        {
+                            IKey key = IKey.constant(value.toString());
+
+                            menu.action(Icons.BLOCK, key, () ->
+                            {
+                                BlockState nextState = this.blockState.with((Property) property, (Comparable) value);
+
+                                this.acceptBlock(nextState);
+                                this.fillBlockProperties(nextState);
+                            });
+                        }
+                    });
+                });
+
+                button.tooltip(IKey.constant(property.getName()));
+                this.blockProperties.add(button);
+            }
+        }
+
+        if (this.getRoot() != null)
+        {
+            this.getRoot().resize();
+        }
+    }
+
+    private IKey propertyLabel(BlockState state, Property<?> property)
+    {
+        return IKey.constant(property.getName() + ": " + state.get(property));
+    }
+}

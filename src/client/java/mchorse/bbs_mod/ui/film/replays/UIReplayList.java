@@ -373,6 +373,56 @@ public class UIReplayList extends UIList<ReplayListEntry>
     }
 
     /**
+     * Selected replays in current visible list order.
+     */
+    private List<Replay> getSelectedReplaysInViewOrder()
+    {
+        List<Replay> out = new ArrayList<>();
+
+        for (int i = 0; i < this.list.size(); i++)
+        {
+            if (!this.current.contains(i))
+            {
+                continue;
+            }
+
+            ReplayListEntry e = this.list.get(i);
+
+            if (e.isReplay())
+            {
+                out.add(e.replay);
+            }
+        }
+
+        return out;
+    }
+
+    /**
+     * Replay index in currently visible replay rows (folder rows ignored).
+     */
+    private int getVisibleReplayIndex(Replay replay)
+    {
+        int index = 0;
+
+        for (ReplayListEntry e : this.list)
+        {
+            if (!e.isReplay())
+            {
+                continue;
+            }
+
+            if (e.replay == replay)
+            {
+                return index;
+            }
+
+            index += 1;
+        }
+
+        return -1;
+    }
+
+    /**
      * Global index of the first selected replay in {@link Film#replays}, or {@code -1}.
      */
     public int getGlobalReplayIndex()
@@ -975,52 +1025,46 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 }
 
                 LAST_PROCESS_PROPERTIES = new ArrayList<>(properties.getCurrent());
+                List<Replay> selected = this.getSelectedReplaysInViewOrder();
 
-                Film film = this.panel.getData();
-                List<Replay> replaysOrder = film.replays.getList();
-
-                for (int idx : this.current)
+                for (Replay replay : selected)
                 {
-                    if (!this.exists(idx))
+                    int visibleI = this.getVisibleReplayIndex(replay);
+
+                    if (visibleI < 0)
                     {
                         continue;
                     }
 
-                    ReplayListEntry ent = this.list.get(idx);
-
-                    if (!ent.isReplay())
-                    {
-                        continue;
-                    }
-
-                    int gi = replaysOrder.indexOf(ent.replay);
-
-                    min = Math.min(min, gi);
+                    min = Math.min(min, visibleI);
                 }
 
-                for (int idx : this.current)
+                if (min == Integer.MAX_VALUE)
                 {
-                    if (!this.exists(idx))
+                    return;
+                }
+
+                for (Replay replay : selected)
+                {
+                    int visibleI = this.getVisibleReplayIndex(replay);
+
+                    if (visibleI < 0)
                     {
                         continue;
                     }
 
-                    ReplayListEntry ent = this.list.get(idx);
-
-                    if (!ent.isReplay())
-                    {
-                        continue;
-                    }
-
-                    Replay replay = ent.replay;
-                    int globalI = replaysOrder.indexOf(replay);
-
-                    builder.variables.get("i").set(globalI);
-                    builder.variables.get("o").set(globalI - min);
+                    builder.variables.get("i").set(visibleI);
+                    builder.variables.get("o").set(visibleI - min);
 
                     for (String s : properties.getCurrent())
                     {
                         KeyframeChannel channel = (KeyframeChannel) replay.keyframes.get(s);
+
+                        if (channel == null)
+                        {
+                            continue;
+                        }
+
                         List keyframes = channel.getKeyframes();
 
                         for (int i = 0; i < keyframes.size(); i++)
@@ -1098,46 +1142,36 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 {}
 
                 Film film = this.panel.getData();
-                List<Replay> replaysOrder = film.replays.getList();
+                List<Replay> selected = this.getSelectedReplaysInViewOrder();
 
-                for (int idx : this.current)
+                for (Replay replay : selected)
                 {
-                    if (!this.exists(idx))
+                    int visibleI = this.getVisibleReplayIndex(replay);
+
+                    if (visibleI < 0)
                     {
                         continue;
                     }
 
-                    ReplayListEntry ent = this.list.get(idx);
-
-                    if (!ent.isReplay())
-                    {
-                        continue;
-                    }
-
-                    int gi = replaysOrder.indexOf(ent.replay);
-
-                    min = Math.min(min, gi);
+                    min = Math.min(min, visibleI);
                 }
 
-                for (int idx : this.current)
+                if (min == Integer.MAX_VALUE)
                 {
-                    if (!this.exists(idx))
+                    return;
+                }
+
+                for (Replay replay : selected)
+                {
+                    int visibleI = this.getVisibleReplayIndex(replay);
+
+                    if (visibleI < 0)
                     {
                         continue;
                     }
 
-                    ReplayListEntry ent = this.list.get(idx);
-
-                    if (!ent.isReplay())
-                    {
-                        continue;
-                    }
-
-                    Replay replay = ent.replay;
-                    int globalI = replaysOrder.indexOf(replay);
-
-                    builder.variables.get("i").set(globalI);
-                    builder.variables.get("o").set(globalI - min);
+                    builder.variables.get("i").set(visibleI);
+                    builder.variables.get("o").set(visibleI - min);
 
                     float tickv = parse == null ? 0F : (float) parse.doubleValue();
 

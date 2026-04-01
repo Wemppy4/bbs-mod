@@ -381,6 +381,7 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_BILLBOARD_UV_SHIFT = L10n.lang("bbs.ui.forms.editors.billboard.uv_shift");
     public static final IKey FORMS_EDITORS_BLOCK_PROPERTIES = L10n.lang("bbs.ui.forms.editors.block.title");
     public static final IKey FORMS_EDITORS_BLOCK_TITLE = L10n.lang("bbs.ui.forms.editors.block.title");
+    public static final IKey FORMS_EDITORS_BLOCK_PICKER_OPEN = L10n.lang("bbs.ui.forms.editors.block.picker.open");
     public static final IKey FORMS_EDITORS_EXTRUDED_TITLE = L10n.lang("bbs.ui.forms.editors.extruded.title");
     public static final IKey FORMS_EDITORS_GENERAL = L10n.lang("bbs.ui.forms.editors.general");
     public static final IKey FORMS_EDITORS_GENERAL_ANIMATABLE = L10n.lang("bbs.ui.forms.editors.general.animatable");
@@ -406,6 +407,16 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_GENERAL_VISIBLE = L10n.lang("bbs.ui.forms.editors.general.visible");
     public static final IKey FORMS_EDITORS_ITEM_TITLE = L10n.lang("bbs.ui.forms.editors.item.title");
     public static final IKey FORMS_EDITORS_ITEM_TRANSFORMS = L10n.lang("bbs.ui.forms.editors.item.transforms");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_FAVORITES = L10n.lang("bbs.ui.forms.editors.item.picker.favorites");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_RECENT = L10n.lang("bbs.ui.forms.editors.item.picker.recent");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_ALL = L10n.lang("bbs.ui.forms.editors.item.picker.all");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_FAVORITE_TOGGLE = L10n.lang("bbs.ui.forms.editors.item.picker.favorite_toggle");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_FROM_HAND = L10n.lang("bbs.ui.forms.editors.item.picker.from_hand");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_FROM_HOTBAR = L10n.lang("bbs.ui.forms.editors.item.picker.from_hotbar");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_FROM_LOOK = L10n.lang("bbs.ui.forms.editors.item.picker.from_look");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_ITEM_NAME = L10n.lang("bbs.ui.forms.editors.item.picker.item_name");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_ITEM_COUNT = L10n.lang("bbs.ui.forms.editors.item.picker.item_count");
+    public static final IKey FORMS_EDITORS_ITEM_PICKER_ITEM_NBT = L10n.lang("bbs.ui.forms.editors.item.picker.item_nbt");
     public static final IKey FORMS_EDITORS_LABEL_ANCHOR = L10n.lang("bbs.ui.forms.editors.label.anchor");
     public static final IKey FORMS_EDITORS_LABEL_ANCHOR_LINES = L10n.lang("bbs.ui.forms.editors.label.anchor_lines");
     public static final IKey FORMS_EDITORS_LABEL_BACKGROUND = L10n.lang("bbs.ui.forms.editors.label.background");
