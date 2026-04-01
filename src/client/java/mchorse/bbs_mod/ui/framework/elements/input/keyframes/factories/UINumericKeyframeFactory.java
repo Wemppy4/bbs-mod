@@ -255,7 +255,6 @@ public abstract class UINumericKeyframeFactory<T extends Number> extends UIKeyfr
                 }
                 
                 this.value.setValue(newValue);
-                this.setValue(newValue);
                 
                 this.lastMouseX = context.mouseX;
                 this.lastRecordedValue = newValue;
