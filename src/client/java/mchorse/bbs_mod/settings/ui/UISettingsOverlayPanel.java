@@ -96,6 +96,21 @@ public class UISettingsOverlayPanel extends UIOverlayPanel
                     continue;
                 }
 
+                if (value == BBSSettings.editorPreviewCustomWidth || value == BBSSettings.editorPreviewCustomHeight)
+                {
+                    if (BBSSettings.editorPreviewSizeMode.get() != 1)
+                    {
+                        continue;
+                    }
+                }
+                else if (value == BBSSettings.editorPreviewResolutionScale)
+                {
+                    if (BBSSettings.editorPreviewSizeMode.get() != 2)
+                    {
+                        continue;
+                    }
+                }
+
                 List<UIElement> elements = UIValueMap.create(value, this);
 
                 for (UIElement element : elements)

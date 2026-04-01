@@ -939,6 +939,9 @@ public class UIKeys
     public static final IKey VIDEO_SETTINGS_AUDIO_ARGS = L10n.lang("bbs.ui.video_settings.audio_args");
     public static final IKey VIDEO_SETTINGS_AUDIO_TOOLTIP = L10n.lang("bbs.ui.video_settings.audio-tooltip");
     public static final IKey VIDEO_SETTINGS_EDIT = L10n.lang("bbs.ui.video_settings.edit");
+    public static final IKey CONFIG_EDITOR_PREVIEW_MODE_EXPORT = L10n.lang("bbs.config.editor.preview_size_mode.export");
+    public static final IKey CONFIG_EDITOR_PREVIEW_MODE_CUSTOM = L10n.lang("bbs.config.editor.preview_size_mode.custom");
+    public static final IKey CONFIG_EDITOR_PREVIEW_MODE_AUTO = L10n.lang("bbs.config.editor.preview_size_mode.auto");
     public static final IKey VIDEO_SETTINGS_FRAME_RATE = L10n.lang("bbs.ui.video_settings.frame_rate");
     public static final IKey VIDEO_SETTINGS_HEIGHT = L10n.lang("bbs.ui.video_settings.height");
     public static final IKey VIDEO_SETTINGS_HELD_FRAMES = L10n.lang("bbs.ui.video_settings.held_frames");

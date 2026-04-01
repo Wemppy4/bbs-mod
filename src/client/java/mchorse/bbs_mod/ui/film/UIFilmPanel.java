@@ -91,6 +91,10 @@ import java.util.function.Supplier;
 
 public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSupported, IUIOrbitKeysHandler, ICursor
 {
+    private static final int PREVIEW_MODE_EXPORT = 0;
+    private static final int PREVIEW_MODE_CUSTOM = 1;
+    private static final int PREVIEW_MODE_AUTO = 2;
+
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private RunnerCameraController runner;
@@ -317,6 +321,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         };
         BBSSettings.videoSettings.width.postCallback(refreshPreviewOnVideoResolution);
         BBSSettings.videoSettings.height.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.editorPreviewSizeMode.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.editorPreviewCustomWidth.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.editorPreviewCustomHeight.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.editorPreviewResolutionScale.postCallback(refreshPreviewOnVideoResolution);
     }
 
     public boolean isLayoutLocked()
@@ -878,28 +886,43 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         int w;
         int h;
 
-        boolean useExportSize = !BBSSettings.editorPreviewAutoSize.get()
-            || this.cameraEditor.isVisible();
-        if (useExportSize)
+        int previewMode = BBSSettings.editorPreviewSizeMode.get();
+
+        if (previewMode == PREVIEW_MODE_EXPORT)
         {
             w = Math.max(2, BBSSettings.videoSettings.width.get());
             h = Math.max(2, BBSSettings.videoSettings.height.get());
         }
+        else if (previewMode == PREVIEW_MODE_CUSTOM)
+        {
+            w = Math.max(2, BBSSettings.editorPreviewCustomWidth.get());
+            h = Math.max(2, BBSSettings.editorPreviewCustomHeight.get());
+        }
         else
         {
-            float scale = BBSSettings.editorPreviewResolutionScale.get();
-            int previewW = this.preview.area.w;
-            int previewH = this.preview.area.h;
-            w = Math.max(2, (int) (previewW * scale));
-            h = Math.max(2, (int) (previewH * scale));
+            boolean useExportSize = this.cameraEditor.isVisible();
+
+            if (useExportSize)
+            {
+                w = Math.max(2, BBSSettings.videoSettings.width.get());
+                h = Math.max(2, BBSSettings.videoSettings.height.get());
+            }
+            else
+            {
+                float scale = BBSSettings.editorPreviewResolutionScale.get();
+                int previewW = this.preview.area.w;
+                int previewH = this.preview.area.h;
+                w = Math.max(2, (int) (previewW * scale));
+                h = Math.max(2, (int) (previewH * scale));
+            }
         }
 
         if (w % 2 != 0) w++;
         if (h % 2 != 0) h++;
 
         boolean applied = w != BBSRendering.getVideoWidth() || h != BBSRendering.getVideoHeight();
-        LOGGER.info("[BBS film] applyPreviewSizeToBBS autoSize={} cameraEditor={} -> w={} h={} applied={}",
-            BBSSettings.editorPreviewAutoSize.get(), this.cameraEditor.isVisible(), w, h, applied);
+        LOGGER.info("[BBS film] applyPreviewSizeToBBS mode={} cameraEditor={} -> w={} h={} applied={}",
+            previewMode, this.cameraEditor.isVisible(), w, h, applied);
 
         if (applied)
         {
