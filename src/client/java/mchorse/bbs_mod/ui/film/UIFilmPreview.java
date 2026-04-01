@@ -177,7 +177,10 @@ public class UIFilmPreview extends UIElement
 
             int duration = this.panel.getData().camera.calculateDuration();
             UIFilmPanel.applyExportSizeToBBS();
-            this.panel.recorder.startRecording(duration, BBSRendering.getTexture().id, BBSRendering.getVideoWidth(), BBSRendering.getVideoHeight());
+            BBSRendering.scheduleAfterNextExportFrame(() ->
+            {
+                this.panel.recorder.startRecording(duration, BBSRendering.getTexture().id, BBSRendering.getVideoWidth(), BBSRendering.getVideoHeight());
+            });
         });
         this.recordVideo.tooltip(UIKeys.CAMERA_TOOLTIPS_RECORD);
         this.recordVideo.context((menu) ->
