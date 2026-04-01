@@ -367,4 +367,9 @@ public class Films
     {
         this.stopVideoRecordingWhenFilmFinishedId = filmId;
     }
+
+    public void clearStopVideoRecordingWhenFilmFinished()
+    {
+        this.stopVideoRecordingWhenFilmFinishedId = null;
+    }
 }

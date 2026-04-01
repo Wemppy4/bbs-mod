@@ -124,6 +124,7 @@ public class BBSModClient implements ClientModInitializer
     private static GunItemRenderer gunItemRenderer = new GunItemRenderer();
     private static Films films;
     private static GunZoom gunZoom;
+    private static String playFilmAndRecordFilmId;
 
     private static float originalFramebufferScale;
 
@@ -468,6 +469,7 @@ public class BBSModClient implements ClientModInitializer
         {
             dashboard = null;
             films = new Films();
+            playFilmAndRecordFilmId = null;
 
             ClientNetwork.resetHandshake();
             films.reset();
@@ -508,6 +510,11 @@ public class BBSModClient implements ClientModInitializer
                 modelBlockItemRenderer.update();
                 gunItemRenderer.update();
                 textures.update();
+            }
+
+            if (playFilmAndRecordFilmId != null && !videoRecorder.isRecording())
+            {
+                playFilmAndRecordFilmId = null;
             }
 
             while (keyDashboard.wasPressed()) UIScreen.open(getDashboard());
@@ -696,6 +703,20 @@ public class BBSModClient implements ClientModInitializer
             return;
         }
 
+        Film film = panel.getData();
+        boolean sameComboSession = film.getId().equals(playFilmAndRecordFilmId);
+
+        if (sameComboSession && videoRecorder.isRecording())
+        {
+            videoRecorder.stopRecording();
+            BBSRendering.setCustomSize(false, 0, 0);
+            Films.playFilm(film.getId(), false);
+            getFilms().clearStopVideoRecordingWhenFilmFinished();
+            playFilmAndRecordFilmId = null;
+
+            return;
+        }
+
         if (videoRecorder.isRecording())
         {
             return;
@@ -711,9 +732,9 @@ public class BBSModClient implements ClientModInitializer
         videoRecorder.toggleRecording(BBSRendering.getTexture().id, width, height);
         BBSRendering.setCustomSize(videoRecorder.isRecording(), width, height);
 
-        Film film = panel.getData();
         Films.playFilm(film.getId(), false);
         getFilms().setStopVideoRecordingWhenFilmFinished(film.getId());
+        playFilmAndRecordFilmId = film.getId();
     }
 
     private void keyPauseFilm()
