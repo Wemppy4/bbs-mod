@@ -900,16 +900,21 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         }
         else
         {
-            boolean useExportSize = this.cameraEditor.isVisible();
+            float scale = BBSSettings.editorPreviewResolutionScale.get();
 
-            if (useExportSize)
+            if (this.cameraEditor.isVisible())
             {
-                w = Math.max(2, BBSSettings.videoSettings.width.get());
-                h = Math.max(2, BBSSettings.videoSettings.height.get());
+                int previewW = Math.max(2, this.preview.area.w);
+                int previewH = Math.max(2, this.preview.area.h);
+                int exportW = Math.max(2, BBSSettings.videoSettings.width.get());
+                int exportH = Math.max(2, BBSSettings.videoSettings.height.get());
+                Vector2i resized = Vectors.resize(exportW / (float) exportH, previewW, previewH);
+
+                w = Math.max(2, (int) (resized.x * scale));
+                h = Math.max(2, (int) (resized.y * scale));
             }
             else
             {
-                float scale = BBSSettings.editorPreviewResolutionScale.get();
                 int previewW = this.preview.area.w;
                 int previewH = this.preview.area.h;
                 w = Math.max(2, (int) (previewW * scale));
