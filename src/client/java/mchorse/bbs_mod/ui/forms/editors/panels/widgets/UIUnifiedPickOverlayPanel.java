@@ -1,8 +1,12 @@
 package mchorse.bbs_mod.ui.forms.editors.panels.widgets;
 
 import com.mojang.brigadier.StringReader;
+import mchorse.bbs_mod.BBSSettings;
+import mchorse.bbs_mod.forms.CustomVertexConsumerProvider;
+import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.UIKeys;
+import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
@@ -13,9 +17,14 @@ import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.utils.colors.Colors;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -36,6 +45,7 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
     private static final int PADDING = 6;
     private static final int GAP = 6;
     private static final int HEADER_HEIGHT = 20;
+    private static final int HOTBAR_HEIGHT = 24;
 
     private static final List<String> ITEM_IDS = new ArrayList<>();
     private static final List<String> BLOCK_IDS = new ArrayList<>();
@@ -72,6 +82,7 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
     private final UIElement blockPanel;
     private final UIElement blockPropertiesWrap;
     private final UIElement blockProperties;
+    private final UIItemHotbar hotbar;
     private final UITrackpad itemCount;
     private final UITextbox itemName;
     private final UITextarea itemNbt;
@@ -126,6 +137,8 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
 
         this.blockPropertiesWrap = new UIElement();
         this.blockPropertiesWrap.relative(this.blockPanel).x(0.5F, GAP).y(0).w(0.5F, -GAP).h(1F);
+        this.hotbar = new UIItemHotbar();
+        this.hotbar.relative(this.itemPanel).x(0).y(1F, -HOTBAR_HEIGHT).w(1F).h(HOTBAR_HEIGHT);
 
         this.itemName = new UITextbox(1000, (value) ->
         {
@@ -169,7 +182,6 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
             {}
         }).background();
         this.itemNbt.wrap();
-        this.itemNbt.relative(this.itemDetailsWrap).xy(0, 70).w(1F).h(1F, -70);
 
         this.blockProperties = UI.column(4);
         this.blockProperties.relative(this.blockPropertiesWrap).xy(0, 20).w(1F).h(1F, -20);
@@ -179,21 +191,30 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
             UIElement fields = UI.column(5, 6, this.itemName, this.itemCount);
 
             fields.relative(this.itemPanel).y(1F).w(0.5F, -GAP).anchorY(1F);
-            this.itemNbt.relative(this.itemPanel).x(0.5F, GAP).y(0).w(0.5F, -GAP).h(1F);
-            this.list.relative(this.itemPanel).xy(0, 0).w(0.5F, -GAP).hTo(fields.area, 0F, 0);
+            this.hotbar.relative(this.itemPanel).x(0.5F, GAP).y(1F, -HOTBAR_HEIGHT).w(0.5F, -GAP).h(HOTBAR_HEIGHT);
+            this.itemNbt.relative(this.itemPanel).x(0.5F, GAP).y(0).w(0.5F, -GAP).h(1F, -HOTBAR_HEIGHT - GAP);
+            this.list.relative(this.itemPanel).xy(0, 0).w(0.5F, -GAP).hTo(fields.area, 0F, -GAP);
 
-            this.itemPanel.add(this.itemNbt, fields, this.list);
+            this.itemPanel.add(this.itemNbt, fields, this.list, this.hotbar);
         }
         else
         {
+            this.hotbar.relative(this.blockPropertiesWrap).x(0).y(1F, -HOTBAR_HEIGHT).w(1F).h(HOTBAR_HEIGHT);
             this.list.relative(this.blockPanel).xy(0, 0).w(0.5F, -GAP).h(1F);
             this.blockPropertiesWrap.add(UI.label(UIKeys.FORMS_EDITORS_BLOCK_PROPERTIES).relative(this.blockPropertiesWrap).xy(0, 0).w(1F).h(HEADER_HEIGHT));
             this.blockPropertiesWrap.add(this.blockProperties);
-            this.blockProperties.h(1F, -HEADER_HEIGHT);
-            this.blockPanel.add(this.list, this.blockPropertiesWrap);
+            this.blockProperties.h(1F, -HEADER_HEIGHT - HOTBAR_HEIGHT - GAP);
+            this.blockPanel.add(this.list, this.blockPropertiesWrap, this.hotbar);
         }
 
-        this.content.add(this.itemPanel, this.blockPanel);
+        if (mode == PickerMode.ITEM)
+        {
+            this.content.add(this.itemPanel);
+        }
+        else
+        {
+            this.content.add(this.blockPanel);
+        }
 
         if (mode == PickerMode.ITEM)
         {
@@ -328,5 +349,109 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
     private IKey propertyLabel(BlockState state, Property<?> property)
     {
         return IKey.constant(property.getName() + ": " + state.get(property));
+    }
+
+    private class UIItemHotbar extends UIElement
+    {
+        private static final int SLOTS = 9;
+        private static final int SLOT_SIZE = 20;
+        private static final int SLOT_GAP = 2;
+
+        @Override
+        public boolean subMouseClicked(UIContext context)
+        {
+            if (!this.area.isInside(context) || context.mouseButton != 0)
+            {
+                return false;
+            }
+
+            MinecraftClient mc = MinecraftClient.getInstance();
+
+            if (mc.player == null)
+            {
+                return false;
+            }
+
+            int contentWidth = SLOTS * SLOT_SIZE + (SLOTS - 1) * SLOT_GAP;
+            int startX = this.area.mx(contentWidth);
+            int y = this.area.my(SLOT_SIZE);
+            int index = (context.mouseX - startX) / (SLOT_SIZE + SLOT_GAP);
+
+            if (index < 0 || index >= SLOTS)
+            {
+                return false;
+            }
+
+            int slotX = startX + index * (SLOT_SIZE + SLOT_GAP);
+
+            if (context.mouseX < slotX || context.mouseX >= slotX + SLOT_SIZE || context.mouseY < y || context.mouseY >= y + SLOT_SIZE)
+            {
+                return false;
+            }
+
+            ItemStack stack = mc.player.getInventory().getStack(index).copy();
+
+            if (stack.isEmpty())
+            {
+                return true;
+            }
+
+            if (UIUnifiedPickOverlayPanel.this.mode == PickerMode.ITEM)
+            {
+                UIUnifiedPickOverlayPanel.this.acceptItem(stack);
+                UIUnifiedPickOverlayPanel.this.selectId(Registries.ITEM.getId(stack.getItem()).toString());
+            }
+            else if (stack.getItem() instanceof BlockItem blockItem)
+            {
+                BlockState state = blockItem.getBlock().getDefaultState();
+
+                UIUnifiedPickOverlayPanel.this.acceptBlock(state);
+                UIUnifiedPickOverlayPanel.this.selectId(Registries.BLOCK.getId(state.getBlock()).toString());
+            }
+
+            return true;
+        }
+
+        @Override
+        public void render(UIContext context)
+        {
+            super.render(context);
+
+            MinecraftClient mc = MinecraftClient.getInstance();
+
+            if (mc.player == null)
+            {
+                return;
+            }
+
+            PlayerInventory inventory = mc.player.getInventory();
+            int contentWidth = SLOTS * SLOT_SIZE + (SLOTS - 1) * SLOT_GAP;
+            int startX = this.area.mx(contentWidth);
+            int y = this.area.my(SLOT_SIZE);
+
+            for (int i = 0; i < SLOTS; i++)
+            {
+                int x = startX + i * (SLOT_SIZE + SLOT_GAP);
+                ItemStack stack = inventory.getStack(i);
+                int border = i == inventory.selectedSlot ? Colors.A100 | BBSSettings.primaryColor.get() : Colors.LIGHTER_GRAY;
+
+                context.batcher.box(x, y, x + SLOT_SIZE, y + SLOT_SIZE, border);
+                context.batcher.box(x + 1, y + 1, x + SLOT_SIZE - 1, y + SLOT_SIZE - 1, Colors.A50);
+
+                if (!stack.isEmpty())
+                {
+                    MatrixStack matrices = context.batcher.getContext().getMatrices();
+                    CustomVertexConsumerProvider consumers = FormUtilsClient.getProvider();
+
+                    matrices.push();
+                    consumers.setUI(true);
+                    context.batcher.getContext().drawItem(stack, x + 2, y + 2);
+                    context.batcher.getContext().drawItemInSlot(context.batcher.getFont().getRenderer(), stack, x + 2, y + 2);
+                    consumers.setUI(false);
+                    matrices.pop();
+                }
+
+            }
+        }
     }
 }
