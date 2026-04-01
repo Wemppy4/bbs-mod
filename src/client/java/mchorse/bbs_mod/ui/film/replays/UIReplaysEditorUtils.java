@@ -82,6 +82,11 @@ public class UIReplaysEditorUtils
 
     public static void addBoneTrackSheets(ModelForm modelForm, FormProperties properties, List<UIKeyframeSheet> out)
     {
+        addBoneTrackSheets(modelForm, properties, out, null);
+    }
+
+    public static void addBoneTrackSheets(ModelForm modelForm, FormProperties properties, List<UIKeyframeSheet> out, Map<String, Integer> depthBySheetId)
+    {
         if (!modelForm.boneTracks.get())
         {
             return;
@@ -118,7 +123,30 @@ public class UIReplaysEditorUtils
             ValueTransform transform = new ValueTransform(boneKey, new PoseTransform());
 
             out.add(new UIKeyframeSheet(boneKey, IKey.constant(title), color, false, channel, transform, true));
+
+            if (depthBySheetId != null)
+            {
+                depthBySheetId.put(boneKey, getBoneDepth(iModel, bone));
+            }
         }
+    }
+
+    private static int getBoneDepth(IModel model, String bone)
+    {
+        int depth = 0;
+        String current = bone;
+
+        while (current != null && !current.isEmpty())
+        {
+            current = model.getParentGroupKey(current);
+
+            if (current != null && !current.isEmpty())
+            {
+                depth++;
+            }
+        }
+
+        return Math.max(0, depth);
     }
 
     public static UIPropTransform getEditableTransform(UIKeyframeEditor editor)

@@ -41,7 +41,8 @@ import java.util.Map;
 
 public class UIKeyframeDopeSheet implements IUIKeyframeGraph
 {
-    private static final int POSE_TAB_CHILD_INDENT = 12;
+    private static final int POSE_TAB_BASE_INDENT = 4;
+    private static final int POSE_TAB_DEPTH_STEP = 4;
 
     private UIKeyframes keyframes;
 
@@ -50,6 +51,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     private Map<UIKeyframeSheet, Integer> sheetYCache = new HashMap<>();
     private UIKeyframeSheet lastSheet;
     private Map<UIKeyframeSheet, UIKeyframeSheet> poseTabRoots = new HashMap<>();
+    private Map<UIKeyframeSheet, Integer> poseTabDepths = new HashMap<>();
     private Set<UIKeyframeSheet> poseTabParents = new HashSet<>();
     private Set<UIKeyframeSheet> expandedPoseTabs = new HashSet<>();
 
@@ -153,7 +155,18 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
 
     private int getSheetIndent(UIKeyframeSheet sheet)
     {
-        return this.poseTabRoots.containsKey(sheet) ? POSE_TAB_CHILD_INDENT : 0;
+        if (!this.poseTabRoots.containsKey(sheet))
+        {
+            return 0;
+        }
+
+        int depth = Math.max(0, this.poseTabDepths.getOrDefault(sheet, 0));
+        int labelWidth = Math.max(1, this.keyframes.getLabelWidth());
+        float scale = MathUtils.clamp(labelWidth / 120F, 0.75F, 1.5F);
+        int baseIndent = Math.max(1, Math.round(POSE_TAB_BASE_INDENT * scale));
+        int depthStep = Math.max(1, Math.round(POSE_TAB_DEPTH_STEP * scale));
+
+        return baseIndent + depth * depthStep;
     }
 
     private boolean isPoseTabParent(UIKeyframeSheet sheet)
@@ -240,9 +253,10 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
         return this.sheets;
     }
 
-    public void configurePoseTabs(Map<UIKeyframeSheet, List<UIKeyframeSheet>> tabs, Set<String> expandedPoseIds)
+    public void configurePoseTabs(Map<UIKeyframeSheet, List<UIKeyframeSheet>> tabs, Map<UIKeyframeSheet, Integer> depths, Set<String> expandedPoseIds)
     {
         this.poseTabRoots.clear();
+        this.poseTabDepths.clear();
         this.poseTabParents.clear();
         this.expandedPoseTabs.clear();
 
@@ -260,6 +274,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
             for (UIKeyframeSheet child : entry.getValue())
             {
                 this.poseTabRoots.put(child, parent);
+                this.poseTabDepths.put(child, Math.max(0, depths.getOrDefault(child, 0)));
             }
         }
 
@@ -283,6 +298,7 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
         this.elements.clear();
         this.sheets.clear();
         this.poseTabRoots.clear();
+        this.poseTabDepths.clear();
         this.poseTabParents.clear();
         this.expandedPoseTabs.clear();
         this.updateScrollSize();

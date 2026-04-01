@@ -447,6 +447,7 @@ public class UIReplaysEditor extends UIElement {
 
         List<UIKeyframeSheet> sheets = new ArrayList<>();
         Map<UIKeyframeSheet, List<UIKeyframeSheet>> poseTabs = new HashMap<>();
+        Map<UIKeyframeSheet, Integer> poseTabDepths = new HashMap<>();
         boolean tabsEnabled = BBSSettings.editorReplayTabs.get();
 
         if (!tabsEnabled || this.category == ReplayCategory.PLAYER) {
@@ -483,7 +484,7 @@ public class UIReplaysEditor extends UIElement {
 
                 if (form != lastForm) {
                     if (lastForm != null) {
-                        this.flushForm(sheets, formSheets, lastForm, tabsEnabled, poseTabs);
+                        this.flushForm(sheets, formSheets, lastForm, tabsEnabled, poseTabs, poseTabDepths);
                     }
 
                     lastForm = form;
@@ -501,7 +502,7 @@ public class UIReplaysEditor extends UIElement {
         }
 
         if (lastForm != null) {
-            this.flushForm(sheets, formSheets, lastForm, tabsEnabled, poseTabs);
+            this.flushForm(sheets, formSheets, lastForm, tabsEnabled, poseTabs, poseTabDepths);
         }
 
         this.keys.clear();
@@ -672,7 +673,7 @@ public class UIReplaysEditor extends UIElement {
                 this.replay == null ? "" : this.replay.getId(),
                 Collections.emptySet()
             );
-            this.keyframeEditor.view.getDopeSheet().configurePoseTabs(poseTabs, expandedPoseIds);
+            this.keyframeEditor.view.getDopeSheet().configurePoseTabs(poseTabs, poseTabDepths, expandedPoseIds);
 
             this.add(this.keyframeEditor);
             /* Icon bar on top so it overlays the track names column (left labelWidth pixels) */
@@ -694,7 +695,8 @@ public class UIReplaysEditor extends UIElement {
             List<UIKeyframeSheet> formSheets,
             Form form,
             boolean tabsEnabled,
-            Map<UIKeyframeSheet, List<UIKeyframeSheet>> poseTabs
+            Map<UIKeyframeSheet, List<UIKeyframeSheet>> poseTabs,
+            Map<UIKeyframeSheet, Integer> poseTabDepths
     ) {
         String path = FormUtils.getPath(form);
         String poseId = path.isEmpty() ? "pose" : path + FormUtils.PATH_SEPARATOR + "pose";
@@ -715,7 +717,14 @@ public class UIReplaysEditor extends UIElement {
         if ((!tabsEnabled || this.category == ReplayCategory.POSE)
                 && form instanceof ModelForm modelForm) {
             List<UIKeyframeSheet> boneSheets = new ArrayList<>();
-            UIReplaysEditorUtils.addBoneTrackSheets(modelForm, this.replay.properties, boneSheets);
+            Map<String, Integer> depthBySheetId = new HashMap<>();
+            UIReplaysEditorUtils.addBoneTrackSheets(modelForm, this.replay.properties, boneSheets, depthBySheetId);
+
+            for (UIKeyframeSheet boneSheet : boneSheets)
+            {
+                Integer depth = depthBySheetId.get(boneSheet.id);
+                poseTabDepths.put(boneSheet, depth == null ? 0 : depth);
+            }
 
             if (poseSheet != null && !boneSheets.isEmpty())
             {
