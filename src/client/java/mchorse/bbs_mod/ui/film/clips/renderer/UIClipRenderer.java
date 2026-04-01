@@ -64,7 +64,7 @@ public class UIClipRenderer <T extends Clip> implements IUIClipRenderer<T>
 
         if (right - left > 10 && clip.envelope.enabled.get())
         {
-            this.renderEnvelope(context, clip.envelope, clip.duration.get(), left + 1, y + 1, right - 1, y + 17);
+            this.renderEnvelope(context, clip.envelope, clip.duration.get(), left + 1, y + 1, right - 1, y + h - 1);
         }
 
         FontRenderer font = context.batcher.getFont();

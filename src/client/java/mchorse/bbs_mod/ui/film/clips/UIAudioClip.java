@@ -25,6 +25,7 @@ public class UIAudioClip extends UIClip<AudioClip>
     public UIIcon openFolder;
     public UIIcon extendDuration;
     public UITrackpad offset;
+    public UITrackpad volume;
 
     public UIAudioClip(AudioClip clip, IUIClipsDelegate editor)
     {
@@ -80,6 +81,9 @@ public class UIAudioClip extends UIClip<AudioClip>
 
         this.offset = new UITrackpad((v) -> this.clip.offset.set(v.intValue()));
         this.offset.integer();
+
+        this.volume = new UITrackpad((v) -> this.clip.volume.set(v.floatValue()));
+        this.volume.limit(this.clip.volume).values(0.05F, 0.01F, 0.2F).increment(0.1F).tooltip(UIKeys.CAMERA_PANELS_AUDIO_VOLUME);
     }
 
     @Override
@@ -88,7 +92,7 @@ public class UIAudioClip extends UIClip<AudioClip>
         super.registerPanels();
 
         this.panels.add(UI.column(UIClip.label(UIKeys.C_CLIP.get("bbs:audio")), UI.row(this.pickAudio, this.extendDuration, this.openFolder)).marginTop(UIConstants.SECTION_GAP));
-        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_AUDIO_OFFSET).marginTop(UIConstants.SECTION_GAP), this.offset).marginTop(UIConstants.SECTION_GAP));
+        this.panels.add(UI.column(UIClip.label(UIKeys.CAMERA_PANELS_AUDIO_OFFSET).marginTop(UIConstants.SECTION_GAP), this.offset, UIClip.label(UIKeys.CAMERA_PANELS_AUDIO_VOLUME).marginTop(UIConstants.SECTION_GAP), this.volume).marginTop(UIConstants.SECTION_GAP));
     }
 
     @Override
@@ -97,5 +101,6 @@ public class UIAudioClip extends UIClip<AudioClip>
         super.fillData();
 
         this.offset.setValue(this.clip.offset.get());
+        this.volume.setValue(this.clip.volume.get());
     }
 }

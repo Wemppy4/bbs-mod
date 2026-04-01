@@ -13,29 +13,44 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AudioClientClip extends AudioClip
 {
+    static final class Playback
+    {
+        final float seconds;
+        final float gain;
+
+        Playback(float seconds, float gain)
+        {
+            this.seconds = seconds;
+            this.gain = gain;
+        }
+    }
+
     public AudioClientClip()
     {
         super();
     }
 
-    public static Map<Link, Float> getPlayback(ClipContext context)
+    public static Map<Link, Playback> getPlayback(ClipContext context)
     {
         return context.clipData.get("audio", ConcurrentHashMap::new);
     }
 
     public static void manageSounds(ClipContext context)
     {
-        Map<Link, Float> playback = getPlayback(context);
+        Map<Link, Playback> playback = getPlayback(context);
 
-        for (Map.Entry<Link, Float> entry : playback.entrySet())
+        for (Map.Entry<Link, Playback> entry : playback.entrySet())
         {
-            float tickTime = entry.getValue();
+            Playback state = entry.getValue();
+            float tickTime = state.seconds;
             SoundPlayer player = BBSModClient.getSounds().playUnique(entry.getKey());
 
             if (player == null)
             {
                 continue;
             }
+
+            player.setVolume(state.gain);
 
             if (tickTime < 0 || tickTime >= player.getBuffer().getDuration())
             {
@@ -98,15 +113,16 @@ public class AudioClientClip extends AudioClip
             }
 
             float tickTime = (context.relativeTick + context.transition) / 20F;
-            Map<Link, Float> playback = getPlayback(context);
+            Map<Link, Playback> playback = getPlayback(context);
+            float gain = this.volume.get();
 
             if (context.relativeTick >= this.duration.get() || tickTime < 0)
             {
-                playback.putIfAbsent(link, -1F);
+                playback.putIfAbsent(link, new Playback(-1F, gain));
             }
             else
             {
-                playback.put(link, TimeUtils.toSeconds(this.offset.get()) + tickTime);
+                playback.put(link, new Playback(TimeUtils.toSeconds(this.offset.get()) + tickTime, gain));
             }
         }
     }

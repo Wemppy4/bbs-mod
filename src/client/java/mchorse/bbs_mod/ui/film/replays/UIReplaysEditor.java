@@ -1,6 +1,7 @@
 package mchorse.bbs_mod.ui.film.replays;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -96,6 +97,7 @@ public class UIReplaysEditor extends UIElement {
     private Film film;
     private Replay replay;
     private Set<String> keys = new LinkedHashSet<>();
+    private final Map<String, Set<String>> expandedPoseTabsByReplay = new HashMap<>();
 
     public enum ReplayCategory {
         PLAYER(
@@ -366,12 +368,23 @@ public class UIReplaysEditor extends UIElement {
         return this.category;
     }
 
+    public void pickPlayerCategory()
+    {
+        if (this.category != ReplayCategory.PLAYER)
+        {
+            this.setCategory(ReplayCategory.PLAYER);
+        }
+    }
+
     private int getLabelWidth() {
         return this.keyframeEditor != null ? this.keyframeEditor.view.getLabelWidth() : UIKeyframes.LABEL_WIDTH_DEFAULT;
     }
 
     public void setFilm(Film film) {
+        this.savePoseTabState(this.replay);
+        this.expandedPoseTabsByReplay.clear();
         this.film = film;
+        this.filmPanel.getController().orbit.clearReplayStates();
 
         if (film != null) {
             List<Replay> replays = film.replays.getList();
@@ -383,7 +396,6 @@ public class UIReplaysEditor extends UIElement {
 
             this.replays.replays.refreshReplayList();
             this.setReplay(replays.isEmpty() ? null : replays.get(index), true, false);
-            this.filmPanel.getController().orbit.reset();
         }
     }
 
@@ -396,10 +408,18 @@ public class UIReplaysEditor extends UIElement {
     }
 
     public void setReplay(Replay replay, boolean select, boolean resetOrbit) {
+        this.savePoseTabState(this.replay);
+        Replay previousReplay = this.replay;
+
+        this.filmPanel.getController().orbit.saveReplayState(previousReplay);
         this.replay = replay;
 
         if (resetOrbit) {
             this.filmPanel.getController().orbit.reset();
+        }
+        else
+        {
+            this.filmPanel.getController().orbit.restoreReplayState(replay, true);
         }
 
         this.replays.setReplay(replay);
@@ -434,6 +454,8 @@ public class UIReplaysEditor extends UIElement {
         }
 
         List<UIKeyframeSheet> sheets = new ArrayList<>();
+        Map<UIKeyframeSheet, List<UIKeyframeSheet>> poseTabs = new HashMap<>();
+        Map<UIKeyframeSheet, Integer> poseTabDepths = new HashMap<>();
         boolean tabsEnabled = BBSSettings.editorReplayTabs.get();
 
         if (!tabsEnabled || this.category == ReplayCategory.PLAYER) {
@@ -470,7 +492,7 @@ public class UIReplaysEditor extends UIElement {
 
                 if (form != lastForm) {
                     if (lastForm != null) {
-                        this.flushForm(sheets, formSheets, lastForm, tabsEnabled);
+                        this.flushForm(sheets, formSheets, lastForm, tabsEnabled, poseTabs, poseTabDepths);
                     }
 
                     lastForm = form;
@@ -488,7 +510,7 @@ public class UIReplaysEditor extends UIElement {
         }
 
         if (lastForm != null) {
-            this.flushForm(sheets, formSheets, lastForm, tabsEnabled);
+            this.flushForm(sheets, formSheets, lastForm, tabsEnabled, poseTabs, poseTabDepths);
         }
 
         this.keys.clear();
@@ -655,6 +677,12 @@ public class UIReplaysEditor extends UIElement {
                 this.keyframeEditor.view.addSheet(sheet);
             }
 
+            Set<String> expandedPoseIds = this.expandedPoseTabsByReplay.getOrDefault(
+                this.replay == null ? "" : this.replay.getId(),
+                Collections.emptySet()
+            );
+            this.keyframeEditor.view.getDopeSheet().configurePoseTabs(poseTabs, poseTabDepths, expandedPoseIds);
+
             this.add(this.keyframeEditor);
             /* Icon bar on top so it overlays the track names column (left labelWidth pixels) */
             if (this.iconBar.getParent() != null) {
@@ -674,15 +702,70 @@ public class UIReplaysEditor extends UIElement {
             List<UIKeyframeSheet> sheets,
             List<UIKeyframeSheet> formSheets,
             Form form,
-            boolean tabsEnabled
+            boolean tabsEnabled,
+            Map<UIKeyframeSheet, List<UIKeyframeSheet>> poseTabs,
+            Map<UIKeyframeSheet, Integer> poseTabDepths
     ) {
-        sheets.addAll(formSheets);
+        String path = FormUtils.getPath(form);
+        String poseId = path.isEmpty() ? "pose" : path + FormUtils.PATH_SEPARATOR + "pose";
+        UIKeyframeSheet poseSheet = null;
+
+        for (UIKeyframeSheet sheet : formSheets)
+        {
+            if (poseId.equals(sheet.id) && sheet.channel.getFactory() == KeyframeFactories.POSE)
+            {
+                poseSheet = sheet;
+                break;
+            }
+        }
+
+        List<UIKeyframeSheet> orderedFormSheets = new ArrayList<>(formSheets);
         formSheets.clear();
 
         if ((!tabsEnabled || this.category == ReplayCategory.POSE)
                 && form instanceof ModelForm modelForm) {
-            UIReplaysEditorUtils.addBoneTrackSheets(modelForm, this.replay.properties, sheets);
+            List<UIKeyframeSheet> boneSheets = new ArrayList<>();
+            Map<String, Integer> depthBySheetId = new HashMap<>();
+            UIReplaysEditorUtils.addBoneTrackSheets(modelForm, this.replay.properties, boneSheets, depthBySheetId);
+
+            for (UIKeyframeSheet boneSheet : boneSheets)
+            {
+                Integer depth = depthBySheetId.get(boneSheet.id);
+                poseTabDepths.put(boneSheet, depth == null ? 0 : depth);
+            }
+
+            if (poseSheet != null && !boneSheets.isEmpty())
+            {
+                poseTabs.put(poseSheet, boneSheets);
+
+                int poseIndex = orderedFormSheets.indexOf(poseSheet);
+
+                if (poseIndex >= 0)
+                {
+                    orderedFormSheets.addAll(poseIndex + 1, boneSheets);
+                }
+                else
+                {
+                    orderedFormSheets.addAll(boneSheets);
+                }
+            }
+            else
+            {
+                orderedFormSheets.addAll(boneSheets);
+            }
         }
+
+        sheets.addAll(orderedFormSheets);
+    }
+
+    private void savePoseTabState(Replay replay)
+    {
+        if (replay == null || this.keyframeEditor == null)
+        {
+            return;
+        }
+
+        this.expandedPoseTabsByReplay.put(replay.getId(), this.keyframeEditor.view.getDopeSheet().getExpandedPoseTabIds());
     }
 
     /**

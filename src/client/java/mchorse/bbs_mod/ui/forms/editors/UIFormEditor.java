@@ -320,9 +320,8 @@ public class UIFormEditor extends UIElement implements IUIFormList, ICursor
         this.formEditor.add(this.forms);
         this.statesEditor.add(backgroundStates, this.openStates, this.plause, this.shiftDuration, this.statesKeyframes);
         this.add(this.renderer, this.formEditor, this.statesEditor, this.icons);
+        this.add(new UIFormEditorUndoKeys(this).full(this));
 
-        this.keys().register(Keys.UNDO, this::undo);
-        this.keys().register(Keys.REDO, this::redo);
         this.keys().register(Keys.FORMS_OPEN_STATES_EDITOR, () ->
         {
             if (!this.statesEditor.isVisible())

@@ -94,7 +94,7 @@ public class UIItemStack extends UIElement
         {
             this.opened = true;
 
-            UIItemStackOverlayPanel panel = new UIItemStackOverlayPanel((i) ->
+            UIUnifiedPickOverlayPanel panel = UIUnifiedPickOverlayPanel.forItem((i) ->
             {
                 if (this.callback != null)
                 {
@@ -106,7 +106,7 @@ public class UIItemStack extends UIElement
 
             panel.onClose((a) -> this.opened = false);
 
-            UIOverlay.addOverlay(this.getContext(), panel, 0.9F, 0.5F);
+            UIOverlay.addOverlay(this.getContext(), panel, 0.68F, 0.62F);
             UIUtils.playClick();
 
             return true;

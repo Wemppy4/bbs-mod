@@ -35,6 +35,7 @@ import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
 import mchorse.bbs_mod.ui.forms.UIFormPalette;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.context.UIContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIList;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
@@ -90,6 +91,9 @@ public class UIReplayList extends UIList<ReplayListEntry>
     /** Category names whose replay rows are hidden (headers stay visible). */
     private final Set<String> collapsedCategories = new HashSet<>();
 
+    /** Set while building the context menu when the cursor is on a category folder row. */
+    private String contextFolderCategoryName;
+
     public UIReplayList(Consumer<List<Replay>> callback, UIReplaysOverlayPanel overlay, UIFilmPanel panel)
     {
         super((entries) -> callback.accept(replaysFromEntries(entries)));
@@ -107,6 +111,13 @@ public class UIReplayList extends UIList<ReplayListEntry>
             if (film != null)
             {
                 menu.action(Icons.FOLDER, UIKeys.SCENE_REPLAYS_CONTEXT_ADD_CATEGORY, this::openAddCategoryOverlay);
+            }
+
+            if (film != null && this.contextFolderCategoryName != null)
+            {
+                String cat = this.contextFolderCategoryName;
+
+                menu.action(Icons.TRASH, UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE_CATEGORY, () -> this.removeReplayCategory(cat));
             }
 
             if (this.hasReplaySelection())
@@ -181,6 +192,68 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 menu.action(Icons.REMOVE, UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE, this::removeReplay);
             }
         });
+    }
+
+    @Override
+    public UIContextMenu createContextMenu(UIContext context)
+    {
+        this.contextFolderCategoryName = null;
+
+        int idx = this.getIndexAtCursor(context);
+
+        if (this.exists(idx))
+        {
+            ReplayListEntry e = this.list.get(idx);
+
+            if (e.isFolder())
+            {
+                String cat = Replay.normalizeCategory(e.folderName);
+
+                if (!cat.isEmpty())
+                {
+                    this.contextFolderCategoryName = cat;
+                }
+            }
+        }
+
+        try
+        {
+            return super.createContextMenu(context);
+        }
+        finally
+        {
+            this.contextFolderCategoryName = null;
+        }
+    }
+
+    /**
+     * Remove a category from the film and move all replays in it to root.
+     */
+    private void removeReplayCategory(String normalizedName)
+    {
+        Film film = this.panel.getData();
+
+        if (film == null || normalizedName.isEmpty())
+        {
+            return;
+        }
+
+        Set<String> names = new HashSet<>(film.replayCategoryNames.get());
+
+        names.remove(normalizedName);
+        film.replayCategoryNames.set(names);
+
+        for (Replay r : film.replays.getList())
+        {
+            if (normalizedName.equals(Replay.normalizeCategory(r.category.get())))
+            {
+                r.category.set("");
+            }
+        }
+
+        this.collapsedCategories.remove(normalizedName);
+        this.refreshReplayList();
+        this.updateFilmEditor();
     }
 
     private static List<Replay> replaysFromEntries(List<ReplayListEntry> entries)
@@ -297,6 +370,56 @@ public class UIReplayList extends UIList<ReplayListEntry>
     public boolean hasReplaySelection()
     {
         return this.getSelectedReplayFirst() != null;
+    }
+
+    /**
+     * Selected replays in current visible list order.
+     */
+    private List<Replay> getSelectedReplaysInViewOrder()
+    {
+        List<Replay> out = new ArrayList<>();
+
+        for (int i = 0; i < this.list.size(); i++)
+        {
+            if (!this.current.contains(i))
+            {
+                continue;
+            }
+
+            ReplayListEntry e = this.list.get(i);
+
+            if (e.isReplay())
+            {
+                out.add(e.replay);
+            }
+        }
+
+        return out;
+    }
+
+    /**
+     * Replay index in currently visible replay rows (folder rows ignored).
+     */
+    private int getVisibleReplayIndex(Replay replay)
+    {
+        int index = 0;
+
+        for (ReplayListEntry e : this.list)
+        {
+            if (!e.isReplay())
+            {
+                continue;
+            }
+
+            if (e.replay == replay)
+            {
+                return index;
+            }
+
+            index += 1;
+        }
+
+        return -1;
     }
 
     /**
@@ -902,52 +1025,46 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 }
 
                 LAST_PROCESS_PROPERTIES = new ArrayList<>(properties.getCurrent());
+                List<Replay> selected = this.getSelectedReplaysInViewOrder();
 
-                Film film = this.panel.getData();
-                List<Replay> replaysOrder = film.replays.getList();
-
-                for (int idx : this.current)
+                for (Replay replay : selected)
                 {
-                    if (!this.exists(idx))
+                    int visibleI = this.getVisibleReplayIndex(replay);
+
+                    if (visibleI < 0)
                     {
                         continue;
                     }
 
-                    ReplayListEntry ent = this.list.get(idx);
-
-                    if (!ent.isReplay())
-                    {
-                        continue;
-                    }
-
-                    int gi = replaysOrder.indexOf(ent.replay);
-
-                    min = Math.min(min, gi);
+                    min = Math.min(min, visibleI);
                 }
 
-                for (int idx : this.current)
+                if (min == Integer.MAX_VALUE)
                 {
-                    if (!this.exists(idx))
+                    return;
+                }
+
+                for (Replay replay : selected)
+                {
+                    int visibleI = this.getVisibleReplayIndex(replay);
+
+                    if (visibleI < 0)
                     {
                         continue;
                     }
 
-                    ReplayListEntry ent = this.list.get(idx);
-
-                    if (!ent.isReplay())
-                    {
-                        continue;
-                    }
-
-                    Replay replay = ent.replay;
-                    int globalI = replaysOrder.indexOf(replay);
-
-                    builder.variables.get("i").set(globalI);
-                    builder.variables.get("o").set(globalI - min);
+                    builder.variables.get("i").set(visibleI);
+                    builder.variables.get("o").set(visibleI - min);
 
                     for (String s : properties.getCurrent())
                     {
                         KeyframeChannel channel = (KeyframeChannel) replay.keyframes.get(s);
+
+                        if (channel == null)
+                        {
+                            continue;
+                        }
+
                         List keyframes = channel.getKeyframes();
 
                         for (int i = 0; i < keyframes.size(); i++)
@@ -1025,46 +1142,36 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 {}
 
                 Film film = this.panel.getData();
-                List<Replay> replaysOrder = film.replays.getList();
+                List<Replay> selected = this.getSelectedReplaysInViewOrder();
 
-                for (int idx : this.current)
+                for (Replay replay : selected)
                 {
-                    if (!this.exists(idx))
+                    int visibleI = this.getVisibleReplayIndex(replay);
+
+                    if (visibleI < 0)
                     {
                         continue;
                     }
 
-                    ReplayListEntry ent = this.list.get(idx);
-
-                    if (!ent.isReplay())
-                    {
-                        continue;
-                    }
-
-                    int gi = replaysOrder.indexOf(ent.replay);
-
-                    min = Math.min(min, gi);
+                    min = Math.min(min, visibleI);
                 }
 
-                for (int idx : this.current)
+                if (min == Integer.MAX_VALUE)
                 {
-                    if (!this.exists(idx))
+                    return;
+                }
+
+                for (Replay replay : selected)
+                {
+                    int visibleI = this.getVisibleReplayIndex(replay);
+
+                    if (visibleI < 0)
                     {
                         continue;
                     }
 
-                    ReplayListEntry ent = this.list.get(idx);
-
-                    if (!ent.isReplay())
-                    {
-                        continue;
-                    }
-
-                    Replay replay = ent.replay;
-                    int globalI = replaysOrder.indexOf(replay);
-
-                    builder.variables.get("i").set(globalI);
-                    builder.variables.get("o").set(globalI - min);
+                    builder.variables.get("i").set(visibleI);
+                    builder.variables.get("o").set(visibleI - min);
 
                     float tickv = parse == null ? 0F : (float) parse.doubleValue();
 

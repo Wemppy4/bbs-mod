@@ -190,6 +190,11 @@ public class Wave
      */
     public void add(ByteBuffer buffer, Wave wave, float offset, float shift, float duration)
     {
+        this.add(buffer, wave, offset, shift, duration, 1F);
+    }
+
+    public void add(ByteBuffer buffer, Wave wave, float offset, float shift, float duration, float gain)
+    {
         int waveStart = this.truncate((int) (shift * wave.byteRate));
         int start = this.truncate((int) (offset * this.byteRate));
         int end = this.truncate((int) ((offset + duration) * this.byteRate));
@@ -276,7 +281,7 @@ public class Wave
             
             /* Improved audio mixing algorithm with smart volume normalization
              * Convert to float for precise calculations */
-            float waveFloat = waveShort / (float) Short.MAX_VALUE;
+            float waveFloat = waveShort / (float) Short.MAX_VALUE * gain;
             float bytesFloat = bytesShort / (float) Short.MAX_VALUE;
             
             /* Calculate sum and check for clipping */

@@ -76,6 +76,27 @@ public class UIValueMap
 
         register(ValueInt.class, (value, ui) ->
         {
+            if (value == BBSSettings.editorPreviewSizeMode)
+            {
+                UICirculate button = new UICirculate(null);
+                button.addLabel(UIKeys.CONFIG_EDITOR_PREVIEW_MODE_EXPORT);
+                button.addLabel(UIKeys.CONFIG_EDITOR_PREVIEW_MODE_CUSTOM);
+                button.addLabel(UIKeys.CONFIG_EDITOR_PREVIEW_MODE_AUTO);
+                button.callback = (b) ->
+                {
+                    value.set(button.getValue());
+
+                    if (ui instanceof UISettingsOverlayPanel panel)
+                    {
+                        panel.refresh();
+                    }
+                };
+                button.setValue(value.get());
+                button.w(90);
+
+                return Arrays.asList(UIValueFactory.column(button, value));
+            }
+
             if (value.getSubtype() == ValueInt.Subtype.COLOR || value.getSubtype() == ValueInt.Subtype.COLOR_ALPHA)
             {
                 UIColor color = UIValueFactory.colorUI(value, null);

@@ -91,6 +91,10 @@ import java.util.function.Supplier;
 
 public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSupported, IUIOrbitKeysHandler, ICursor
 {
+    private static final int PREVIEW_MODE_EXPORT = 0;
+    private static final int PREVIEW_MODE_CUSTOM = 1;
+    private static final int PREVIEW_MODE_AUTO = 2;
+
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private RunnerCameraController runner;
@@ -144,6 +148,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private UIElement secretPlay;
 
     private boolean newFilm;
+    private double timelineXMin = Double.NaN;
+    private double timelineXMax = Double.NaN;
 
     /* Docking: layout panels and drag-to-swap/split */
     private final Map<String, UIElement> panelById = new LinkedHashMap<>();
@@ -167,6 +173,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public UIFilmPanel(UIDashboard dashboard)
     {
         super(dashboard);
+        this.playerToCamera = BBSSettings.editorPlayerFollowsCamera.get();
 
         this.runner = new RunnerCameraController(this, (playing) ->
         {
@@ -314,6 +321,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         };
         BBSSettings.videoSettings.width.postCallback(refreshPreviewOnVideoResolution);
         BBSSettings.videoSettings.height.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.editorPreviewSizeMode.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.editorPreviewCustomWidth.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.editorPreviewCustomHeight.postCallback(refreshPreviewOnVideoResolution);
+        BBSSettings.editorPreviewResolutionScale.postCallback(refreshPreviewOnVideoResolution);
     }
 
     public boolean isLayoutLocked()
@@ -875,28 +886,48 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         int w;
         int h;
 
-        boolean useExportSize = !BBSSettings.editorPreviewAutoSize.get()
-            || this.cameraEditor.isVisible();
-        if (useExportSize)
+        int previewMode = BBSSettings.editorPreviewSizeMode.get();
+
+        if (previewMode == PREVIEW_MODE_EXPORT)
         {
             w = Math.max(2, BBSSettings.videoSettings.width.get());
             h = Math.max(2, BBSSettings.videoSettings.height.get());
         }
+        else if (previewMode == PREVIEW_MODE_CUSTOM)
+        {
+            w = Math.max(2, BBSSettings.editorPreviewCustomWidth.get());
+            h = Math.max(2, BBSSettings.editorPreviewCustomHeight.get());
+        }
         else
         {
             float scale = BBSSettings.editorPreviewResolutionScale.get();
-            int previewW = this.preview.area.w;
-            int previewH = this.preview.area.h;
-            w = Math.max(2, (int) (previewW * scale));
-            h = Math.max(2, (int) (previewH * scale));
+
+            if (this.cameraEditor.isVisible())
+            {
+                int previewW = Math.max(2, this.preview.area.w);
+                int previewH = Math.max(2, this.preview.area.h);
+                int exportW = Math.max(2, BBSSettings.videoSettings.width.get());
+                int exportH = Math.max(2, BBSSettings.videoSettings.height.get());
+                Vector2i resized = Vectors.resize(exportW / (float) exportH, previewW, previewH);
+
+                w = Math.max(2, (int) (resized.x * scale));
+                h = Math.max(2, (int) (resized.y * scale));
+            }
+            else
+            {
+                int previewW = this.preview.area.w;
+                int previewH = this.preview.area.h;
+                w = Math.max(2, (int) (previewW * scale));
+                h = Math.max(2, (int) (previewH * scale));
+            }
         }
 
         if (w % 2 != 0) w++;
         if (h % 2 != 0) h++;
 
         boolean applied = w != BBSRendering.getVideoWidth() || h != BBSRendering.getVideoHeight();
-        LOGGER.info("[BBS film] applyPreviewSizeToBBS autoSize={} cameraEditor={} -> w={} h={} applied={}",
-            BBSSettings.editorPreviewAutoSize.get(), this.cameraEditor.isVisible(), w, h, applied);
+        LOGGER.info("[BBS film] applyPreviewSizeToBBS mode={} cameraEditor={} -> w={} h={} applied={}",
+            previewMode, this.cameraEditor.isVisible(), w, h, applied);
 
         if (applied)
         {
@@ -932,17 +963,65 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
     public void showPanel(UIElement element)
     {
+        int index = this.getPanelIndex();
+
+        if (index >= 0)
+        {
+            this.captureTimelineViewport(this.panels.get(index));
+        }
+
         this.cameraEditor.setVisible(false);
         this.replayEditor.setVisible(false);
         this.actionEditor.setVisible(false);
 
         element.setVisible(true);
+        this.applyTimelineViewport(element);
 
         this.applyPreviewSizeToBBS();
 
         if (this.isFlying())
         {
             this.toggleFlight();
+        }
+    }
+
+    private void captureTimelineViewport(UIElement panel)
+    {
+        if (panel == this.cameraEditor)
+        {
+            this.timelineXMin = this.cameraEditor.clips.scale.getMinValue();
+            this.timelineXMax = this.cameraEditor.clips.scale.getMaxValue();
+        }
+        else if (panel == this.actionEditor)
+        {
+            this.timelineXMin = this.actionEditor.clips.scale.getMinValue();
+            this.timelineXMax = this.actionEditor.clips.scale.getMaxValue();
+        }
+        else if (panel == this.replayEditor && this.replayEditor.keyframeEditor != null)
+        {
+            this.timelineXMin = this.replayEditor.keyframeEditor.view.getXAxis().getMinValue();
+            this.timelineXMax = this.replayEditor.keyframeEditor.view.getXAxis().getMaxValue();
+        }
+    }
+
+    private void applyTimelineViewport(UIElement panel)
+    {
+        if (Double.isNaN(this.timelineXMin) || Double.isNaN(this.timelineXMax) || this.timelineXMin >= this.timelineXMax)
+        {
+            return;
+        }
+
+        if (panel == this.cameraEditor)
+        {
+            this.cameraEditor.clips.scale.view(this.timelineXMin, this.timelineXMax);
+        }
+        else if (panel == this.actionEditor)
+        {
+            this.actionEditor.clips.scale.view(this.timelineXMin, this.timelineXMax);
+        }
+        else if (panel == this.replayEditor && this.replayEditor.keyframeEditor != null)
+        {
+            this.replayEditor.keyframeEditor.view.getXAxis().view(this.timelineXMin, this.timelineXMax);
         }
     }
 
@@ -1376,9 +1455,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.getContext().menu.getRoot().add(this.secretPlay);
         }
 
+        this.playerToCamera = BBSSettings.editorPlayerFollowsCamera.get();
         this.controller.update();
 
-        if (this.playerToCamera && this.data != null)
+        if (this.playerToCamera && this.data != null && !this.controller.isControlling())
         {
             this.teleportToCamera();
         }
@@ -1696,6 +1776,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         double z = cameraPos.z;
 
         PlayerUtils.teleport(x, y, z, MathUtils.toDeg(camera.rotation.y) - 180F, MathUtils.toDeg(camera.rotation.x));
+    }
+
+    public void setPlayerToCamera(boolean value)
+    {
+        this.playerToCamera = value;
+        BBSSettings.editorPlayerFollowsCamera.set(value);
     }
 
     public boolean checkShowNoCamera()

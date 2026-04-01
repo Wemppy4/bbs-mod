@@ -251,6 +251,31 @@ public abstract class UIList <T> extends UIElement
         return (context.mouseY - this.area.y + (int) this.scroll.getScroll()) / this.scroll.scrollItemSize;
     }
 
+    /**
+     * Backing list index under the cursor (for context menus). When filtering, maps the visible row to {@link #list}.
+     */
+    protected int getIndexAtCursor(UIContext context)
+    {
+        int row = this.getHoveredIndex(context);
+
+        if (row < 0)
+        {
+            return -1;
+        }
+
+        if (this.isFiltering())
+        {
+            if (row >= this.filtered.size())
+            {
+                return -1;
+            }
+
+            return this.filtered.get(row).b;
+        }
+
+        return this.exists(row) ? row : -1;
+    }
+
     public void deselect()
     {
         this.setIndex(-1);

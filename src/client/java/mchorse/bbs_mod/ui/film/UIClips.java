@@ -214,6 +214,8 @@ public class UIClips extends UIElement
         this.keys().register(Keys.CLIP_DURATION, this::shiftDurationToCursor).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.DELETE, this::removeSelected).label(UIKeys.CAMERA_TIMELINE_CONTEXT_REMOVE_CLIPS).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_ENABLE, this::toggleEnabled).category(KEYS_CATEGORY).active(canUseKeybinds);
+        this.keys().register(Keys.CLIP_SELECT_ALL, this::selectAll).category(KEYS_CATEGORY).active(canUseKeybinds);
+        this.keys().register(Keys.CLIP_SELECT_TRACK, this::selectTrack).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_SELECT_AFTER, this::selectAfter).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_SELECT_BEFORE, this::selectBefore).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.FADE_IN, () ->
@@ -738,6 +740,46 @@ public class UIClips extends UIElement
         this.delegate.pickClip(this.selection.isEmpty() ? null : this.clips.get(this.selection.get(0)));
     }
 
+    private void selectAll()
+    {
+        this.clearSelection();
+
+        for (Clip clip : this.clips.get())
+        {
+            this.addSelected(clip);
+        }
+
+        this.pickLastSelectedClip();
+    }
+
+    private void selectTrack()
+    {
+        Clip clip = this.delegate.getClip();
+        int layer = this.fromLayerY(this.getContext().mouseY);
+
+        if (layer < 0 && clip != null)
+        {
+            layer = clip.layer.get();
+        }
+
+        if (layer < 0)
+        {
+            return;
+        }
+
+        this.clearSelection();
+
+        for (Clip c : this.clips.get())
+        {
+            if (c.layer.get() == layer)
+            {
+                this.addSelected(c);
+            }
+        }
+
+        this.pickLastSelectedClip();
+    }
+
     private void selectAfter()
     {
         int i = 0;
@@ -1199,8 +1241,15 @@ public class UIClips extends UIElement
             }
             else if (Window.isAltPressed() && context.mouseWheel != 0D)
             {
-                int step = (int) Math.copySign(2, context.mouseWheel);
-                this.layerHeight = MathUtils.clamp(this.layerHeight + step, LAYER_HEIGHT_MIN, LAYER_HEIGHT_MAX);
+                if (this.isSelecting())
+                {
+                    this.moveSelectedBy((int) Math.copySign(1, context.mouseWheel));
+                }
+                else
+                {
+                    int step = (int) Math.copySign(2, context.mouseWheel);
+                    this.layerHeight = MathUtils.clamp(this.layerHeight + step, LAYER_HEIGHT_MIN, LAYER_HEIGHT_MAX);
+                }
             }
             else if (Window.isShiftPressed())
             {
@@ -1215,6 +1264,42 @@ public class UIClips extends UIElement
         }
 
         return super.subMouseScrolled(context);
+    }
+
+    private void moveSelectedBy(int dx)
+    {
+        List<Clip> selected = this.getClipsFromSelection();
+
+        if (selected.isEmpty())
+        {
+            return;
+        }
+
+        List<Vector3i> data = new ArrayList<>(selected.size());
+
+        for (Clip clip : selected)
+        {
+            data.add(new Vector3i(clip.tick.get(), clip.layer.get(), clip.duration.get()));
+        }
+
+        List<Clip> others = new ArrayList<>(this.clips.get());
+        others.removeIf(selected::contains);
+
+        int[] adjusted = this.resolveCollisions(others, data, dx, 0);
+
+        if (adjusted[0] == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < selected.size(); i++)
+        {
+            Vector3i clipData = data.get(i);
+
+            this.setClipData(selected.get(i), clipData.x() + adjusted[0], clipData.y(), clipData.z());
+        }
+
+        this.delegate.fillData();
     }
 
     @Override

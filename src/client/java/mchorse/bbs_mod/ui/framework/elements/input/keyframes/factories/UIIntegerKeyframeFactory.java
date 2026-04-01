@@ -1,38 +1,32 @@
 package mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories;
 
-import mchorse.bbs_mod.camera.utils.TimeUtils;
-import mchorse.bbs_mod.settings.values.base.BaseValue;
-import mchorse.bbs_mod.ui.UIKeys;
-import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
-import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.TrackpadRecorder;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
-import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.utils.UIBezierHandles;
-import mchorse.bbs_mod.ui.utils.UI;
-import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 
-public class UIIntegerKeyframeFactory extends UIKeyframeFactory<Integer>
+public class UIIntegerKeyframeFactory extends UINumericKeyframeFactory<Integer>
 {
-    private UITrackpad value;
-    private UIBezierHandles handles;
-
     public UIIntegerKeyframeFactory(Keyframe<Integer> keyframe, UIKeyframes editor)
     {
         super(keyframe, editor);
-
-        this.value = new UITrackpad(this::setValue);
-        this.value.setValue(keyframe.getValue());
-        this.handles = new UIBezierHandles(keyframe);
-
-        this.scroll.add(this.value, this.handles.createColumn());
+        this.value.integer();
     }
 
     @Override
-    public void update()
+    protected double getNumericValue(Integer value)
     {
-        super.update();
+        return value;
+    }
 
-        this.value.setValue(this.keyframe.getValue());
-        this.handles.update();
+    @Override
+    protected void setKeyframeValue(double value)
+    {
+        this.keyframe.setValue((int) value);
+    }
+
+    @Override
+    protected TrackpadRecorder.ValueConverter createValueConverter()
+    {
+        return (value) -> (int) value;
     }
 }

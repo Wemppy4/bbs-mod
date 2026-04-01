@@ -78,6 +78,7 @@ public class BBSSettings {
 	public static ValueInt editorPeriodicSave;
 	public static ValueBoolean editorHorizontalFlight;
 	public static ValueBoolean editorOrbitMovementRequiresFlight;
+	public static ValueBoolean editorPlayerFollowsCamera;
 	public static ValueEditorLayout editorLayoutSettings;
 	public static ValueOnionSkin editorOnionSkin;
 	public static ValueBoolean editorSnapToMarkers;
@@ -86,7 +87,9 @@ public class BBSSettings {
 	public static ValueBoolean editorHorizontalClipEditor;
 	public static ValueBoolean editorMinutesBackup;
 	public static ValueInt editorTrackWidth;
-	public static ValueBoolean editorPreviewAutoSize;
+	public static ValueInt editorPreviewSizeMode;
+	public static ValueInt editorPreviewCustomWidth;
+	public static ValueInt editorPreviewCustomHeight;
 	public static ValueFloat editorPreviewResolutionScale;
 	public static ValueBoolean editorClipAutoName;
 
@@ -236,6 +239,7 @@ public class BBSSettings {
 		editorPeriodicSave = builder.getInt("periodic_save", 60, 0, 3600);
 		editorHorizontalFlight = builder.getBoolean("horizontal_flight", false);
 		editorOrbitMovementRequiresFlight = builder.getBoolean("orbit_movement_requires_flight", true);
+		editorPlayerFollowsCamera = builder.getBoolean("player_follows_camera", false);
 		builder.register(editorLayoutSettings = new ValueEditorLayout("layout"));
 		builder.register(editorOnionSkin = new ValueOnionSkin("onion_skin"));
 		editorSnapToMarkers = builder.getBoolean("snap_to_markers", false);
@@ -243,7 +247,9 @@ public class BBSSettings {
 		editorRewind = builder.getBoolean("rewind", true);
 		editorHorizontalClipEditor = builder.getBoolean("horizontal_clip_editor", true);
 		editorMinutesBackup = builder.getBoolean("minutes_backup", true);
-		editorPreviewAutoSize = builder.getBoolean("preview_auto_size", true);
+		editorPreviewSizeMode = builder.getInt("preview_size_mode", 2, 0, 2);
+		editorPreviewCustomWidth = builder.getInt("preview_custom_width", 1280, 2, 16384);
+		editorPreviewCustomHeight = builder.getInt("preview_custom_height", 720, 2, 16384);
 		editorPreviewResolutionScale = builder.getFloat("preview_resolution_scale", 2F, 1F, 3F);
 
 		builder.category("recording");

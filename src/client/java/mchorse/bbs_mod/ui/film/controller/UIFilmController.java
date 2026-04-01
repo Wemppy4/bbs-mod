@@ -23,6 +23,7 @@ import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.actions.ActionState;
 import mchorse.bbs_mod.camera.Camera;
+import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.camera.controller.RunnerCameraController;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.client.BBSShaders;
@@ -363,6 +364,11 @@ public class UIFilmController extends UIElement
     {
         this.getContext().unfocus();
 
+        if (this.panel.replayEditor.isVisible())
+        {
+            this.panel.replayEditor.pickPlayerCategory();
+        }
+
         boolean replacePlayer = ClientNetwork.isIsBBSModOnServer();
         IntObjectMap<IEntity> entities = this.getEntities();
 
@@ -461,7 +467,7 @@ public class UIFilmController extends UIElement
 
         this.recordingTick = this.getTick();
         this.recording = true;
-        this.recordingCountdown = 30;
+        this.recordingCountdown = Math.max(0, TimeUtils.toTick(BBSSettings.recordingCountdown.get()));
         this.recordingGroups = groups;
 
         this.recordingOld = this.getReplay().keyframes.toData();
