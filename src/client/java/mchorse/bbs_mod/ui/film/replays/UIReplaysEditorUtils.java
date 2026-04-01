@@ -171,8 +171,7 @@ public class UIReplaysEditorUtils
             {
                 return;
             }
-            String mainPoseId = path.isEmpty() ? "pose" : path + FormUtils.PATH_SEPARATOR + "pose";
-            if (currentSheet != null && mainPoseId.equals(currentSheet.id))
+            if (isMainPoseSheet(currentSheet, path))
             {
                 int tick = cursor.getCursor();
                 Keyframe closest = getClosestKeyframe(currentSheet, tick);
@@ -191,6 +190,15 @@ public class UIReplaysEditorUtils
 
         if (insert)
         {
+            IUIKeyframeGraph graph = keyframeEditor.view.getGraph();
+            Keyframe selected = graph.getSelected();
+            UIKeyframeSheet currentSheet = selected != null ? graph.getSheet(selected) : null;
+
+            if (isMainPoseSheet(currentSheet, path))
+            {
+                return;
+            }
+
             pickProperty(keyframeEditor, cursor, bone, boneKey, true);
             return;
         }
@@ -310,6 +318,18 @@ public class UIReplaysEditorUtils
         KeyframeSegment segment = sheet.channel.find(tick);
 
         return segment != null ? segment.getClosest() : null;
+    }
+
+    private static boolean isMainPoseSheet(UIKeyframeSheet sheet, String formPath)
+    {
+        if (sheet == null)
+        {
+            return false;
+        }
+
+        String mainPoseId = formPath.isEmpty() ? "pose" : formPath + FormUtils.PATH_SEPARATOR + "pose";
+
+        return mainPoseId.equals(sheet.id);
     }
 
     private static void forceSelectInSheet(IUIKeyframeGraph graph, UIKeyframeSheet sheet, Keyframe keyframe)
