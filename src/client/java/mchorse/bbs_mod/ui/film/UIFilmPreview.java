@@ -107,7 +107,7 @@ public class UIFilmPreview extends UIElement
         this.teleport.tooltip(UIKeys.FILM_TELEPORT_TITLE);
         this.teleport.context((menu) ->
         {
-            menu.action(Icons.MOVE_TO, UIKeys.FILM_TELEPORT_CONTEXT_PLAYER, this.panel.playerToCamera, () -> this.panel.playerToCamera = !this.panel.playerToCamera);
+            menu.action(Icons.MOVE_TO, UIKeys.FILM_TELEPORT_CONTEXT_PLAYER, this.panel.playerToCamera, () -> this.panel.setPlayerToCamera(!this.panel.playerToCamera));
             menu.action(Icons.COPY, UIKeys.CAMERA_PANELS_CONTEXT_COPY_POSITION, () ->
             {
                 Position current = new Position(this.panel.getCamera());

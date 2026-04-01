@@ -169,6 +169,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public UIFilmPanel(UIDashboard dashboard)
     {
         super(dashboard);
+        this.playerToCamera = BBSSettings.editorPlayerFollowsCamera.get();
 
         this.runner = new RunnerCameraController(this, (playing) ->
         {
@@ -1426,9 +1427,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.getContext().menu.getRoot().add(this.secretPlay);
         }
 
+        this.playerToCamera = BBSSettings.editorPlayerFollowsCamera.get();
         this.controller.update();
 
-        if (this.playerToCamera && this.data != null)
+        if (this.playerToCamera && this.data != null && !this.controller.isControlling())
         {
             this.teleportToCamera();
         }
@@ -1746,6 +1748,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         double z = cameraPos.z;
 
         PlayerUtils.teleport(x, y, z, MathUtils.toDeg(camera.rotation.y) - 180F, MathUtils.toDeg(camera.rotation.x));
+    }
+
+    public void setPlayerToCamera(boolean value)
+    {
+        this.playerToCamera = value;
+        BBSSettings.editorPlayerFollowsCamera.set(value);
     }
 
     public boolean checkShowNoCamera()
