@@ -368,6 +368,14 @@ public class UIReplaysEditor extends UIElement {
         return this.category;
     }
 
+    public void pickPlayerCategory()
+    {
+        if (this.category != ReplayCategory.PLAYER)
+        {
+            this.setCategory(ReplayCategory.PLAYER);
+        }
+    }
+
     private int getLabelWidth() {
         return this.keyframeEditor != null ? this.keyframeEditor.view.getLabelWidth() : UIKeyframes.LABEL_WIDTH_DEFAULT;
     }

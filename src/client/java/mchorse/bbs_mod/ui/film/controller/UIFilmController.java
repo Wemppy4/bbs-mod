@@ -363,6 +363,11 @@ public class UIFilmController extends UIElement
     {
         this.getContext().unfocus();
 
+        if (this.panel.replayEditor.isVisible())
+        {
+            this.panel.replayEditor.pickPlayerCategory();
+        }
+
         boolean replacePlayer = ClientNetwork.isIsBBSModOnServer();
         IntObjectMap<IEntity> entities = this.getEntities();
 
