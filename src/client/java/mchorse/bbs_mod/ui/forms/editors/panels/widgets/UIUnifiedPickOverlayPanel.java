@@ -26,6 +26,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
@@ -37,7 +38,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
@@ -49,6 +52,18 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
 
     private static final List<String> ITEM_IDS = new ArrayList<>();
     private static final List<String> BLOCK_IDS = new ArrayList<>();
+
+    private static final Map<String, String> ITEM_LABEL_CACHE = new HashMap<>();
+    private static final Map<String, String> BLOCK_LABEL_CACHE = new HashMap<>();
+
+    /** Row height: two text lines + vertical padding (see {@link RegistryIdList}). */
+    private static final int LIST_ROW_HEIGHT = 32;
+
+    /** Slot behind list icon; item drawn at +1 px inset (16×16). */
+    private static final int LIST_ICON_SLOT = 18;
+    private static final int LIST_ICON_GAP = 4;
+
+    private static final Map<String, ItemStack> PREVIEW_STACK_CACHE = new HashMap<>();
 
     static
     {
@@ -64,6 +79,63 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
 
         ITEM_IDS.sort(String::compareToIgnoreCase);
         BLOCK_IDS.sort(String::compareToIgnoreCase);
+    }
+
+    private static String itemLabel(String id)
+    {
+        return ITEM_LABEL_CACHE.computeIfAbsent(id, (k) ->
+        {
+            try
+            {
+                Item item = Registries.ITEM.get(new Identifier(k));
+
+                return new ItemStack(item).getName().getString();
+            }
+            catch (Exception e)
+            {
+                return k;
+            }
+        });
+    }
+
+    private static String blockLabel(String id)
+    {
+        return BLOCK_LABEL_CACHE.computeIfAbsent(id, (k) ->
+        {
+            try
+            {
+                return Registries.BLOCK.get(new Identifier(k)).getName().getString();
+            }
+            catch (Exception e)
+            {
+                return k;
+            }
+        });
+    }
+
+    private static ItemStack previewStackFor(PickerMode mode, String id)
+    {
+        return PREVIEW_STACK_CACHE.computeIfAbsent(mode.name() + "\0" + id, (k) ->
+        {
+            try
+            {
+                Identifier rid = new Identifier(id);
+
+                if (mode == PickerMode.ITEM)
+                {
+                    return new ItemStack(Registries.ITEM.get(rid));
+                }
+
+                Block block = Registries.BLOCK.get(rid);
+                Item item = block.asItem();
+
+                return item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+            }
+            catch (Exception e)
+            {
+                return ItemStack.EMPTY;
+            }
+        });
     }
 
     public enum PickerMode
@@ -111,7 +183,7 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
         this.itemStack = itemStack;
         this.blockState = blockState;
 
-        this.list = new UISearchList<>(new UIStringList((values) ->
+        this.list = new UISearchList<>(new RegistryIdList((values) ->
         {
             if (values.isEmpty())
             {
@@ -119,7 +191,7 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
             }
 
             this.selectId(values.get(0));
-        }));
+        }, mode));
         this.list.label(UIKeys.GENERAL_SEARCH);
         this.list.list.background();
 
@@ -452,6 +524,83 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
                 }
 
             }
+        }
+    }
+
+    /**
+     * Registry id list with display name on the first line and id on the second (muted).
+     * {@link UIList#filter(String)} matches both label and id via {@link #elementToString}.
+     */
+    private static final class RegistryIdList extends UIStringList
+    {
+        private final PickerMode mode;
+
+        RegistryIdList(Consumer<List<String>> callback, PickerMode mode)
+        {
+            super(callback);
+
+            this.mode = mode;
+            this.scroll.scrollItemSize = LIST_ROW_HEIGHT;
+        }
+
+        private String labelFor(String id)
+        {
+            return this.mode == PickerMode.ITEM ? itemLabel(id) : blockLabel(id);
+        }
+
+        @Override
+        protected String elementToString(UIContext context, int i, String element)
+        {
+            return this.labelFor(element) + " " + element;
+        }
+
+        @Override
+        protected void renderElementPart(UIContext context, String element, int i, int x, int y, boolean hover, boolean selected)
+        {
+            var font = context.batcher.getFont();
+            int lineH = font.getHeight();
+
+            int iconLeft = x + LIST_ICON_GAP;
+            int iconTop = y + (this.scroll.scrollItemSize - LIST_ICON_SLOT) / 2;
+
+            context.batcher.box(iconLeft, iconTop, iconLeft + LIST_ICON_SLOT, iconTop + LIST_ICON_SLOT, Colors.A25);
+            context.batcher.box(iconLeft + 1, iconTop + 1, iconLeft + LIST_ICON_SLOT - 1, iconTop + LIST_ICON_SLOT - 1, Colors.A12);
+
+            ItemStack stack = previewStackFor(this.mode, element);
+
+            if (!stack.isEmpty())
+            {
+                MatrixStack matrices = context.batcher.getContext().getMatrices();
+                CustomVertexConsumerProvider consumers = FormUtilsClient.getProvider();
+
+                matrices.push();
+                consumers.setUI(true);
+                context.batcher.getContext().drawItem(stack, iconLeft + 1, iconTop + 1);
+                context.batcher.getContext().drawItemInSlot(context.batcher.getFont().getRenderer(), stack, iconLeft + 1, iconTop + 1);
+                consumers.setUI(false);
+                matrices.pop();
+            }
+
+            int textX = iconLeft + LIST_ICON_SLOT + LIST_ICON_GAP;
+            int maxW = this.area.w - (textX - x) - LIST_ICON_GAP;
+            if (maxW < 8)
+            {
+                maxW = 8;
+            }
+
+            String title = font.limitToWidth(this.labelFor(element), maxW);
+            String idLine = font.limitToWidth(element, maxW);
+            int colorTitle = hover ? Colors.HIGHLIGHT : Colors.WHITE;
+            int colorId = hover ? Colors.LIGHTER_GRAY : Colors.GRAY;
+
+            int padY = (this.scroll.scrollItemSize - (lineH * 2 + 2)) / 2;
+            if (padY < 2)
+            {
+                padY = 2;
+            }
+
+            context.batcher.textShadow(title, textX, y + padY, colorTitle);
+            context.batcher.textShadow(idLine, textX, y + padY + lineH + 1, colorId);
         }
     }
 }
