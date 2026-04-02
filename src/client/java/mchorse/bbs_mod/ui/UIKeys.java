@@ -159,6 +159,10 @@ public class UIKeys
     public static final IKey CAMERA_PANELS_SUBTITLE_TEXT_SHADOW = L10n.lang("bbs.ui.camera.panels.subtitle.text_shadow");
     public static final IKey CAMERA_PANELS_SUBTITLE_TRANSFORM = L10n.lang("bbs.ui.camera.panels.subtitle.transform");
     public static final IKey CAMERA_PANELS_SUBTITLE_WINDOW = L10n.lang("bbs.ui.camera.panels.subtitle.window");
+    public static final IKey CAMERA_PANELS_SUBTITLE_IMAGE = L10n.lang("bbs.ui.camera.panels.subtitle.image");
+    public static final IKey CAMERA_PANELS_SUBTITLE_IMAGE_PICK = L10n.lang("bbs.ui.camera.panels.subtitle.image.pick");
+    public static final IKey CAMERA_PANELS_SUBTITLE_IMAGE_RIGHT = L10n.lang("bbs.ui.camera.panels.subtitle.image.right");
+    public static final IKey CAMERA_PANELS_SUBTITLE_IMAGE_SIZE = L10n.lang("bbs.ui.camera.panels.subtitle.image.size");
     public static final IKey CAMERA_PANELS_TARGET = L10n.lang("bbs.ui.camera.panels.target");
     public static final IKey CAMERA_PANELS_TARGET_TITLE = L10n.lang("bbs.ui.camera.panels.target-title");
     public static final IKey CAMERA_PANELS_TARGET_TOOLTIP = L10n.lang("bbs.ui.camera.panels.target-tooltip");

@@ -101,30 +101,69 @@ public class UISubtitleRenderer
 
             h = (strings.size() - 1) * subtitle.lineHeight + font.getHeight();
 
-            int fw = (int) ((w + 10) * scale);
-            int fh = (int) ((h + 10) * scale);
+            Texture imgTex = null;
+            float gap = 6F;
+            float imgW = 0F;
+            float imgH = 0F;
 
-            RenderSystem.setProjectionMatrix(new Matrix4f().ortho(0, w + 10, 0, h + 10, -100, 100), VertexSorter.BY_Z);
+            if (subtitle.image != null && BBSModClient.getTextures().has(subtitle.image))
+            {
+                imgTex = BBSModClient.getTextures().getTexture(subtitle.image);
+
+                if (imgTex != BBSModClient.getTextures().getError())
+                {
+                    int base = subtitle.lineHeight > 0 ? subtitle.lineHeight : font.getHeight();
+                    imgH = base * subtitle.imageScale;
+                    if (imgH <= 0) imgH = 0;
+                    if (imgTex.height > 0)
+                    {
+                        imgW = imgTex.width * (imgH / imgTex.height);
+                    }
+                }
+            }
+
+            float contentW = w + (imgTex != null && imgH > 0 ? (gap + imgW) : 0);
+            float contentH = Math.max(h, imgH);
+
+            int fw = (int) ((contentW + 10) * scale);
+            int fh = (int) ((contentH + 10) * scale);
+
+            RenderSystem.setProjectionMatrix(new Matrix4f().ortho(0, contentW + 10, 0, contentH + 10, -100, 100), VertexSorter.BY_Z);
 
             framebuffer.resize(fw, fh);
             framebuffer.applyClear();
 
-            int yy = 5;
+            float baseX = 5F;
+            float baseY = 5F;
+            float textLeft = baseX + ((imgTex != null && imgH > 0 && !subtitle.imageRight) ? (imgW + gap) : 0F);
+            float textAreaW = w;
+            float yy = baseY + (contentH - h) / 2F;
+
+            if (Colors.getA(subtitle.backgroundColor) > 0)
+            {
+                float o = subtitle.backgroundOffset;
+                float bgX1 = baseX - o;
+                float bgY1 = yy - o;
+                float bgX2 = baseX + contentW + o - 1F;
+                float bgY2 = yy + h + o;
+
+                batcher.box(bgX1, bgY1, bgX2, bgY2, Colors.mulA(subtitle.backgroundColor, alpha));
+            }
+
+            if (imgTex != null && imgH > 0)
+            {
+                float imgX = subtitle.imageRight ? baseX + contentW - imgW : baseX;
+                float imgY = baseY + (contentH - imgH) / 2F;
+
+                batcher.texturedBox(imgTex, Colors.setA(Colors.WHITE, 1F), imgX, imgY, imgW, imgH, 0, 0, imgTex.width, imgTex.height, imgTex.width, imgTex.height);
+            }
 
             for (String string : strings)
             {
                 string = string.trim();
 
-                int xx = 5 + (w - font.getWidth(string)) / 2;
-
-                if (Colors.getA(subtitle.backgroundColor) > 0)
-                {
-                    batcher.textCard(string, xx, yy, Colors.setA(subColor, 1F), Colors.mulA(subtitle.backgroundColor, alpha), subtitle.backgroundOffset, subtitle.textShadow);
-                }
-                else
-                {
-                    batcher.text(string, xx, yy, Colors.setA(subColor, 1F), subtitle.textShadow);
-                }
+                int xx = (int) (textLeft + (textAreaW - font.getWidth(string)) / 2F);
+                batcher.text(string, xx, (int) yy, Colors.setA(subColor, 1F), subtitle.textShadow);
 
                 yy += subtitle.lineHeight;
             }

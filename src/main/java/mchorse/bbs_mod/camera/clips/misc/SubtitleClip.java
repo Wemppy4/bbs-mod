@@ -10,6 +10,7 @@ import mchorse.bbs_mod.utils.clips.Clip;
 import mchorse.bbs_mod.utils.clips.ClipContext;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.pose.Transform;
+import mchorse.bbs_mod.settings.values.core.ValueLink;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,9 @@ public class SubtitleClip extends CameraClip
     public ValueTransform transform = new ValueTransform("transform", new Transform());
     public ValueInt lineHeight = new ValueInt("lineHeight", 12);
     public ValueInt maxWidth = new ValueInt("maxWidth", 0);
+    public ValueLink image = new ValueLink("image", null);
+    public ValueBoolean imageRight = new ValueBoolean("imageRight", true);
+    public ValueFloat imageScale = new ValueFloat("imageScale", 1F);
 
     private Subtitle subtitle = new Subtitle();
 
@@ -58,6 +62,9 @@ public class SubtitleClip extends CameraClip
         this.add(this.transform);
         this.add(this.lineHeight);
         this.add(this.maxWidth);
+        this.add(this.image);
+        this.add(this.imageRight);
+        this.add(this.imageScale);
     }
 
     @Override
@@ -72,6 +79,7 @@ public class SubtitleClip extends CameraClip
         this.subtitle.updateBackground(this.background.get(), this.backgroundOffset.get(), this.shadow.get(), this.shadowOpaque.get());
         this.subtitle.updateTransform(this.transform.get(), factor);
         this.subtitle.updateConstraints(this.lineHeight.get(), this.maxWidth.get());
+        this.subtitle.updateImage(this.image.get(), this.imageRight.get(), this.imageScale.get());
         subtitles.add(this.subtitle);
     }
 
