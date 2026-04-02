@@ -3,11 +3,8 @@ package mchorse.bbs_mod.ui.film;
 import mchorse.bbs_mod.camera.utils.TimeUtils;
 import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.l10n.L10n;
-import mchorse.bbs_mod.l10n.keys.IKey;
-import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
-import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextarea;
 import mchorse.bbs_mod.ui.framework.elements.input.text.utils.TextLine;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
@@ -21,7 +18,6 @@ public class UIFilmDetailsOverlayPanel extends UIOverlayPanel
 
     public UITextarea<TextLine> description;
     public UILabel timeLabel;
-    public UILabel timeActiveLabel;
 
     private long lastTimeUpdate;
 
@@ -35,18 +31,15 @@ public class UIFilmDetailsOverlayPanel extends UIOverlayPanel
         int replaysCount = film.replays.getList().size();
         int clipsCount = film.camera.get().size();
         int duration = film.camera.calculateDuration();
-        long timeSpentTicks = film.timeSpent.get();
         long timeSpentActiveTicks = film.timeSpentActive.get();
 
-        String timeFormatted = this.formatTime(timeSpentTicks);
-        String timeActiveFormatted = this.formatTime(timeSpentActiveTicks);
+        String timeFormatted = this.formatTime(timeSpentActiveTicks);
         String durationFormatted = TimeUtils.formatTime(duration);
 
         UILabel nameLabel = UI.label(L10n.lang("bbs.ui.film.details.name").format(film.getId())).background();
         UILabel statsLabel = UI.label(L10n.lang("bbs.ui.film.details.stats").format(replaysCount, clipsCount)).background();
         UILabel durationLabel = UI.label(L10n.lang("bbs.ui.film.details.duration").format(durationFormatted)).background();
         this.timeLabel = UI.label(L10n.lang("bbs.ui.film.details.time_spent").format(timeFormatted)).background();
-        this.timeActiveLabel = UI.label(L10n.lang("bbs.ui.film.details.time_spent_active").format(timeActiveFormatted)).background();
 
         /* Description */
         this.description = new UITextarea<>((t) -> this.film.description.set(t));
@@ -62,8 +55,7 @@ public class UIFilmDetailsOverlayPanel extends UIOverlayPanel
             this.description,
             statsLabel.marginTop(UIConstants.SECTION_GAP),
             durationLabel,
-            this.timeLabel,
-            this.timeActiveLabel
+            this.timeLabel
         );
         
         column.relative(this.content).xy(10, 10).w(1F, -20).h(1F, -20);
@@ -85,13 +77,10 @@ public class UIFilmDetailsOverlayPanel extends UIOverlayPanel
 
     private void updateTimeDisplay()
     {
-        long timeSpentTicks = this.film.timeSpent.get();
         long timeSpentActiveTicks = this.film.timeSpentActive.get();
-        String timeFormatted = this.formatTime(timeSpentTicks);
-        String timeActiveFormatted = this.formatTime(timeSpentActiveTicks);
+        String timeFormatted = this.formatTime(timeSpentActiveTicks);
 
         this.timeLabel.label = L10n.lang("bbs.ui.film.details.time_spent").format(timeFormatted);
-        this.timeActiveLabel.label = L10n.lang("bbs.ui.film.details.time_spent_active").format(timeActiveFormatted);
     }
 
     private String formatTime(long ticks)

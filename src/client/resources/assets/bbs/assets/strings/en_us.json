@@ -481,7 +481,6 @@
 	"bbs.ui.film.details.save": "Save",
 	"bbs.ui.film.details.stats": "Replays: %d | Clips: %d",
 	"bbs.ui.film.details.time_spent": "Time Spent: %s",
-	"bbs.ui.film.details.time_spent_active": "Active Time (non-AFK): %s",
 	"bbs.ui.film.details.title": "Film Details",
 	"bbs.ui.film.groups.all": "All groups",
 	"bbs.ui.film.groups.extra_1": "Extra 1",
