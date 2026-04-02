@@ -543,6 +543,11 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
         if (this.editor.isVisible())
         {
             this.editor.resetView();
+            this.options.setVisible(false);
+        }
+        else
+        {
+            this.updateOptions();
         }
     }
 
