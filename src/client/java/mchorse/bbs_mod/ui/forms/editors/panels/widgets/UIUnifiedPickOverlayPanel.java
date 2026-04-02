@@ -81,34 +81,56 @@ public class UIUnifiedPickOverlayPanel extends UIOverlayPanel
         BLOCK_IDS.sort(String::compareToIgnoreCase);
     }
 
+    /**
+     * Vanilla Minecraft UI language ({@code options.language}, e.g. {@code ru_ru}).
+     * Label caches are keyed with this so names update when the player changes language.
+     */
+    private static String minecraftLanguageKey()
+    {
+        MinecraftClient mc = MinecraftClient.getInstance();
+
+        if (mc == null || mc.options == null)
+        {
+            return "en_us";
+        }
+
+        String lang = mc.options.language;
+
+        return lang == null || lang.isEmpty() ? "en_us" : lang;
+    }
+
     private static String itemLabel(String id)
     {
-        return ITEM_LABEL_CACHE.computeIfAbsent(id, (k) ->
+        String cacheKey = minecraftLanguageKey() + "\0" + id;
+
+        return ITEM_LABEL_CACHE.computeIfAbsent(cacheKey, (k) ->
         {
             try
             {
-                Item item = Registries.ITEM.get(new Identifier(k));
+                Item item = Registries.ITEM.get(new Identifier(id));
 
                 return new ItemStack(item).getName().getString();
             }
             catch (Exception e)
             {
-                return k;
+                return id;
             }
         });
     }
 
     private static String blockLabel(String id)
     {
-        return BLOCK_LABEL_CACHE.computeIfAbsent(id, (k) ->
+        String cacheKey = minecraftLanguageKey() + "\0" + id;
+
+        return BLOCK_LABEL_CACHE.computeIfAbsent(cacheKey, (k) ->
         {
             try
             {
-                return Registries.BLOCK.get(new Identifier(k)).getName().getString();
+                return Registries.BLOCK.get(new Identifier(id)).getName().getString();
             }
             catch (Exception e)
             {
-                return k;
+                return id;
             }
         });
     }
