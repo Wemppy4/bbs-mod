@@ -35,8 +35,10 @@ public class UIFilmDetailsOverlayPanel extends UIOverlayPanel
 
         String timeFormatted = this.formatTime(timeSpentActiveTicks);
         String durationFormatted = TimeUtils.formatTime(duration);
+        String createdFormatted = Film.formatCreatedAtForDisplay(film.createdAt.get());
 
         UILabel nameLabel = UI.label(L10n.lang("bbs.ui.film.details.name").format(film.getId())).background();
+        UILabel createdLabel = UI.label(L10n.lang("bbs.ui.film.details.created").format(createdFormatted != null ? createdFormatted : "—")).background();
         UILabel statsLabel = UI.label(L10n.lang("bbs.ui.film.details.stats").format(replaysCount, clipsCount)).background();
         UILabel durationLabel = UI.label(L10n.lang("bbs.ui.film.details.duration").format(durationFormatted)).background();
         this.timeLabel = UI.label(L10n.lang("bbs.ui.film.details.time_spent").format(timeFormatted)).background();
@@ -48,9 +50,10 @@ public class UIFilmDetailsOverlayPanel extends UIOverlayPanel
         this.description.h(80); // Set a reasonable height for the description area
 
         /* Layout */
-        // Reordered: Name -> Description Label -> Description -> Stats -> Duration -> Time
+        // Name -> Created -> Description -> Stats -> Duration -> Time
         UIElement column = UI.column(
             nameLabel,
+            createdLabel,
             UI.label(L10n.lang("bbs.ui.film.details.description")).marginTop(UIConstants.SECTION_GAP),
             this.description,
             statsLabel.marginTop(UIConstants.SECTION_GAP),

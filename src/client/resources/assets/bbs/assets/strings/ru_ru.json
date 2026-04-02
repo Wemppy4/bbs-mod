@@ -478,6 +478,7 @@
 	"bbs.ui.film.details.description": "Описание:",
 	"bbs.ui.film.details.duration": "Длительность: %s",
 	"bbs.ui.film.details.name": "Название: %s",
+	"bbs.ui.film.details.created": "Создан: %s",
 	"bbs.ui.film.details.save": "Сохранить",
 	"bbs.ui.film.details.stats": "Реплеев: %d | Клипов: %d",
 	"bbs.ui.film.details.time_spent": "Потрачено времени: %s",

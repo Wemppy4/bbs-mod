@@ -12,6 +12,13 @@ import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 import mchorse.bbs_mod.settings.values.numeric.ValueLong;
 import mchorse.bbs_mod.utils.clips.Clips;
 
+import java.time.DateTimeException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
+
 public class Film extends ValueGroup
 {
     public final Clips camera = new Clips("camera", BBSMod.getFactoryCameraClips());
@@ -29,6 +36,8 @@ public class Film extends ValueGroup
     public final ValueFloat xpProgress = new ValueFloat("xp_progress", 0F);
     
     public final ValueString description = new ValueString("description", "");
+    /** UTC instant as ISO-8601 ({@link Instant#toString()}), set when the film is first created. */
+    public final ValueString createdAt = new ValueString("created_at", "");
     /** Time spent editing with recent input (excludes AFK idle in the film editor). */
     public final ValueLong timeSpentActive = new ValueLong("time_spent_active", 0L);
 
@@ -47,7 +56,35 @@ public class Film extends ValueGroup
         this.add(this.xpProgress);
         
         this.add(this.description);
+        this.add(this.createdAt);
         this.add(this.timeSpentActive);
+    }
+
+    public void stampCreationTimeNow()
+    {
+        this.createdAt.set(Instant.now().toString());
+    }
+
+    /**
+     * @return Localized date/time for UI, or {@code null} if missing/legacy films without {@link #createdAt}.
+     */
+    public static String formatCreatedAtForDisplay(String isoUtc)
+    {
+        if (isoUtc == null || isoUtc.isEmpty())
+        {
+            return null;
+        }
+
+        try
+        {
+            return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                .withLocale(Locale.getDefault())
+                .format(Instant.parse(isoUtc).atZone(ZoneId.systemDefault()));
+        }
+        catch (DateTimeException e)
+        {
+            return isoUtc;
+        }
     }
 
     public Replay getFirstPersonReplay()

@@ -1044,7 +1044,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     @Override
     protected UICRUDOverlayPanel createOverlayPanel()
     {
-        UICRUDOverlayPanel crudPanel = super.createOverlayPanel();
+        UIFilmOverlayPanel crudPanel = new UIFilmOverlayPanel(this.getTitle(), this, this::pickData);
 
         this.duplicateFilm = new UIIcon(Icons.SCENE, (b) ->
         {
@@ -1082,6 +1082,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             idle.position.set(position);
             data.camera.addClip(idle);
             data.setId(name);
+            data.stampCreationTimeNow();
 
             for (Replay replay : this.data.replays.getList())
             {
@@ -1306,6 +1307,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         clip.duration.set(BBSSettings.getDefaultDuration());
         clip.fromCamera(camera);
         data.camera.addClip(clip);
+
+        data.stampCreationTimeNow();
 
         this.newFilm = true;
     }

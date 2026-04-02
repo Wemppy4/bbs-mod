@@ -478,6 +478,7 @@
 	"bbs.ui.film.details.description": "Description:",
 	"bbs.ui.film.details.duration": "Duration: %s",
 	"bbs.ui.film.details.name": "Name: %s",
+	"bbs.ui.film.details.created": "Created: %s",
 	"bbs.ui.film.details.save": "Save",
 	"bbs.ui.film.details.stats": "Replays: %d | Clips: %d",
 	"bbs.ui.film.details.time_spent": "Time Spent: %s",
