@@ -30,6 +30,8 @@ public class Film extends ValueGroup
     
     public final ValueString description = new ValueString("description", "");
     public final ValueLong timeSpent = new ValueLong("time_spent", 0L);
+    /** Time spent editing with recent input (excludes AFK idle in the film editor). */
+    public final ValueLong timeSpentActive = new ValueLong("time_spent_active", 0L);
 
     public Film()
     {
@@ -47,6 +49,7 @@ public class Film extends ValueGroup
         
         this.add(this.description);
         this.add(this.timeSpent);
+        this.add(this.timeSpentActive);
     }
 
     public Replay getFirstPersonReplay()

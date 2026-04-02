@@ -481,6 +481,7 @@
 	"bbs.ui.film.details.save": "Сохранить",
 	"bbs.ui.film.details.stats": "Реплеев: %d | Клипов: %d",
 	"bbs.ui.film.details.time_spent": "Потрачено времени: %s",
+	"bbs.ui.film.details.time_spent_active": "Активное время (без AFK): %s",
 	"bbs.ui.film.details.title": "Детали фильма",
 	"bbs.ui.film.groups.all": "Все группы",
 	"bbs.ui.film.groups.extra_1": "Экстра 1",

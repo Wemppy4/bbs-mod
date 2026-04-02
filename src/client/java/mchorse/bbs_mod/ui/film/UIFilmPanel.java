@@ -143,6 +143,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private Timer flightEditTime = new Timer(100);
     private long lastTime;
     private double timeAccumulator;
+    private double timeActiveAccumulator;
+    private final FilmEditorUserActivity filmUserActivity = new FilmEditorUserActivity();
 
     private List<UIElement> panels = new ArrayList<>();
     private UIElement secretPlay;
@@ -1362,6 +1364,15 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         this.entered = data != null;
         this.newFilm = false;
+
+        if (data != null)
+        {
+            this.filmUserActivity.onFilmOpened();
+        }
+        else
+        {
+            this.filmUserActivity.reset();
+        }
     }
 
     public void undo()
@@ -1521,7 +1532,14 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         if (this.getData() != null)
         {
+            MinecraftClient mc = MinecraftClient.getInstance();
+
             this.timeAccumulator += diff;
+
+            if (this.filmUserActivity.shouldAccumulateActiveTime(mc, context, now))
+            {
+                this.timeActiveAccumulator += diff;
+            }
 
             /* Batch updates to once per second to avoid undo history pollution
              * and reduce set() overhead; display already refreshes every 1s */
@@ -1531,6 +1549,14 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
                 this.getData().timeSpent.set(this.getData().timeSpent.get() + ticks);
                 this.timeAccumulator -= ticks * 50;
+            }
+
+            if (this.timeActiveAccumulator >= 1000)
+            {
+                long ticks = (long) (this.timeActiveAccumulator / 50);
+
+                this.getData().timeSpentActive.set(this.getData().timeSpentActive.get() + ticks);
+                this.timeActiveAccumulator -= ticks * 50;
             }
         }
 
