@@ -35,6 +35,8 @@ public class Keys
     public static final KeyCombo CLIP_ENABLE = new KeyCombo("clip_enable", UIKeys.CAMERA_TIMELINE_KEYS_ENABLED, GLFW.GLFW_KEY_J).categoryKey("camera");
     public static final KeyCombo CLIP_SELECT_ALL = new KeyCombo("clip_select_all", UIKeys.CAMERA_EDITOR_KEYS_CLIPS_SELECT_ALL, GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("camera");
     public static final KeyCombo CLIP_SELECT_TRACK = new KeyCombo("clip_select_track", UIKeys.CAMERA_EDITOR_KEYS_CLIPS_SELECT_TRACK, GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("camera");
+    public static final KeyCombo CLIP_SELECT_TRACK_BEFORE = new KeyCombo("clip_select_track_before", UIKeys.CAMERA_EDITOR_KEYS_CLIPS_SELECT_TRACK_BEFORE, GLFW.GLFW_KEY_COMMA, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("camera");
+    public static final KeyCombo CLIP_SELECT_TRACK_AFTER = new KeyCombo("clip_select_track_after", UIKeys.CAMERA_EDITOR_KEYS_CLIPS_SELECT_TRACK_AFTER, GLFW.GLFW_KEY_PERIOD, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("camera");
     public static final KeyCombo CLIP_SHIFT = new KeyCombo("clip_shift", UIKeys.CAMERA_TIMELINE_CONTEXT_SHIFT, GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("camera");
     public static final KeyCombo CLIP_SELECT_AFTER = new KeyCombo("clip_select_after", UIKeys.CAMERA_EDITOR_KEYS_EDITOR_SELECT_AFTER, GLFW.GLFW_KEY_PERIOD, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("camera");
     public static final KeyCombo CLIP_SELECT_BEFORE = new KeyCombo("clip_select_before", UIKeys.CAMERA_EDITOR_KEYS_EDITOR_SELECT_BEFORE, GLFW.GLFW_KEY_COMMA, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("camera");
@@ -87,6 +89,8 @@ public class Keys
     public static final KeyCombo KEYFRAMES_MAXIMIZE = new KeyCombo("maximize", UIKeys.KEYFRAMES_CONTEXT_MAXIMIZE, GLFW.GLFW_KEY_HOME).categoryKey("keyframes");
     public static final KeyCombo KEYFRAMES_SELECT_ALL = new KeyCombo("select_all", UIKeys.KEYFRAMES_CONTEXT_SELECT_ALL, GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("keyframes");
     public static final KeyCombo KEYFRAMES_SELECT_TRACK = new KeyCombo("select_track", UIKeys.KEYFRAMES_KEYS_SELECT_TRACK, GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("keyframes");
+    public static final KeyCombo KEYFRAMES_SELECT_TRACK_LEFT = new KeyCombo("select_track_left", UIKeys.KEYFRAMES_KEYS_SELECT_TRACK_LEFT, GLFW.GLFW_KEY_COMMA, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("keyframes");
+    public static final KeyCombo KEYFRAMES_SELECT_TRACK_RIGHT = new KeyCombo("select_track_right", UIKeys.KEYFRAMES_KEYS_SELECT_TRACK_RIGHT, GLFW.GLFW_KEY_PERIOD, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("keyframes");
     public static final KeyCombo KEYFRAMES_INTERP = new KeyCombo("interp", UIKeys.KEYFRAMES_KEYS_TOGGLE_INTERP, GLFW.GLFW_KEY_T, GLFW.GLFW_KEY_LEFT_SHIFT).categoryKey("keyframes");
     public static final KeyCombo KEYFRAMES_SELECT_LEFT = new KeyCombo("select_left", UIKeys.KEYFRAMES_KEYS_SELECT_LEFT, GLFW.GLFW_KEY_COMMA, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("keyframes");
     public static final KeyCombo KEYFRAMES_SELECT_RIGHT = new KeyCombo("select_right", UIKeys.KEYFRAMES_KEYS_SELECT_RIGHT, GLFW.GLFW_KEY_PERIOD, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("keyframes");
