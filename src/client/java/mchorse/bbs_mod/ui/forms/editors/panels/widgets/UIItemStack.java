@@ -3,19 +3,15 @@ package mchorse.bbs_mod.ui.forms.editors.panels.widgets;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.forms.CustomVertexConsumerProvider;
 import mchorse.bbs_mod.forms.FormUtilsClient;
-import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UIUtils;
-import mchorse.bbs_mod.ui.utils.context.ItemStackContextAction;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.colors.Colors;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 
 import java.util.function.Consumer;
@@ -33,18 +29,6 @@ public class UIItemStack extends UIElement
 
         this.context((menu) ->
         {
-            menu.action(Icons.PASTE, UIKeys.ITEM_STACK_CONTEXT_PASTE, () ->
-            {
-                ItemStack stack = MinecraftClient.getInstance().player.getMainHandStack().copy();
-
-                if (this.callback != null)
-                {
-                    this.callback.accept(stack);
-                }
-
-                this.setStack(stack);
-            });
-
             menu.action(Icons.CLOSE, UIKeys.ITEM_STACK_CONTEXT_RESET, () ->
             {
                 if (this.callback != null)
@@ -53,30 +37,6 @@ public class UIItemStack extends UIElement
                 }
 
                 this.setStack(ItemStack.EMPTY);
-            });
-
-            menu.action(Icons.POSE, UIKeys.ITEM_STACK_CONTEXT_HOTBAR, () ->
-            {
-                this.getContext().replaceContextMenu((newMenu) ->
-                {
-                    PlayerInventory inventory = MinecraftClient.getInstance().player.getInventory();
-
-                    /* First nine slots are hotbar items */
-                    for (int i = 0; i < 9; i++)
-                    {
-                        ItemStack s = inventory.getStack(i);
-
-                        newMenu.action(new ItemStackContextAction(s, IKey.constant(s.getName().getString()), () ->
-                        {
-                            if (this.callback != null)
-                            {
-                                this.callback.accept(s);
-                            }
-
-                            this.setStack(s);
-                        }));
-                    }
-                });
             });
         });
 
