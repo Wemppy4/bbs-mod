@@ -216,6 +216,8 @@ public class UIClips extends UIElement
         this.keys().register(Keys.CLIP_ENABLE, this::toggleEnabled).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_SELECT_ALL, this::selectAll).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_SELECT_TRACK, this::selectTrack).category(KEYS_CATEGORY).active(canUseKeybinds);
+        this.keys().register(Keys.CLIP_SELECT_TRACK_BEFORE, this::selectTrackBefore).category(KEYS_CATEGORY).active(canUseKeybinds);
+        this.keys().register(Keys.CLIP_SELECT_TRACK_AFTER, this::selectTrackAfter).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_SELECT_AFTER, this::selectAfter).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.CLIP_SELECT_BEFORE, this::selectBefore).category(KEYS_CATEGORY).active(canUseKeybinds);
         this.keys().register(Keys.FADE_IN, () ->
@@ -778,6 +780,78 @@ public class UIClips extends UIElement
         }
 
         this.pickLastSelectedClip();
+    }
+
+    /**
+     * Like {@link #selectBefore()} but only clips on the layer under the mouse (same rules as {@link #selectTrack()}).
+     */
+    private void selectTrackBefore()
+    {
+        Clip clip = this.delegate.getClip();
+        int layer = this.fromLayerY(this.getContext().mouseY);
+
+        if (layer < 0 && clip != null)
+        {
+            layer = clip.layer.get();
+        }
+
+        if (layer < 0)
+        {
+            return;
+        }
+
+        int cursor = this.delegate.getCursor();
+        int i = 0;
+
+        this.clearSelection();
+
+        for (Clip c : this.clips.get())
+        {
+            if (c.layer.get() == layer && c.tick.get() < cursor)
+            {
+                this.selection.add(i);
+            }
+
+            i += 1;
+        }
+
+        this.delegate.pickClip(this.selection.isEmpty() ? null : this.clips.get(this.selection.get(0)));
+    }
+
+    /**
+     * Like {@link #selectAfter()} but only clips on the layer under the mouse (same rules as {@link #selectTrack()}).
+     */
+    private void selectTrackAfter()
+    {
+        Clip clip = this.delegate.getClip();
+        int layer = this.fromLayerY(this.getContext().mouseY);
+
+        if (layer < 0 && clip != null)
+        {
+            layer = clip.layer.get();
+        }
+
+        if (layer < 0)
+        {
+            return;
+        }
+
+        int cursor = this.delegate.getCursor();
+        int i = 0;
+
+        this.clearSelection();
+
+        for (Clip c : this.clips.get())
+        {
+            if (c.layer.get() == layer && c.tick.get() + c.duration.get() > cursor)
+            {
+                this.selection.add(i);
+            }
+
+            i += 1;
+        }
+
+        this.delegate.pickClip(this.selection.isEmpty() ? null : this.clips.get(this.selection.get(0)));
     }
 
     private void selectAfter()

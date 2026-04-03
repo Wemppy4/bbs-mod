@@ -194,6 +194,8 @@ public class UIKeyframes extends UIElement
         this.keys().register(Keys.KEYFRAMES_MAXIMIZE, this::resetView).inside().category(category);
         this.keys().register(Keys.KEYFRAMES_SELECT_ALL, () -> this.currentGraph.selectAll()).inside().category(category).active(canModify);
         this.keys().register(Keys.KEYFRAMES_SELECT_TRACK, this::selectAllOnTrackUnderCursor).inside().category(category).active(canModify);
+        this.keys().register(Keys.KEYFRAMES_SELECT_TRACK_LEFT, () -> this.selectTrackSideUnderCursor(-1)).inside().category(category).active(canModify);
+        this.keys().register(Keys.KEYFRAMES_SELECT_TRACK_RIGHT, () -> this.selectTrackSideUnderCursor(1)).inside().category(category).active(canModify);
         this.keys().register(Keys.COPY, () ->
         {
             if (this.copyPasteController.copy()) UIUtils.playClick();
@@ -337,6 +339,25 @@ public class UIKeyframes extends UIElement
         {
             this.currentGraph.clearSelection();
             sheet.selection.all();
+            this.currentGraph.pickSelected();
+        }
+    }
+
+    /**
+     * Like {@link #selectAllOnTrackUnderCursor()} but only keyframes on one side of the cursor time
+     * (same behavior as Ctrl+, / Ctrl+. but scoped to the track under the mouse).
+     */
+    private void selectTrackSideUnderCursor(int direction)
+    {
+        UIContext context = this.getContext();
+        UIKeyframeSheet sheet = this.currentGraph.getSheet(context.mouseY);
+
+        if (sheet != null)
+        {
+            float tick = (float) this.fromGraphX(context.mouseX);
+
+            this.currentGraph.clearSelection();
+            sheet.selection.after(tick, direction);
             this.currentGraph.pickSelected();
         }
     }

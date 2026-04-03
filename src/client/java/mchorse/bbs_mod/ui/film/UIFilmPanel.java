@@ -142,7 +142,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
     private Timer flightEditTime = new Timer(100);
     private long lastTime;
-    private double timeAccumulator;
+    private double timeSpentActiveAccumulator;
+    private final FilmEditorUserActivity filmUserActivity = new FilmEditorUserActivity();
 
     private List<UIElement> panels = new ArrayList<>();
     private UIElement secretPlay;
@@ -1043,7 +1044,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     @Override
     protected UICRUDOverlayPanel createOverlayPanel()
     {
-        UICRUDOverlayPanel crudPanel = super.createOverlayPanel();
+        UIFilmOverlayPanel crudPanel = new UIFilmOverlayPanel(this.getTitle(), this, this::pickData);
 
         this.duplicateFilm = new UIIcon(Icons.SCENE, (b) ->
         {
@@ -1081,6 +1082,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             idle.position.set(position);
             data.camera.addClip(idle);
             data.setId(name);
+            data.stampCreationTimeNow();
 
             for (Replay replay : this.data.replays.getList())
             {
@@ -1306,6 +1308,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         clip.fromCamera(camera);
         data.camera.addClip(clip);
 
+        data.stampCreationTimeNow();
+
         this.newFilm = true;
     }
 
@@ -1362,6 +1366,15 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         this.entered = data != null;
         this.newFilm = false;
+
+        if (data != null)
+        {
+            this.filmUserActivity.onFilmOpened();
+        }
+        else
+        {
+            this.filmUserActivity.reset();
+        }
     }
 
     public void undo()
@@ -1521,16 +1534,21 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         if (this.getData() != null)
         {
-            this.timeAccumulator += diff;
+            MinecraftClient mc = MinecraftClient.getInstance();
+
+            if (this.filmUserActivity.shouldAccumulateActiveTime(mc, context, now))
+            {
+                this.timeSpentActiveAccumulator += diff;
+            }
 
             /* Batch updates to once per second to avoid undo history pollution
              * and reduce set() overhead; display already refreshes every 1s */
-            if (this.timeAccumulator >= 1000)
+            if (this.timeSpentActiveAccumulator >= 1000)
             {
-                long ticks = (long) (this.timeAccumulator / 50);
+                long ticks = (long) (this.timeSpentActiveAccumulator / 50);
 
-                this.getData().timeSpent.set(this.getData().timeSpent.get() + ticks);
-                this.timeAccumulator -= ticks * 50;
+                this.getData().timeSpentActive.set(this.getData().timeSpentActive.get() + ticks);
+                this.timeSpentActiveAccumulator -= ticks * 50;
             }
         }
 
