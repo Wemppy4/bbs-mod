@@ -119,12 +119,12 @@ public class UIPropTransform extends UITransform
 
     private void updateLocalUI()
     {
-        this.tx.forcedLabel(null);
-        this.ty.forcedLabel(null);
-        this.tz.forcedLabel(null);
-        this.tx.relative(false);
-        this.ty.relative(false);
-        this.tz.relative(false);
+        this.tx.forcedLabel(this.local ? UIKeys.GENERAL_X : null);
+        this.ty.forcedLabel(this.local ? UIKeys.GENERAL_Y : null);
+        this.tz.forcedLabel(this.local ? UIKeys.GENERAL_Z : null);
+        this.tx.relative(this.local);
+        this.ty.relative(this.local);
+        this.tz.relative(this.local);
         this.iconT.tooltip(this.local ? UIKeys.TRANSFORMS_CONTEXT_SWITCH_GLOBAL : UIKeys.TRANSFORMS_CONTEXT_SWITCH_LOCAL);
     }
 
