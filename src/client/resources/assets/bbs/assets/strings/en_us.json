@@ -1163,6 +1163,8 @@
 	"bbs.ui.video_settings.height": "Height",
 	"bbs.ui.video_settings.held_frames": "Held frames",
 	"bbs.ui.video_settings.held_frames-tooltip": "Increase if you need to stabilize picture of accumulative shaders (like RT or PT)",
+	"bbs.ui.video_settings.delay": "Export delay",
+	"bbs.ui.video_settings.delay-tooltip": "Delay before export starts (seconds). Useful to let replays/entities fully settle on the first tick.",
 	"bbs.ui.video_settings.motion_blur": "Motion blur",
 	"bbs.ui.video_settings.motion_blur-tooltip": "The bigger the number, the better quality of motion blur, but also the longer it will take to record",
 	"bbs.ui.video_settings.path": "Export path",

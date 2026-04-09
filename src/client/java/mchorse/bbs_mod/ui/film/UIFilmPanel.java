@@ -842,7 +842,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         }
 
         boolean anySplitterDragging = this.splitterHandles.stream().anyMatch(UIDraggable::isDragging);
-        if (!this.recorder.isRecording() && !anySplitterDragging
+        if (!this.recorder.isExporting() && !anySplitterDragging
             && this.preview.area.w >= 2 && this.preview.area.h >= 2)
         {
             this.applyPreviewSizeToBBS();
@@ -879,7 +879,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
      */
     private void applyPreviewSizeToBBS()
     {
-        if (this.recorder.isRecording())
+        if (this.recorder.isExporting())
         {
             return;
         }

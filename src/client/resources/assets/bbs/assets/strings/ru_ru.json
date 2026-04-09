@@ -1155,6 +1155,8 @@
 	"bbs.ui.video_settings.height": "Высота",
 	"bbs.ui.video_settings.held_frames": "Задержка кадров",
 	"bbs.ui.video_settings.held_frames-tooltip": "Увеличьте, если вам нужно исправить артифакты аккумулятивных шейдеров (по типу трассировки лучей или путей)",
+	"bbs.ui.video_settings.delay": "Задержка экспорта",
+	"bbs.ui.video_settings.delay-tooltip": "Задержка перед началом экспорта (в секундах). Нужна, чтобы реплеи/сущности успели стабилизироваться на первом тике.",
 	"bbs.ui.video_settings.motion_blur": "Размытие в движении",
 	"bbs.ui.video_settings.motion_blur-tooltip": "Чем больше число тем лучше качество размытия движения но также экспоненциально уйдёт больше времени на запись видео",
 	"bbs.ui.video_settings.path": "Путь экспортирования",

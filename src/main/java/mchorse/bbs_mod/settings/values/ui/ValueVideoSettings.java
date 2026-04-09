@@ -3,6 +3,7 @@ package mchorse.bbs_mod.settings.values.ui;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
+import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
 import mchorse.bbs_mod.settings.values.numeric.ValueInt;
 
 public class ValueVideoSettings extends ValueGroup
@@ -18,6 +19,7 @@ public class ValueVideoSettings extends ValueGroup
     public final ValueInt frameRate = new ValueInt("frameRate", 60, 10, 1000);
     public final ValueInt motionBlur = new ValueInt("motionBlur", 0, 0, 6);
     public final ValueInt heldFrames = new ValueInt("heldFrames", 1, 1, 1000);
+    public final ValueFloat delay = new ValueFloat("delay", 0.5F, 0F, 30F);
     public final ValueString path = new ValueString("exportPath", "");
     public final ValueBoolean openFolderAfterExport = new ValueBoolean("openFolderAfterExport", false);
     public final ValueBoolean playSoundAfterExport = new ValueBoolean("playSoundAfterExport", true);
@@ -34,6 +36,7 @@ public class ValueVideoSettings extends ValueGroup
         this.add(this.frameRate);
         this.add(this.motionBlur);
         this.add(this.heldFrames);
+        this.add(this.delay);
         this.add(this.path);
         this.add(this.openFolderAfterExport);
         this.add(this.playSoundAfterExport);

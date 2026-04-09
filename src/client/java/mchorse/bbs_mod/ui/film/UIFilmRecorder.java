@@ -33,6 +33,14 @@ public class UIFilmRecorder extends UIElement
 
     public boolean resetReplays = true;
 
+    private boolean preparing;
+    private long startRecordingAtMs;
+    private File pendingAudioFile;
+    private int pendingTextureId;
+    private int pendingWidth;
+    private int pendingHeight;
+    private boolean restorePaused;
+
     public UIFilmRecorder(UIFilmPanel editor)
     {
         super();
@@ -45,6 +53,11 @@ public class UIFilmRecorder extends UIElement
     public boolean isRecording()
     {
         return getRecorder().isRecording();
+    }
+
+    public boolean isExporting()
+    {
+        return this.preparing || this.isRecording();
     }
 
     private UIContext getUIContext()
@@ -77,10 +90,12 @@ public class UIFilmRecorder extends UIElement
         VideoRecorder recorder = this.getRecorder();
         UIContext context = this.getUIContext();
 
-        if (this.isRunning() || recorder.isRecording() || duration <= 0)
+        if (this.isRunning() || this.preparing || recorder.isRecording() || duration <= 0)
         {
             return;
         }
+
+        this.restorePaused = this.editor.getController().isPaused();
 
         int min = this.editor.cameraEditor.clips.loopMin;
         int max = this.editor.cameraEditor.clips.loopMax;
@@ -88,10 +103,22 @@ public class UIFilmRecorder extends UIElement
 
         this.end = looping && min != max ? Math.max(min, max) : duration;
 
+        this.editor.setCursor(looping ? Math.min(min, max) : 0);
+        this.editor.notifyServer(ActionState.RESTART);
+
+        if (this.resetReplays)
+        {
+            this.editor.getController().createEntities();
+        }
+
+        context.menu.main.setEnabled(false);
+        context.menu.overlay.add(this);
+        context.menu.getRoot().add(this.exit);
+
+        File audioFile = null;
+
         try
         {
-            File audioFile = null;
-
             if (BBSSettings.videoSettings.audio.get())
             {
                 Clips camera = this.editor.getData().camera;
@@ -106,28 +133,57 @@ public class UIFilmRecorder extends UIElement
                     audioFile = file;
                 }
             }
-
-            recorder.startRecording(audioFile, id, w, h);
         }
         catch (Exception e)
         {
             UIOverlay.addOverlay(context, new UIMessageOverlayPanel(UIKeys.GENERAL_ERROR, IKey.constant(e.getMessage())));
-
+            this.stop();
             return;
         }
 
-        this.editor.setCursor(looping ? Math.min(min, max) : 0);
-        this.editor.notifyServer(ActionState.RESTART);
+        this.pendingAudioFile = audioFile;
+        this.pendingTextureId = id;
+        this.pendingWidth = w;
+        this.pendingHeight = h;
 
-        if (this.resetReplays)
+        float delaySeconds = Math.max(0F, BBSSettings.videoSettings.delay.get());
+        long delayMs = (long) (delaySeconds * 1000F);
+
+        if (delayMs > 0)
         {
-            this.editor.getController().createEntities();
+            this.editor.getController().setPaused(true);
+
+            this.preparing = true;
+            this.startRecordingAtMs = System.currentTimeMillis() + delayMs;
+        }
+        else
+        {
+            this.preparing = false;
+            this.startRecordingAtMs = 0L;
+            this.beginRecording(context, recorder);
+        }
+    }
+
+    private void beginRecording(UIContext context, VideoRecorder recorder)
+    {
+        if (recorder.isRecording())
+        {
+            return;
         }
 
+        try
+        {
+            recorder.startRecording(this.pendingAudioFile, this.pendingTextureId, this.pendingWidth, this.pendingHeight);
+        }
+        catch (Exception e)
+        {
+            UIOverlay.addOverlay(context, new UIMessageOverlayPanel(UIKeys.GENERAL_ERROR, IKey.constant(e.getMessage())));
+            this.stop();
+            return;
+        }
+
+        this.editor.getController().setPaused(false);
         this.editor.togglePlayback();
-        context.menu.main.setEnabled(false);
-        context.menu.overlay.add(this);
-        context.menu.getRoot().add(this.exit);
     }
 
     public void stop()
@@ -136,6 +192,9 @@ public class UIFilmRecorder extends UIElement
 
         context.render.postRunnable(this.exit::removeFromParent);
 
+        this.preparing = false;
+        this.startRecordingAtMs = 0L;
+
         if (this.getRecorder().isRecording())
         {
             try
@@ -143,23 +202,41 @@ public class UIFilmRecorder extends UIElement
                 this.getRecorder().stopRecording();
             }
             catch (Exception e) {}
-
-            this.editor.restorePreviewSize();
-
-            if (this.isRunning())
-            {
-                this.editor.togglePlayback();
-            }
-
-            context.menu.main.setEnabled(true);
-            context.render.postRunnable(this::removeFromParent);
         }
+
+        this.pendingAudioFile = null;
+        this.pendingTextureId = 0;
+        this.pendingWidth = 0;
+        this.pendingHeight = 0;
+
+        this.editor.getController().setPaused(this.restorePaused);
+
+        this.editor.restorePreviewSize();
+
+        if (this.isRunning())
+        {
+            this.editor.togglePlayback();
+        }
+
+        context.menu.main.setEnabled(true);
+        context.render.postRunnable(this::removeFromParent);
     }
 
     @Override
     public void render(UIContext context)
     {
         super.render(context);
+
+        if (this.preparing)
+        {
+            if (System.currentTimeMillis() >= this.startRecordingAtMs)
+            {
+                this.preparing = false;
+                this.beginRecording(context, this.getRecorder());
+            }
+
+            return;
+        }
 
         int ticks = this.editor.getCursor();
 
