@@ -30,6 +30,7 @@ import mchorse.bbs_mod.settings.values.IValueListener;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.core.ValueForm;
 import mchorse.bbs_mod.settings.values.core.ValueLink;
+import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
@@ -98,7 +99,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
     private static final ProcessReplaysState PROCESS_STATE = new ProcessReplaysState();
 
     public UIFilmPanel panel;
-    public UIReplaysOverlayPanel overlay;
+    private final Consumer<Form> formConsumer;
 
     /** Category names whose replay rows are hidden (headers stay visible). */
     private final Set<String> collapsedCategories = new HashSet<>();
@@ -122,11 +123,11 @@ public class UIReplayList extends UIList<ReplayListEntry>
         public double shift = 1;
     }
 
-    public UIReplayList(Consumer<List<Replay>> callback, UIReplaysOverlayPanel overlay, UIFilmPanel panel)
+    public UIReplayList(Consumer<List<Replay>> callback, Consumer<Form> formConsumer, UIFilmPanel panel)
     {
         super((entries) -> callback.accept(replaysFromEntries(entries)));
 
-        this.overlay = overlay;
+        this.formConsumer = formConsumer;
         this.panel = panel;
 
         this.multi().sorting();
@@ -220,6 +221,42 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 menu.action(Icons.REMOVE, UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE, this::removeReplay);
             }
         });
+
+        this.keys().register(Keys.DELETE, this::removeReplay)
+            .inside()
+            .label(UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE)
+            .active(this::hasReplaySelection)
+            .category(UIKeys.FILM_REPLAY_TITLE);
+        this.keys().register(Keys.COPY, this::copyReplay)
+            .inside()
+            .label(UIKeys.SCENE_REPLAYS_CONTEXT_COPY)
+            .active(this::hasReplaySelection)
+            .category(UIKeys.FILM_REPLAY_TITLE);
+        this.keys().register(Keys.PASTE, () ->
+        {
+            MapType data = Window.getClipboardMap("_CopyReplay");
+            if (data != null)
+            {
+                this.pasteReplay(data);
+            }
+        }).inside()
+            .label(UIKeys.SCENE_REPLAYS_CONTEXT_PASTE)
+            .active(() -> Window.getClipboardMap("_CopyReplay") != null && this.panel != null && this.panel.getData() != null)
+            .category(UIKeys.FILM_REPLAY_TITLE);
+        this.keys().register(Keys.REPLAYS_DUPE, this::dupeReplay)
+            .inside()
+            .label(UIKeys.SCENE_REPLAYS_CONTEXT_DUPE)
+            .active(this::hasReplaySelection)
+            .category(UIKeys.FILM_REPLAY_TITLE);
+        this.keys().register(Keys.FORMS_EDIT, () ->
+        {
+            Replay r = this.getSelectedReplayFirst();
+            if (r != null)
+            {
+                this.openFormEditor(r.form, true, null);
+            }
+        }).inside()
+            .category(UIKeys.FILM_REPLAY_TITLE);
     }
 
     @Override
@@ -877,7 +914,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
     private void pasteToReplays(MapType data)
     {
         UIReplaysEditor replayEditor = this.panel.replayEditor;
-        List<Replay> selectedReplays = replayEditor.replays.replays.getSelectedReplays();
+        List<Replay> selectedReplays = replayEditor.replaysList.replays.getSelectedReplays();
 
         if (data == null)
         {
@@ -1844,9 +1881,9 @@ public class UIReplayList extends UIList<ReplayListEntry>
             {
                 consumer.accept(f);
             }
-            else
+            else if (this.formConsumer != null)
             {
-                this.overlay.pickEdit.setForm(f);
+                this.formConsumer.accept(f);
             }
         });
 

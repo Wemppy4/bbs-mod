@@ -61,7 +61,6 @@ public class UIFilmPreview extends UIElement
 
     public UIElement icons;
 
-    public UIIcon replays;
     public UIIcon onionSkin;
     public UIIcon plause;
     public UIIcon teleport;
@@ -80,8 +79,6 @@ public class UIFilmPreview extends UIElement
         this.icons.relative(this).x(0.5F).y(1F).anchor(0.5F, 1F);
 
         /* Preview buttons */
-        this.replays = new UIIcon(Icons.EDITOR, (b) -> this.openReplays());
-        this.replays.tooltip(UIKeys.FILM_REPLAY_TITLE);
         this.onionSkin = new UIIcon(Icons.ONION_SKIN, (b) -> this.openOnionSkin());
         this.onionSkin.tooltip(UIKeys.FILM_CONTROLLER_ONION_SKIN_TITLE);
         this.plause = new UIIcon(() -> this.panel.isRunning() ? Icons.PAUSE : Icons.PLAY, (b) -> this.panel.togglePlayback());
@@ -222,15 +219,8 @@ public class UIFilmPreview extends UIElement
             });
         });
 
-        this.icons.add(this.replays, this.onionSkin, this.plause, this.teleport, this.flight, this.control, this.perspective, this.recordReplay, this.recordVideo);
+        this.icons.add(this.onionSkin, this.plause, this.teleport, this.flight, this.control, this.perspective, this.recordReplay, this.recordVideo);
         this.add(this.icons);
-    }
-
-    public void openReplays()
-    {
-        UIOverlay overlay = UIOverlay.addOverlayLeft(this.getContext(), this.panel.replayEditor.replays, 360);
-
-        overlay.eventPropagataion(EventPropagation.PASS);
     }
 
     public void openOnionSkin()

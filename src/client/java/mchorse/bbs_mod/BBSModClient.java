@@ -792,7 +792,7 @@ public class BBSModClient implements ClientModInitializer
 
         if (dashboard.getPanels().panel instanceof UIFilmPanel panel && panel.getData() != null)
         {
-            panel.preview.openReplays();
+            panel.showPanel(panel.replayEditor);
         }
         else
         {

@@ -71,13 +71,23 @@ public abstract class EditorLayoutNode
     {
         return new SplitterNode(
             false,
-            0.66F,
-            new PanelNode("main"),
+            0.1819149F,
             new SplitterNode(
                 true,
-                0.5F,
-                new PanelNode("preview"),
-                new PanelNode("editArea")
+                0.28659794F,
+                new PanelNode("replayProps"),
+                new PanelNode("replaysList")
+            ),
+            new SplitterNode(
+                true,
+                0.6659794F,
+                new SplitterNode(
+                    false,
+                    0.793238F,
+                    new PanelNode("preview"),
+                    new PanelNode("editArea")
+                ),
+                new PanelNode("main")
             )
         );
     }

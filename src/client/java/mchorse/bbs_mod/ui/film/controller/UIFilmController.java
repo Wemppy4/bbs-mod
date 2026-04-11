@@ -181,7 +181,7 @@ public class UIFilmController extends UIElement
         }).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_OPEN_REPLAYS, () ->
         {
-            this.panel.preview.openReplays();
+            this.panel.showPanel(this.panel.replayEditor);
         }).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_PREV_REPLAY, () -> this.switchReplay(-1)).active(hasTwoOrMoreReplays).category(category);
         this.keys().register(Keys.FILM_CONTROLLER_NEXT_REPLAY, () -> this.switchReplay(1)).active(hasTwoOrMoreReplays).category(category);
@@ -384,7 +384,7 @@ public class UIFilmController extends UIElement
 
             this.controlled = null;
         }
-        else if (this.panel.replayEditor.replays.replays.isSelected())
+        else if (this.panel.replayEditor.replaysList.replays.isSelected())
         {
             this.controlled = this.getCurrentEntity();
 
@@ -770,7 +770,7 @@ public class UIFilmController extends UIElement
                 {
                     this.panel.replayEditor.setReplay(replay, false, false);
 
-                    UIReplayList list = this.panel.replayEditor.replays.replays;
+                    UIReplayList list = this.panel.replayEditor.replaysList.replays;
 
                     list.scrollToReplay(replay);
 

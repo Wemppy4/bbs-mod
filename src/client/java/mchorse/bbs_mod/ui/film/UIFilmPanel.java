@@ -84,6 +84,7 @@ import org.joml.Vector3d;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -205,6 +206,9 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.actionEditor = new UIClipsPanel(this, BBSMod.getFactoryActionClips()).target(this.editArea);
         this.actionEditor.full(this.main).setVisible(false);
 
+        this.panelById.put("replaysList", this.replayEditor.replaysList);
+        this.panelById.put("replayProps", this.replayEditor.replayProperties);
+
         /* Icon bar buttons */
         this.openFilmMenu = new UIIcon(Icons.GEAR, (b) ->
         {
@@ -244,7 +248,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.dragHandlesById.put(id, handle);
             this.editor.add(handle);
         }
-        this.main.add(this.cameraEditor, this.replayEditor, this.actionEditor, this.editArea, this.preview);
+        this.main.add(this.cameraEditor, this.replayEditor, this.actionEditor, this.editArea, this.preview, this.replayEditor.replaysList, this.replayEditor.replayProperties);
         this.add(this.controller, new UIRenderable(this::renderDividers));
         this.overlay.namesList.setFileIcon(Icons.FILM);
 
@@ -385,7 +389,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private void setupEditorFlex(boolean resize)
     {
         ValueEditorLayout layout = BBSSettings.editorLayoutSettings;
-        EditorLayoutNode root = layout.getFilmLayoutRoot();
+        EditorLayoutNode originalRoot = layout.getFilmLayoutRoot();
+        EditorLayoutNode root = this.ensureFilmLayoutPanels(originalRoot);
+        if (root != originalRoot)
+        {
+            layout.setFilmLayoutRoot(root);
+        }
         List<EditorLayoutNode.SplitterNode> splitters = layout.getFilmSplitters();
 
         if (!this.layoutLocked && resize && splitters.size() == this.splitterHandles.size())
@@ -399,9 +408,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         Map<String, float[]> bounds = new HashMap<>();
         root.computeBounds(0F, 0F, 1F, 1F, bounds);
 
-        this.main.resetFlex();
-        this.editArea.resetFlex();
-        this.preview.resetFlex();
+        for (UIElement el : this.panelById.values())
+        {
+            el.resetFlex();
+        }
         for (UIDraggable h : this.splitterHandles)
         {
             h.removeFromParent();
@@ -458,6 +468,48 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         {
             this.resize();
             this.resize();
+        }
+    }
+
+    private EditorLayoutNode ensureFilmLayoutPanels(EditorLayoutNode root)
+    {
+        HashSet<String> ids = new HashSet<>();
+        this.collectPanelIds(root, ids);
+
+        boolean hasList = ids.contains("replaysList");
+        boolean hasProps = ids.contains("replayProps");
+
+        if (hasList && hasProps)
+        {
+            return root;
+        }
+
+        EditorLayoutNode out = root;
+
+        if (!hasList)
+        {
+            out = EditorLayoutNode.copyWithInsertSplitAt(out, "editArea", "replaysList", EditorLayoutNode.EDGE_BOTTOM);
+        }
+
+        if (!hasProps)
+        {
+            out = EditorLayoutNode.copyWithInsertSplitAt(out, hasList ? "replaysList" : "replaysList", "replayProps", EditorLayoutNode.EDGE_RIGHT);
+        }
+
+        return out;
+    }
+
+    private void collectPanelIds(EditorLayoutNode node, HashSet<String> out)
+    {
+        if (node instanceof EditorLayoutNode.PanelNode)
+        {
+            out.add(((EditorLayoutNode.PanelNode) node).getPanelId());
+        }
+        else if (node instanceof EditorLayoutNode.SplitterNode)
+        {
+            EditorLayoutNode.SplitterNode s = (EditorLayoutNode.SplitterNode) node;
+            this.collectPanelIds(s.getFirst(), out);
+            this.collectPanelIds(s.getSecond(), out);
         }
     }
 
@@ -1340,7 +1392,6 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.undoHandler = null;
         }
 
-        this.preview.replays.setEnabled(data != null);
         this.openFilmMenu.setEnabled(data != null);
         this.openCameraEditor.setEnabled(data != null);
         this.openReplayEditor.setEnabled(data != null);
