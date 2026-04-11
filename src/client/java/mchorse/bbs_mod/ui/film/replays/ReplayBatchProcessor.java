@@ -3,19 +3,11 @@ package mchorse.bbs_mod.ui.film.replays;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.math.IExpression;
 import mchorse.bbs_mod.math.MathBuilder;
-import mchorse.bbs_mod.utils.RayTracing;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
 import mchorse.bbs_mod.utils.keyframes.factories.KeyframeFactories;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.SplittableRandom;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -31,13 +23,18 @@ public class ReplayBatchProcessor
         CIRCLE,
         CIRCLE_OUTLINE,
         CUBE,
-        SPHERE
+        SPHERE,
+        FIT_HEIGHT,
+        LOOK_AT
     }
 
     public enum Error
     {
         NEED_TWO_CHANNELS,
         NEED_THREE_CHANNELS,
+        NEED_Y_CHANNEL,
+        NEED_TARGET,
+        NEED_POSITION_CHANNELS,
         INVALID_EXPRESSION,
         NO_WORLD
     }
@@ -64,7 +61,14 @@ public class ReplayBatchProcessor
         public double size;
         public double shift;
         public boolean fill;
-        public boolean fitHeight;
+        public Replay lookAtTarget;
+        public GroundProvider groundProvider;
+    }
+
+    @FunctionalInterface
+    public interface GroundProvider
+    {
+        double getGroundY(double x, double z);
     }
 
     public static Error applyAdvanced(List<VisibleReplay> selected, List<String> selectedProperties, String expressionText)
@@ -120,270 +124,291 @@ public class ReplayBatchProcessor
 
     public static Error applyNormal(List<VisibleReplay> selected, List<String> selectedProperties, Operation operation, NormalParams params)
     {
-        if (operation == Operation.SQUARE || operation == Operation.SQUARE_OUTLINE || operation == Operation.CIRCLE || operation == Operation.CIRCLE_OUTLINE)
+        if (operation == null)
         {
-            if (selectedProperties.size() < 2)
-            {
-                return Error.NEED_TWO_CHANNELS;
-            }
-
-            String aId = selectedProperties.get(0);
-            String bId = selectedProperties.get(1);
-
-            int count = selected.size();
-
-            for (VisibleReplay replay : selected)
-            {
-                int o = replay.o;
-                double a = 0;
-                double b = 0;
-
-                if (operation == Operation.SQUARE)
-                {
-                    int side = (int) Math.ceil(Math.sqrt(count));
-                    double half = (side - 1) / 2D;
-                    double step = side > 1 ? params.size / (side - 1) : 0D;
-                    int col = o % side;
-                    int row = o / side;
-
-                    a = (col - half) * step;
-                    b = (row - half) * step;
-                }
-                else if (operation == Operation.SQUARE_OUTLINE)
-                {
-                    int side = Math.max(2, (int) Math.ceil(count / 4D) + 1);
-                    int edge = side - 1;
-                    double half = edge / 2D;
-                    double step = edge > 0 ? params.size / edge : 0D;
-                    int pos = edge == 0 ? 0 : (o % (edge * 4));
-                    int x;
-                    int y;
-
-                    if (pos < edge)
-                    {
-                        x = pos;
-                        y = 0;
-                    }
-                    else if (pos < edge * 2)
-                    {
-                        x = edge;
-                        y = pos - edge;
-                    }
-                    else if (pos < edge * 3)
-                    {
-                        x = edge - (pos - edge * 2);
-                        y = edge;
-                    }
-                    else
-                    {
-                        x = 0;
-                        y = edge - (pos - edge * 3);
-                    }
-
-                    a = (x - half) * step;
-                    b = (y - half) * step;
-                }
-                else if (operation == Operation.CIRCLE)
-                {
-                    double radius = params.size / 2D;
-                    double goldenAngle = Math.PI * (3D - Math.sqrt(5D));
-                    double t = (o + 0.5D) / count;
-                    double r = Math.sqrt(t) * radius;
-                    double angle = o * goldenAngle;
-
-                    a = Math.cos(angle) * r;
-                    b = Math.sin(angle) * r;
-                }
-                else if (operation == Operation.CIRCLE_OUTLINE)
-                {
-                    double radius = params.size / 2D;
-                    double angle = (count == 1 ? 0D : (o / (double) count) * Math.PI * 2D);
-
-                    a = Math.cos(angle) * radius;
-                    b = Math.sin(angle) * radius;
-                }
-
-                applyDelta(replay.replay, aId, a);
-                applyDelta(replay.replay, bId, b);
-            }
-
-            return fitHeightToGround(selected, selectedProperties, params);
+            return null;
         }
 
-        if (operation == Operation.CUBE || operation == Operation.SPHERE)
+        return switch (operation)
         {
-            if (selectedProperties.size() < 3)
+            case SQUARE, SQUARE_OUTLINE, CIRCLE, CIRCLE_OUTLINE -> apply2DShape(selected, selectedProperties, operation, params);
+            case CUBE, SPHERE -> apply3DShape(selected, selectedProperties, operation, params);
+            case LINE -> applyLine(selected, selectedProperties, params);
+            case SHIFT -> applyShift(selected, selectedProperties, params);
+            case RANDOM -> applyRandom(selected, selectedProperties, params);
+            case FIT_HEIGHT -> applyFitHeight(selected, selectedProperties, params);
+            case LOOK_AT -> applyLookAt(selected, params);
+        };
+    }
+
+    private static Error apply2DShape(List<VisibleReplay> selected, List<String> selectedProperties, Operation operation, NormalParams params)
+    {
+        if (selectedProperties.size() < 2)
+        {
+            return Error.NEED_TWO_CHANNELS;
+        }
+
+        String aId = selectedProperties.get(0);
+        String bId = selectedProperties.get(1);
+
+        int count = selected.size();
+
+        for (VisibleReplay replay : selected)
+        {
+            int o = replay.o;
+            double a = 0;
+            double b = 0;
+
+            if (operation == Operation.SQUARE)
             {
-                return Error.NEED_THREE_CHANNELS;
-            }
+                int side = (int) Math.ceil(Math.sqrt(count));
+                int rows = (int) Math.ceil(count / (double) side);
+                double half = (side - 1) / 2D;
+                double step = side > 1 ? params.size / (side - 1) : 0D;
+                int col = o % side;
+                int row = o / side;
 
-            String aId = selectedProperties.get(0);
-            String bId = selectedProperties.get(1);
-            String cId = selectedProperties.get(2);
-
-            int count = selected.size();
-
-            if (operation == Operation.CUBE)
-            {
-                int side;
-                int[] shellCoords = null;
-
-                if (params.fill)
+                a = (col - half) * step;
+                if (rows > 1)
                 {
-                    side = (int) Math.ceil(Math.cbrt(count));
+                    double rowScaled = row * (side - 1D) / (rows - 1D);
+                    b = (rowScaled - half) * step;
                 }
                 else
                 {
-                    side = 2;
-                    while (count > cubeSurfacePoints(side))
-                    {
-                        side++;
-                    }
-
-                    shellCoords = buildCubeShellCoords(count, side);
-                }
-
-                double half = (side - 1) / 2D;
-                double step = side > 1 ? params.size / (side - 1) : 0D;
-
-                for (VisibleReplay replay : selected)
-                {
-                    int o = replay.o;
-                    int gx;
-                    int gy;
-                    int gz;
-
-                    if (params.fill)
-                    {
-                        gx = o % side;
-                        gy = (o / side) % side;
-                        gz = o / (side * side);
-                    }
-                    else
-                    {
-                        int i = o * 3;
-                        gx = shellCoords[i];
-                        gy = shellCoords[i + 1];
-                        gz = shellCoords[i + 2];
-                    }
-
-                    double a = (gx - half) * step;
-                    double b = (gy - half) * step;
-                    double c = (gz - half) * step;
-
-                    applyDelta(replay.replay, aId, a);
-                    applyDelta(replay.replay, bId, b);
-                    applyDelta(replay.replay, cId, c);
+                    b = 0D;
                 }
             }
-            else
+            else if (operation == Operation.SQUARE_OUTLINE)
+            {
+                double size = params.size;
+                double half = size / 2D;
+                double s = count <= 1 ? 0D : (o / (double) count) * 4D;
+
+                if (s < 1D)
+                {
+                    a = -half + size * s;
+                    b = -half;
+                }
+                else if (s < 2D)
+                {
+                    a = half;
+                    b = -half + size * (s - 1D);
+                }
+                else if (s < 3D)
+                {
+                    a = half - size * (s - 2D);
+                    b = half;
+                }
+                else
+                {
+                    a = -half;
+                    b = half - size * (s - 3D);
+                }
+            }
+            else if (operation == Operation.CIRCLE)
             {
                 double radius = params.size / 2D;
                 double goldenAngle = Math.PI * (3D - Math.sqrt(5D));
+                double t = (o + 0.5D) / count;
+                double r = Math.sqrt(t) * radius;
+                double angle = o * goldenAngle;
 
-                for (VisibleReplay replay : selected)
-                {
-                    int o = replay.o;
-                    double t = (o + 0.5D) / count;
-                    double theta = goldenAngle * (o + 0.5D);
-                    double y = 1D - 2D * t;
-                    double rxy = Math.sqrt(1D - y * y);
-                    double s = params.fill ? Math.cbrt(t) : 1D;
-                    double x = Math.cos(theta) * rxy;
-                    double z = Math.sin(theta) * rxy;
-
-                    double a = x * radius * s;
-                    double b = y * radius * s;
-                    double c = z * radius * s;
-
-                    applyDelta(replay.replay, aId, a);
-                    applyDelta(replay.replay, bId, b);
-                    applyDelta(replay.replay, cId, c);
-                }
+                a = Math.cos(angle) * r;
+                b = Math.sin(angle) * r;
             }
-
-            return fitHeightToGround(selected, selectedProperties, params);
-        }
-
-        if (operation == Operation.LINE)
-        {
-            for (VisibleReplay replay : selected)
+            else if (operation == Operation.CIRCLE_OUTLINE)
             {
-                double delta = replay.o * params.lineOffset;
+                double radius = params.size / 2D;
+                double angle = (count == 1 ? 0D : (o / (double) count) * Math.PI * 2D);
 
-                for (String s : selectedProperties)
-                {
-                    applyDelta(replay.replay, s, delta);
-                }
+                a = Math.cos(angle) * radius;
+                b = Math.sin(angle) * radius;
             }
 
-            return fitHeightToGround(selected, selectedProperties, params);
-        }
-
-        if (operation == Operation.SHIFT)
-        {
-            for (VisibleReplay replay : selected)
-            {
-                for (String s : selectedProperties)
-                {
-                    applyDelta(replay.replay, s, params.shift);
-                }
-            }
-
-            return fitHeightToGround(selected, selectedProperties, params);
-        }
-
-        if (operation == Operation.RANDOM)
-        {
-            double minValue = params.randomMin;
-            double maxValue = params.randomMax;
-            double minRand = Math.min(minValue, maxValue);
-            double maxRand = Math.max(minValue, maxValue);
-            long seed = ThreadLocalRandom.current().nextLong();
-
-            for (VisibleReplay replay : selected)
-            {
-                long replaySeed = mix64(seed + (long) replay.o * 0x9e3779b97f4a7c15L);
-
-                for (int ci = 0; ci < selectedProperties.size(); ci++)
-                {
-                    String s = selectedProperties.get(ci);
-                    long channelSeed = mix64(replaySeed + (long) ci * 0xbf58476d1ce4e5b9L);
-                    SplittableRandom random = new SplittableRandom(channelSeed);
-                    double delta = minRand + random.nextDouble() * (maxRand - minRand);
-
-                    applyDelta(replay.replay, s, delta);
-                }
-            }
-
-            return fitHeightToGround(selected, selectedProperties, params);
+            applyDelta(replay.replay, aId, a);
+            applyDelta(replay.replay, bId, b);
         }
 
         return null;
     }
 
-    private static Error fitHeightToGround(List<VisibleReplay> selected, List<String> selectedProperties, NormalParams params)
+    private static Error apply3DShape(List<VisibleReplay> selected, List<String> selectedProperties, Operation operation, NormalParams params)
     {
-        if (!params.fitHeight)
+        if (selectedProperties.size() < 3)
         {
-            return null;
+            return Error.NEED_THREE_CHANNELS;
         }
 
-        if (!(selectedProperties.contains("x") && selectedProperties.contains("y") && selectedProperties.contains("z")))
+        String aId = selectedProperties.get(0);
+        String bId = selectedProperties.get(1);
+        String cId = selectedProperties.get(2);
+
+        int count = selected.size();
+
+        if (operation == Operation.CUBE)
         {
-            return null;
+            int side;
+            int[] shellCoords = null;
+
+            if (params.fill)
+            {
+                side = (int) Math.ceil(Math.cbrt(count));
+            }
+            else
+            {
+                side = 2;
+                while (count > cubeSurfacePoints(side))
+                {
+                    side++;
+                }
+
+                shellCoords = buildCubeShellCoords(count, side);
+            }
+
+            double half = (side - 1) / 2D;
+            double step = side > 1 ? params.size / (side - 1) : 0D;
+
+            for (VisibleReplay replay : selected)
+            {
+                int o = replay.o;
+                int gx;
+                int gy;
+                int gz;
+
+                if (params.fill)
+                {
+                    gx = o % side;
+                    gy = (o / side) % side;
+                    gz = o / (side * side);
+                }
+                else
+                {
+                    int i = o * 3;
+                    gx = shellCoords[i];
+                    gy = shellCoords[i + 1];
+                    gz = shellCoords[i + 2];
+                }
+
+                double a = (gx - half) * step;
+                double b = (gy - half) * step;
+                double c = (gz - half) * step;
+
+                applyDelta(replay.replay, aId, a);
+                applyDelta(replay.replay, bId, b);
+                applyDelta(replay.replay, cId, c);
+            }
+        }
+        else
+        {
+            double radius = params.size / 2D;
+            double goldenAngle = Math.PI * (3D - Math.sqrt(5D));
+
+            for (VisibleReplay replay : selected)
+            {
+                int o = replay.o;
+                double t = (o + 0.5D) / count;
+                double theta = goldenAngle * (o + 0.5D);
+                double y = 1D - 2D * t;
+                double rxy = Math.sqrt(1D - y * y);
+                double s = params.fill ? Math.cbrt(t) : 1D;
+                double x = Math.cos(theta) * rxy;
+                double z = Math.sin(theta) * rxy;
+
+                double a = x * radius * s;
+                double b = y * radius * s;
+                double c = z * radius * s;
+
+                applyDelta(replay.replay, aId, a);
+                applyDelta(replay.replay, bId, b);
+                applyDelta(replay.replay, cId, c);
+            }
         }
 
-        MinecraftClient mc = MinecraftClient.getInstance();
-        World world = mc.world;
+        return null;
+    }
 
-        if (world == null)
+    private static Error applyLine(List<VisibleReplay> selected, List<String> selectedProperties, NormalParams params)
+    {
+        for (VisibleReplay replay : selected)
+        {
+            double delta = replay.o * params.lineOffset;
+
+            for (String s : selectedProperties)
+            {
+                applyDelta(replay.replay, s, delta);
+            }
+        }
+
+        return null;
+    }
+
+    private static Error applyShift(List<VisibleReplay> selected, List<String> selectedProperties, NormalParams params)
+    {
+        for (VisibleReplay replay : selected)
+        {
+            for (String s : selectedProperties)
+            {
+                applyDelta(replay.replay, s, params.shift);
+            }
+        }
+
+        return null;
+    }
+
+    private static Error applyRandom(List<VisibleReplay> selected, List<String> selectedProperties, NormalParams params)
+    {
+        double minValue = params.randomMin;
+        double maxValue = params.randomMax;
+        double minRand = Math.min(minValue, maxValue);
+        double maxRand = Math.max(minValue, maxValue);
+        long seed = ThreadLocalRandom.current().nextLong();
+
+        for (VisibleReplay replay : selected)
+        {
+            long replaySeed = mix64(seed + (long) replay.o * 0x9e3779b97f4a7c15L);
+
+            for (int ci = 0; ci < selectedProperties.size(); ci++)
+            {
+                String s = selectedProperties.get(ci);
+                long channelSeed = mix64(replaySeed + (long) ci * 0xbf58476d1ce4e5b9L);
+                SplittableRandom random = new SplittableRandom(channelSeed);
+                double delta = minRand + random.nextDouble() * (maxRand - minRand);
+
+                applyDelta(replay.replay, s, delta);
+            }
+        }
+
+        return null;
+    }
+
+    private static Error applyFitHeight(List<VisibleReplay> selected, List<String> selectedProperties, NormalParams params)
+    {
+        if (!selectedProperties.contains("y"))
+        {
+            return Error.NEED_Y_CHANNEL;
+        }
+
+        if (params.groundProvider == null)
         {
             return Error.NO_WORLD;
         }
 
-        Map<Long, Double> groundCache = new HashMap<>();
+        return fitHeightToGround(selected, params.groundProvider);
+    }
 
+    private static Error applyLookAt(List<VisibleReplay> selected, NormalParams params)
+    {
+        if (params.lookAtTarget == null)
+        {
+            return Error.NEED_TARGET;
+        }
+
+        return lookAt(selected, params.lookAtTarget);
+    }
+
+    private static Error fitHeightToGround(List<VisibleReplay> selected, GroundProvider groundProvider)
+    {
         for (VisibleReplay replay : selected)
         {
             KeyframeChannel xChannel = (KeyframeChannel) replay.replay.keyframes.get("x");
@@ -392,13 +417,13 @@ public class ReplayBatchProcessor
 
             if (xChannel == null || yChannel == null || zChannel == null)
             {
-                continue;
+                return Error.NEED_POSITION_CHANNELS;
             }
 
             double x = xChannel.getFactory().getY(xChannel.interpolate(0F));
             double y = yChannel.getFactory().getY(yChannel.interpolate(0F));
             double z = zChannel.getFactory().getY(zChannel.interpolate(0F));
-            double groundY = getGroundY(world, groundCache, x, z);
+            double groundY = groundProvider.getGroundY(x, z);
 
             if (!Double.isNaN(groundY))
             {
@@ -409,33 +434,119 @@ public class ReplayBatchProcessor
         return null;
     }
 
-    private static double getGroundY(World world, Map<Long, Double> cache, double x, double z)
+    private static Error lookAt(List<VisibleReplay> selected, Replay target)
     {
-        int bx = (int) Math.floor(x);
-        int bz = (int) Math.floor(z);
-        long key = (((long) bx) << 32) ^ (bz & 0xffffffffL);
+        KeyframeChannel targetX = (KeyframeChannel) target.keyframes.get("x");
+        KeyframeChannel targetY = (KeyframeChannel) target.keyframes.get("y");
+        KeyframeChannel targetZ = (KeyframeChannel) target.keyframes.get("z");
 
-        Double cached = cache.get(key);
-
-        if (cached != null)
+        if (targetX == null || targetY == null || targetZ == null)
         {
-            return cached;
+            return Error.NEED_POSITION_CHANNELS;
         }
 
-        double top = world.getTopY() + 5;
-        Vec3d pos = new Vec3d(x, top, z);
-        BlockHitResult result = RayTracing.rayTrace(world, pos, new Vec3d(0D, -1D, 0D), top - world.getBottomY() + 5D);
-
-        double y = Double.NaN;
-
-        if (result != null && result.getType() != HitResult.Type.MISS)
+        for (VisibleReplay replay : selected)
         {
-            y = result.getPos().y;
+            if (replay.replay == target)
+            {
+                continue;
+            }
+
+            KeyframeChannel srcX = (KeyframeChannel) replay.replay.keyframes.get("x");
+            KeyframeChannel srcY = (KeyframeChannel) replay.replay.keyframes.get("y");
+            KeyframeChannel srcZ = (KeyframeChannel) replay.replay.keyframes.get("z");
+
+            if (srcX == null || srcY == null || srcZ == null)
+            {
+                return Error.NEED_POSITION_CHANNELS;
+            }
+
+            KeyframeChannel yaw = (KeyframeChannel) replay.replay.keyframes.get("yaw");
+            KeyframeChannel pitch = (KeyframeChannel) replay.replay.keyframes.get("pitch");
+
+            if (yaw == null || pitch == null)
+            {
+                continue;
+            }
+
+            applyLookAtToChannel(yaw, srcX, srcY, srcZ, targetX, targetY, targetZ, true);
+            applyLookAtToChannel(pitch, srcX, srcY, srcZ, targetX, targetY, targetZ, false);
+
+            KeyframeChannel headYaw = (KeyframeChannel) replay.replay.keyframes.get("headYaw");
+            if (headYaw != null)
+            {
+                applyLookAtToChannel(headYaw, srcX, srcY, srcZ, targetX, targetY, targetZ, true);
+            }
+
+            KeyframeChannel bodyYaw = (KeyframeChannel) replay.replay.keyframes.get("bodyYaw");
+            if (bodyYaw != null)
+            {
+                applyLookAtToChannel(bodyYaw, srcX, srcY, srcZ, targetX, targetY, targetZ, true);
+            }
         }
 
-        cache.put(key, y);
+        return null;
+    }
 
-        return y;
+    private static void applyLookAtToChannel(KeyframeChannel channel, KeyframeChannel srcX, KeyframeChannel srcY, KeyframeChannel srcZ, KeyframeChannel targetX, KeyframeChannel targetY, KeyframeChannel targetZ, boolean yaw)
+    {
+        List keyframes = channel.getKeyframes();
+
+        if (keyframes.isEmpty())
+        {
+            double value = computeLookAtValue(0F, srcX, srcY, srcZ, targetX, targetY, targetZ, yaw);
+            channel.insert(0F, channel.getFactory().yToValue(value));
+            return;
+        }
+
+        for (int i = 0; i < keyframes.size(); i++)
+        {
+            Keyframe kf = (Keyframe) keyframes.get(i);
+            float tick = (float) kf.getTick();
+            double value = computeLookAtValue(tick, srcX, srcY, srcZ, targetX, targetY, targetZ, yaw);
+            kf.setValue(kf.getFactory().yToValue(value));
+        }
+    }
+
+    private static double computeLookAtValue(float tick, KeyframeChannel srcX, KeyframeChannel srcY, KeyframeChannel srcZ, KeyframeChannel targetX, KeyframeChannel targetY, KeyframeChannel targetZ, boolean yaw)
+    {
+        double sx = srcX.getFactory().getY(srcX.interpolate(tick));
+        double sy = srcY.getFactory().getY(srcY.interpolate(tick));
+        double sz = srcZ.getFactory().getY(srcZ.interpolate(tick));
+        double tx = targetX.getFactory().getY(targetX.interpolate(tick));
+        double ty = targetY.getFactory().getY(targetY.interpolate(tick));
+        double tz = targetZ.getFactory().getY(targetZ.interpolate(tick));
+
+        double dx = tx - sx;
+        double dy = ty - sy;
+        double dz = tz - sz;
+
+        if (yaw)
+        {
+            double angle = Math.atan2(dz, dx) * (180D / Math.PI) - 90D;
+            return wrapDegrees(angle);
+        }
+
+        double h = Math.sqrt(dx * dx + dz * dz);
+        double angle = -Math.atan2(dy, h) * (180D / Math.PI);
+
+        return wrapDegrees(angle);
+    }
+
+    private static double wrapDegrees(double angle)
+    {
+        angle = angle % 360D;
+
+        if (angle >= 180D)
+        {
+            angle -= 360D;
+        }
+        else if (angle < -180D)
+        {
+            angle += 360D;
+        }
+
+        return angle;
     }
 
     private static void applyDelta(Replay replay, String id, double delta)

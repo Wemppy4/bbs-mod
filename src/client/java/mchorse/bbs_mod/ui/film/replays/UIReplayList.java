@@ -39,6 +39,7 @@ import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.UIPanelBase;
 import mchorse.bbs_mod.ui.framework.elements.context.UIContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIList;
@@ -79,6 +80,7 @@ import org.joml.Vector3d;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -109,8 +111,8 @@ public class UIReplayList extends UIList<ReplayListEntry>
         public String expression = "v";
         public List<String> properties = new ArrayList<>(Arrays.asList("x"));
         public boolean advanced;
-        public boolean fitHeight;
         public boolean fill = false;
+        public int lookAtTarget = -1;
 
         public NormalOperation operation = NormalOperation.RANDOM;
         public double randomMin = -1;
@@ -1148,15 +1150,6 @@ public class UIReplayList extends UIList<ReplayListEntry>
 
             List<String> selectedProperties = new ArrayList<>(this.properties.getCurrent());
 
-            if (selectedProperties.isEmpty())
-            {
-                context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NO_CHANNELS);
-
-                return false;
-            }
-
-            PROCESS_STATE.properties = new ArrayList<>(selectedProperties);
-
             List<ReplayBatchProcessor.VisibleReplay> visible = this.collectVisibleReplays();
 
             if (visible.isEmpty())
@@ -1170,6 +1163,15 @@ public class UIReplayList extends UIList<ReplayListEntry>
 
             if (isAdvanced)
             {
+                if (selectedProperties.isEmpty())
+                {
+                    context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NO_CHANNELS);
+
+                    return false;
+                }
+
+                PROCESS_STATE.properties = new ArrayList<>(selectedProperties);
+
                 if (!this.applyAdvanced(context, visible, selectedProperties))
                 {
                     return false;
@@ -1177,6 +1179,29 @@ public class UIReplayList extends UIList<ReplayListEntry>
             }
             else
             {
+                NormalOperation operation = this.normal.getSelectedOperation();
+
+                if (operation == null)
+                {
+                    operation = NormalOperation.RANDOM;
+                }
+
+                if (operation != NormalOperation.LOOK_AT && selectedProperties.isEmpty())
+                {
+                    context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NO_CHANNELS);
+
+                    return false;
+                }
+
+                if (operation == NormalOperation.FIT_HEIGHT && !selectedProperties.contains("y"))
+                {
+                    context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NEED_Y_CHANNEL);
+
+                    return false;
+                }
+
+                PROCESS_STATE.properties = new ArrayList<>(selectedProperties);
+
                 if (!this.applyNormal(context, visible, selectedProperties))
                 {
                     return false;
@@ -1239,13 +1264,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
 
         private boolean applyNormal(UIContext context, List<ReplayBatchProcessor.VisibleReplay> selected, List<String> selectedProperties)
         {
-            NormalOperation operation = null;
-            mchorse.bbs_mod.ui.utils.Label<NormalOperation> operationLabel = this.normal.operations.getCurrentFirst();
-
-            if (operationLabel != null)
-            {
-                operation = operationLabel.value;
-            }
+            NormalOperation operation = this.normal.getSelectedOperation();
 
             if (operation == null)
             {
@@ -1278,7 +1297,8 @@ public class UIReplayList extends UIList<ReplayListEntry>
             params.size = PROCESS_STATE.size;
             params.shift = PROCESS_STATE.shift;
             params.fill = PROCESS_STATE.fill;
-            params.fitHeight = PROCESS_STATE.fitHeight;
+            params.lookAtTarget = this.resolveLookAtTargetReplay();
+            params.groundProvider = operation == NormalOperation.FIT_HEIGHT ? this.createGroundProvider() : null;
 
             ReplayBatchProcessor.Error error = ReplayBatchProcessor.applyNormal(selected, selectedProperties, operation.op, params);
 
@@ -1292,13 +1312,95 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NEED_THREE_CHANNELS);
                 return false;
             }
+            else if (error == ReplayBatchProcessor.Error.NEED_Y_CHANNEL)
+            {
+                context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NEED_Y_CHANNEL);
+                return false;
+            }
+            else if (error == ReplayBatchProcessor.Error.NEED_TARGET)
+            {
+                context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NO_TARGET);
+                return false;
+            }
             else if (error == ReplayBatchProcessor.Error.NO_WORLD)
             {
                 context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NO_WORLD);
                 return false;
             }
+            else if (error == ReplayBatchProcessor.Error.NEED_POSITION_CHANNELS)
+            {
+                context.notifyError(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_ERROR_NEED_THREE_CHANNELS);
+                return false;
+            }
 
             return error == null;
+        }
+
+        private ReplayBatchProcessor.GroundProvider createGroundProvider()
+        {
+            MinecraftClient mc = MinecraftClient.getInstance();
+            World world = mc.world;
+
+            if (world == null)
+            {
+                return null;
+            }
+
+            HashMap<Long, Double> cache = new HashMap<>();
+
+            return (x, z) ->
+            {
+                int bx = (int) Math.floor(x);
+                int bz = (int) Math.floor(z);
+                long key = (((long) bx) << 32) ^ (bz & 0xffffffffL);
+
+                Double cached = cache.get(key);
+
+                if (cached != null)
+                {
+                    return cached;
+                }
+
+                double top = world.getTopY() + 5;
+                Vec3d pos = new Vec3d(x, top, z);
+                BlockHitResult result = RayTracing.rayTrace(world, pos, new Vec3d(0D, -1D, 0D), top - world.getBottomY() + 5D);
+
+                double y = Double.NaN;
+
+                if (result != null && result.getType() != HitResult.Type.MISS)
+                {
+                    y = result.getPos().y;
+                }
+
+                cache.put(key, y);
+
+                return y;
+            };
+        }
+
+        private Replay resolveLookAtTargetReplay()
+        {
+            if (PROCESS_STATE.operation != NormalOperation.LOOK_AT)
+            {
+                return null;
+            }
+
+            Film film = UIReplayList.this.panel.getData();
+
+            if (film == null)
+            {
+                return null;
+            }
+
+            List<Replay> replays = film.replays.getList();
+            int index = PROCESS_STATE.lookAtTarget;
+
+            if (index < 0 || index >= replays.size())
+            {
+                return null;
+            }
+
+            return replays.get(index);
         }
 
         private class UINormalProcessView extends UIElement
@@ -1310,8 +1412,8 @@ public class UIReplayList extends UIList<ReplayListEntry>
             private final UITrackpad lineOffset;
             private final UITrackpad size;
             private final UITrackpad shift;
-            private final UIToggle fitHeight;
             private final UIToggle fill;
+            private final UIButton lookAtTarget;
 
             private final UIElement params = new UIElement();
             private final UIText hint = new UIText(IKey.EMPTY).padding(0, 0).lineHeight(10);
@@ -1360,16 +1462,16 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 this.shift.limit(-10000, 10000, false);
                 this.shift.setValue(PROCESS_STATE.shift);
 
-                this.fitHeight = new UIToggle(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_PARAM_FIT_HEIGHT, PROCESS_STATE.fitHeight, (b) -> PROCESS_STATE.fitHeight = b.getValue());
-                this.fitHeight.tooltip(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_PARAM_FIT_HEIGHT_TOOLTIP);
-
                 this.fill = new UIToggle(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_PARAM_FILL, PROCESS_STATE.fill, (b) -> PROCESS_STATE.fill = b.getValue());
                 this.fill.tooltip(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_PARAM_FILL_TOOLTIP);
+
+                this.lookAtTarget = new UIButton(IKey.EMPTY, (b) -> this.openLookAtTargetMenu());
+                this.lookAtTarget.tooltip(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_PARAM_LOOK_AT_TARGET_TOOLTIP);
 
                 int opsHeight = UIConstants.CONTROL_HEIGHT * NormalOperation.values().length;
 
                 this.operations.relative(this).xy(0, 0).w(1F).h(opsHeight);
-                this.params.relative(this.operations).y(1F, UIConstants.MARGIN * 2).w(1F).h(UIConstants.CONTROL_HEIGHT * 4 + UIConstants.MARGIN * 3);
+                this.params.relative(this.operations).y(1F, UIConstants.MARGIN * 2).w(1F).h(UIConstants.CONTROL_HEIGHT * 2 + UIConstants.MARGIN);
                 this.hint.relative(this.params).y(1F, UIConstants.MARGIN).w(1F);
 
                 this.add(this.operations, this.params, this.hint);
@@ -1389,6 +1491,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 }
 
                 this.params.removeAll();
+                int rows = 0;
 
                 if (operation == NormalOperation.RANDOM)
                 {
@@ -1397,6 +1500,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
                     UIElement row = UI.row(minLabel, this.randomMin, maxLabel, this.randomMax);
                     row.relative(this.params).w(1F).h(UIConstants.CONTROL_HEIGHT).resize();
                     this.params.add(row);
+                    rows = 1;
                     this.hint.text(operation.hint);
                 }
                 else if (operation == NormalOperation.LINE)
@@ -1405,6 +1509,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
                     UIElement row = UI.row(offsetLabel, this.lineOffset);
                     row.relative(this.params).w(1F).h(UIConstants.CONTROL_HEIGHT).resize();
                     this.params.add(row);
+                    rows = 1;
                     this.hint.text(operation.hint);
                 }
                 else if (operation == NormalOperation.SQUARE || operation == NormalOperation.SQUARE_OUTLINE)
@@ -1413,6 +1518,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
                     UIElement row1 = UI.row(sizeLabel, this.size);
                     row1.relative(this.params).w(1F).h(UIConstants.CONTROL_HEIGHT).resize();
                     this.params.add(row1);
+                    rows = 1;
                     this.hint.text(operation.hint);
                 }
                 else if (operation == NormalOperation.CUBE || operation == NormalOperation.SPHERE)
@@ -1421,6 +1527,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
                     UIElement row = UI.row(sizeLabel, this.size);
                     row.relative(this.params).w(1F).h(UIConstants.CONTROL_HEIGHT).resize();
                     this.params.add(row);
+                    rows = 1;
                     this.hint.text(operation.hint);
                 }
                 else if (operation == NormalOperation.CIRCLE || operation == NormalOperation.CIRCLE_OUTLINE)
@@ -1429,6 +1536,21 @@ public class UIReplayList extends UIList<ReplayListEntry>
                     UIElement row = UI.row(sizeLabel, this.size);
                     row.relative(this.params).w(1F).h(UIConstants.CONTROL_HEIGHT).resize();
                     this.params.add(row);
+                    rows = 1;
+                    this.hint.text(operation.hint);
+                }
+                else if (operation == NormalOperation.FIT_HEIGHT)
+                {
+                    this.hint.text(operation.hint);
+                }
+                else if (operation == NormalOperation.LOOK_AT)
+                {
+                    UILabel targetLabel = this.paramLabel(UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_PARAM_LOOK_AT_TARGET, 56);
+                    this.updateLookAtTargetLabel();
+                    UIElement row = UI.row(targetLabel, this.lookAtTarget);
+                    row.relative(this.params).w(1F).h(UIConstants.CONTROL_HEIGHT).resize();
+                    this.params.add(row);
+                    rows = 1;
                     this.hint.text(operation.hint);
                 }
                 else if (operation == NormalOperation.SHIFT)
@@ -1437,6 +1559,7 @@ public class UIReplayList extends UIList<ReplayListEntry>
                     UIElement row = UI.row(shiftLabel, this.shift);
                     row.relative(this.params).w(1F).h(UIConstants.CONTROL_HEIGHT).resize();
                     this.params.add(row);
+                    rows = 1;
                     this.hint.text(operation.hint);
                 }
                 else
@@ -1451,13 +1574,76 @@ public class UIReplayList extends UIList<ReplayListEntry>
                 {
                     this.fill.relative(this.params).x(0).y(y).w(1F).h(UIConstants.CONTROL_HEIGHT);
                     this.params.add(this.fill);
-                    y += UIConstants.CONTROL_HEIGHT + UIConstants.MARGIN;
+                    rows += 1;
                 }
 
-                this.fitHeight.relative(this.params).x(0).y(y).w(1F).h(UIConstants.CONTROL_HEIGHT);
-                this.params.add(this.fitHeight);
-
+                int height = rows <= 0 ? 0 : rows * UIConstants.CONTROL_HEIGHT + (rows - 1) * UIConstants.MARGIN;
+                this.params.h(height);
                 this.resize();
+            }
+
+            private NormalOperation getSelectedOperation()
+            {
+                mchorse.bbs_mod.ui.utils.Label<NormalOperation> operationLabel = this.operations.getCurrentFirst();
+
+                return operationLabel == null ? null : operationLabel.value;
+            }
+
+            private void updateLookAtTargetLabel()
+            {
+                Film film = UIReplayList.this.panel.getData();
+
+                if (film == null)
+                {
+                    this.lookAtTarget.label = IKey.constant("-");
+                    return;
+                }
+
+                List<Replay> replays = film.replays.getList();
+                int index = PROCESS_STATE.lookAtTarget;
+
+                if (index < 0 || index >= replays.size())
+                {
+                    this.lookAtTarget.label = IKey.constant("-");
+                    return;
+                }
+
+                this.lookAtTarget.label = IKey.constant(replays.get(index).getName());
+            }
+
+            private void openLookAtTargetMenu()
+            {
+                UIContext context = this.getContext();
+
+                if (context == null)
+                {
+                    return;
+                }
+
+                Film film = UIReplayList.this.panel.getData();
+
+                if (film == null)
+                {
+                    return;
+                }
+
+                context.replaceContextMenu((manager) ->
+                {
+                    manager.autoKeys();
+
+                    List<Replay> replays = film.replays.getList();
+
+                    for (int i = 0; i < replays.size(); i++)
+                    {
+                        int index = i;
+                        Replay replay = replays.get(i);
+                        manager.action(Icons.FILM, IKey.constant(replay.getName()), () ->
+                        {
+                            PROCESS_STATE.lookAtTarget = index;
+                            this.updateLookAtTargetLabel();
+                        });
+                    }
+                });
             }
 
             private UILabel paramLabel(IKey key, int width)
@@ -1499,6 +1685,8 @@ public class UIReplayList extends UIList<ReplayListEntry>
         CIRCLE(ReplayBatchProcessor.Operation.CIRCLE, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_OP_CIRCLE, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_HINT_SHAPES, Icons.CIRCLE),
         CIRCLE_OUTLINE(ReplayBatchProcessor.Operation.CIRCLE_OUTLINE, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_OP_CIRCLE_OUTLINE, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_HINT_SHAPES, Icons.OUTLINE_SPHERE),
         SPHERE(ReplayBatchProcessor.Operation.SPHERE, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_OP_SPHERE, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_HINT_SPHERE, Icons.SPHERE),
+        FIT_HEIGHT(ReplayBatchProcessor.Operation.FIT_HEIGHT, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_OP_FIT_HEIGHT, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_HINT_FIT_HEIGHT, Icons.ARROW_DOWN),
+        LOOK_AT(ReplayBatchProcessor.Operation.LOOK_AT, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_OP_LOOK_AT, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_HINT_LOOK_AT, Icons.LOOKING),
         SHIFT(ReplayBatchProcessor.Operation.SHIFT, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_OP_SHIFT, UIKeys.SCENE_REPLAYS_CONTEXT_PROCESS_HINT_SHIFT, Icons.SHIFT_TO);
 
         public final ReplayBatchProcessor.Operation op;
