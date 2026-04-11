@@ -274,6 +274,10 @@ public class UIKeys
     public static final IKey FILM_LAYOUT_UNLOCK = L10n.lang("bbs.ui.film.layout_unlock");
     public static final IKey FILM_OPEN_HISTORY = L10n.lang("bbs.ui.film.open_history");
     public static final IKey FILM_OPTIONS = L10n.lang("bbs.ui.film.options");
+    public static final IKey FILM_TABS_NEW_TAB = L10n.lang("bbs.ui.film.tabs.new_tab");
+    public static final IKey FILM_TABS_CONTEXT_CLOSE_OTHERS = L10n.lang("bbs.ui.film.tabs.context.close_others");
+    public static final IKey FILM_TABS_CONTEXT_CLOSE_LEFT = L10n.lang("bbs.ui.film.tabs.context.close_left");
+    public static final IKey FILM_TABS_CONTEXT_CLOSE_RIGHT = L10n.lang("bbs.ui.film.tabs.context.close_right");
     public static final IKey FILM_OPEN_REPLAY_EDITOR = L10n.lang("bbs.ui.film.open_replay_editor");
     public static final IKey FILM_SWAP_SMALL_PANELS = L10n.lang("bbs.ui.film.swap_small_panels");
     public static final IKey FILM_RECORDING = L10n.lang("bbs.ui.film.recording");

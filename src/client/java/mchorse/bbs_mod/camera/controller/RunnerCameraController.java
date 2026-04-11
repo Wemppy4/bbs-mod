@@ -62,6 +62,12 @@ public class RunnerCameraController extends CameraWorkCameraController
     {
         if (this.context.playing && this.manual == null)
         {
+            if (this.context.clips == null)
+            {
+                this.setPlaying(false);
+                return;
+            }
+
             this.ticks += 1;
 
             if (this.ticks >= this.context.clips.calculateDuration())

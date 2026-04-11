@@ -257,6 +257,11 @@ public class UIFilmController extends UIElement
 
     public IEntity getCurrentEntity()
     {
+        if (this.panel.getData() == null)
+        {
+            return null;
+        }
+
         Replay r = this.panel.replayEditor.getReplay();
 
         if (r == null)

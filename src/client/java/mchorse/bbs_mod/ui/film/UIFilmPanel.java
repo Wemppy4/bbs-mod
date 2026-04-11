@@ -103,6 +103,11 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private final Position position = new Position(0, 0, 0, 0, 0);
     private final Position lastPosition = new Position(0, 0, 0, 0, 0);
 
+    public List<FilmTab> tabs = new ArrayList<>();
+    public int currentTab = -1;
+    public UIFilmTabs tabBar;
+    public UIFilmSelectionPanel selectionPanel;
+
     public UIElement main;
     public UIElement editArea;
     private final List<UIDraggable> splitterHandles = new ArrayList<>();
@@ -164,6 +169,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private static final int EDITOR_MIN_SIZE_FOR_PX_HANDLES = 10;
     /** Top offset (px) for parameters panels when layout is unlocked (space for drag icon). Used for lock button size too. */
     public static final int EDIT_PANEL_TOP_OFFSET_PX = 20;
+    public static final int FILM_TABS_HEIGHT_PX = 18;
 
     private String draggingPanelId;
     private String dropTargetPanelId;
@@ -281,6 +287,9 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             UIUtils.playClick();
         }).category(editor);
 
+        this.tabBar = new UIFilmTabs(this);
+        this.selectionPanel = new UIFilmSelectionPanel(this);
+
         this.fill(null);
 
         this.setupEditorFlex(false);
@@ -330,6 +339,36 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         BBSSettings.editorPreviewCustomWidth.postCallback(refreshPreviewOnVideoResolution);
         BBSSettings.editorPreviewCustomHeight.postCallback(refreshPreviewOnVideoResolution);
         BBSSettings.editorPreviewResolutionScale.postCallback(refreshPreviewOnVideoResolution);
+
+        if (this.openOverlay != null)
+        {
+            this.openOverlay.removeFromParent();
+        }
+
+        this.overrideOpenDataManagerKeybind();
+
+        this.iconBar.relative(this).x(1F, -20).y(FILM_TABS_HEIGHT_PX).w(20).h(1F, -FILM_TABS_HEIGHT_PX).column(0).stretch();
+        this.editor.relative(this).y(FILM_TABS_HEIGHT_PX).wTo(this.iconBar.area).h(1F, -FILM_TABS_HEIGHT_PX);
+
+        this.tabBar.relative(this).w(1F).h(FILM_TABS_HEIGHT_PX);
+        this.selectionPanel.relative(this).y(FILM_TABS_HEIGHT_PX).wTo(this.iconBar.area).h(1F, -FILM_TABS_HEIGHT_PX);
+
+        this.add(this.tabBar);
+        this.add(this.selectionPanel);
+
+        this.addTab();
+    }
+
+    private void overrideOpenDataManagerKeybind()
+    {
+        for (mchorse.bbs_mod.ui.utils.keys.Keybind keybind : this.keys().keybinds)
+        {
+            if (keybind.getLabel() == UIKeys.PANELS_KEYS_OPEN_DATA_MANAGER)
+            {
+                keybind.callback = this::addTab;
+                break;
+            }
+        }
     }
 
     public boolean isLayoutLocked()
@@ -341,6 +380,155 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public int getEditPanelTopOffsetPx()
     {
         return this.layoutLocked ? 0 : EDIT_PANEL_TOP_OFFSET_PX;
+    }
+
+    public void addTab()
+    {
+        this.tabs.add(new FilmTab(null));
+        this.switchTab(this.tabs.size() - 1);
+    }
+
+    public void closeTab(int index)
+    {
+        if (this.tabs.size() <= 1)
+        {
+            // If it's the last tab, just clear it
+            if (this.currentTab == 0 && this.data != null)
+            {
+                this.save();
+                this.fill(null);
+            }
+            this.tabs.get(0).filmId = null;
+            this.updateTabVisibility();
+            this.tabBar.sync();
+            return;
+        }
+
+        if (this.currentTab == index && this.data != null)
+        {
+            this.save();
+        }
+
+        this.tabs.remove(index);
+
+        if (this.currentTab >= index)
+        {
+            this.currentTab = Math.max(0, this.currentTab - 1);
+        }
+
+        this.switchTab(this.currentTab, true);
+    }
+
+    public void closeOtherTabs(int index)
+    {
+        this.closeTabsKeeping((i) -> i == index, index);
+    }
+
+    public void closeTabsLeft(int index)
+    {
+        this.closeTabsKeeping((i) -> i >= index, index);
+    }
+
+    public void closeTabsRight(int index)
+    {
+        this.closeTabsKeeping((i) -> i <= index, index);
+    }
+
+    private void closeTabsKeeping(java.util.function.IntPredicate keep, int targetIndex)
+    {
+        if (this.tabs.size() <= 1 || targetIndex < 0 || targetIndex >= this.tabs.size())
+        {
+            return;
+        }
+
+        if (this.data != null)
+        {
+            this.save();
+        }
+
+        FilmTab target = this.tabs.get(targetIndex);
+
+        java.util.ArrayList<FilmTab> kept = new java.util.ArrayList<>();
+
+        for (int i = 0; i < this.tabs.size(); i++)
+        {
+            if (keep.test(i))
+            {
+                kept.add(this.tabs.get(i));
+            }
+        }
+
+        if (kept.isEmpty())
+        {
+            kept.add(target);
+        }
+
+        this.tabs.clear();
+        this.tabs.addAll(kept);
+
+        int newIndex = this.tabs.indexOf(target);
+
+        if (newIndex < 0)
+        {
+            newIndex = 0;
+        }
+
+        this.currentTab = -1;
+        this.switchTab(newIndex, true);
+    }
+
+    public void switchTab(int index)
+    {
+        this.switchTab(index, false);
+    }
+
+    private void switchTab(int index, boolean force)
+    {
+        if (!force && this.currentTab == index)
+        {
+            return;
+        }
+
+        if (this.currentTab >= 0 && this.currentTab < this.tabs.size() && this.data != null)
+        {
+            this.save();
+            this.tabs.get(this.currentTab).filmId = this.data.getId();
+        }
+
+        this.currentTab = index;
+        FilmTab tab = this.tabs.get(index);
+
+        if (tab.filmId == null)
+        {
+            this.fill(null);
+            this.updateTabVisibility();
+            this.tabBar.sync();
+        }
+        else
+        {
+            this.requestData(tab.filmId);
+            // requestData calls fill() which we will hook into to update visibility
+        }
+    }
+
+    public void updateTabVisibility()
+    {
+        boolean hasFilm = this.currentTab >= 0 && this.currentTab < this.tabs.size() && this.tabs.get(this.currentTab).filmId != null;
+
+        this.main.setVisible(hasFilm);
+
+        for (UIDraggable handle : this.dragHandlesById.values())
+        {
+            handle.setVisible(hasFilm && !this.layoutLocked);
+        }
+
+        if (!hasFilm)
+        {
+            this.overlay.namesList.setCurrentFile(null);
+        }
+
+        this.selectionPanel.setVisible(!hasFilm);
+        this.tabBar.sync();
     }
 
     private void toggleLayoutLock()
@@ -883,6 +1071,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public void resize()
     {
         super.resize();
+        this.updateTabVisibility();
 
         if (this.editor.area.w >= EDITOR_MIN_SIZE_FOR_PX_HANDLES && this.editor.area.h >= EDITOR_MIN_SIZE_FOR_PX_HANDLES)
         {
@@ -1426,6 +1615,13 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         {
             this.filmUserActivity.reset();
         }
+
+        if (this.currentTab >= 0 && this.currentTab < this.tabs.size())
+        {
+            this.tabs.get(this.currentTab).filmId = data == null ? null : data.getId();
+        }
+
+        this.updateTabVisibility();
     }
 
     public void undo()
