@@ -86,11 +86,5 @@ public class UIReplaysListPanel extends UIElement
         this.updateButtonsState();
         context.batcher.box(this.bar.area.x, this.bar.area.y, this.bar.area.ex(), this.bar.area.ey(), Colors.A100);
         super.render(context);
-
-        if (this.replays.getList().size() < 3)
-        {
-            this.rightClickAnchorArea.set(this.replays.area.x, this.replays.area.ey() - 90, this.replays.area.w, 0);
-            UIDataUtils.renderRightClickHere(context, this.rightClickAnchorArea);
-        }
     }
 }

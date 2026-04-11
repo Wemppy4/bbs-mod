@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
 public class UIDataPathList extends UIList<DataPath>
@@ -33,43 +34,36 @@ public class UIDataPathList extends UIList<DataPath>
     private Icon fileIcon = Icons.FILE;
 
     private DataPath previousPath;
+    private boolean openOnSingleClick = true;
+    private Consumer<List<DataPath>> openCallback;
+    private ArrayList<DataPath> openArgs = new ArrayList<>(1);
 
     public UIDataPathList(Consumer<List<DataPath>> callback)
     {
         super(null);
 
+        this.openCallback = callback;
         this.scroll.scrollItemSize = 16;
-        this.callback = (l) -> this.fileCallback(callback, l);
     }
 
-    private void fileCallback(Consumer<List<DataPath>> callback, List<DataPath> strings)
+    public UIDataPathList openOnSingleClick(boolean openOnSingleClick)
     {
-        DataPath dataPath = strings.get(0);
+        this.openOnSingleClick = openOnSingleClick;
 
-        if (dataPath.folder)
+        return this;
+    }
+
+    private void open(DataPath dataPath)
+    {
+        if (this.openCallback == null)
         {
-            if (Objects.equals(this.previousPath, dataPath))
-            {
-                DataPath newPath;
-
-                if (dataPath.getLast().equals(".."))
-                {
-                    newPath = this.path.getParent();
-                }
-                else
-                {
-                    newPath = dataPath;
-                }
-
-                this.goTo(newPath);
-            }
-        }
-        else
-        {
-            callback.accept(strings);
+            return;
         }
 
-        this.previousPath = dataPath.copy();
+        this.openArgs.clear();
+        this.openArgs.add(dataPath);
+
+        this.openCallback.accept(this.openArgs);
     }
 
     public void setFileIcon(Icon icon)
@@ -123,6 +117,38 @@ public class UIDataPathList extends UIList<DataPath>
         this.filter("");
         this.deselect();
         this.updateStrings();
+    }
+
+    public void activateSelection()
+    {
+        DataPath dataPath = this.getCurrentFirst();
+
+        if (dataPath == null)
+        {
+            return;
+        }
+
+        if (dataPath.folder)
+        {
+            DataPath newPath;
+
+            if (dataPath.getLast().equals(".."))
+            {
+                newPath = this.path.getParent();
+            }
+            else
+            {
+                newPath = dataPath;
+            }
+
+            this.goTo(newPath);
+        }
+        else
+        {
+            this.open(dataPath);
+        }
+
+        this.previousPath = dataPath.copy();
     }
 
     private void updateStrings()
@@ -240,6 +266,72 @@ public class UIDataPathList extends UIList<DataPath>
     }
 
     /* UIList overrides */
+
+    @Override
+    public boolean subMouseClicked(UIContext context)
+    {
+        if (this.scroll.mouseClicked(context))
+        {
+            return true;
+        }
+
+        if (this.area.isInside(context) && context.mouseButton == 0)
+        {
+            int index = this.getIndexAtCursor(context);
+
+            if (this.exists(index))
+            {
+                this.applySelectionOnClick(index);
+
+                DataPath dataPath = this.list.get(index);
+
+                if (dataPath.folder)
+                {
+                    if (Objects.equals(this.previousPath, dataPath))
+                    {
+                        DataPath newPath;
+
+                        if (dataPath.getLast().equals(".."))
+                        {
+                            newPath = this.path.getParent();
+                        }
+                        else
+                        {
+                            newPath = dataPath;
+                        }
+
+                        this.goTo(newPath);
+                    }
+                }
+                else if (this.openOnSingleClick || Objects.equals(this.previousPath, dataPath))
+                {
+                    this.open(dataPath);
+                }
+
+                this.previousPath = dataPath.copy();
+
+                return true;
+            }
+        }
+
+        return super.subMouseClicked(context);
+    }
+
+    @Override
+    protected boolean mouseClickedContextMenu(UIContext context)
+    {
+        if (this.area.isInside(context) && context.mouseButton == 1 && !context.hasContextMenu())
+        {
+            int index = this.getIndexAtCursor(context);
+
+            if (this.exists(index) && !this.current.contains(index))
+            {
+                this.setIndex(index);
+            }
+        }
+
+        return super.mouseClickedContextMenu(context);
+    }
 
     @Override
     protected boolean sortElements()

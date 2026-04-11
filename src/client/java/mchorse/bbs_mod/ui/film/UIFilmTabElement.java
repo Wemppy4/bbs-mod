@@ -25,8 +25,8 @@ public class UIFilmTabElement extends UIClickable<UIFilmTabElement>
 
     private IKey label;
     private Icon icon;
-    private int index;
-    private UIFilmPanel panel;
+    private FilmTab tab;
+    private final UIFilmPanel panel;
     public UIIcon close;
 
     public UIFilmTabElement(UIFilmPanel panel, int h)
@@ -38,9 +38,9 @@ public class UIFilmTabElement extends UIClickable<UIFilmTabElement>
         this.label = IKey.raw("");
         this.icon = Icons.SEARCH;
 
-        this.callback = (b) -> this.panel.switchTab(this.index);
+        this.callback = (b) -> this.panel.switchTab(this.tab);
 
-        this.close = new UIIcon(Icons.CLOSE, (b) -> this.panel.closeTab(this.index));
+        this.close = new UIIcon(Icons.CLOSE, (b) -> this.panel.closeTab(this.tab));
         this.close.relative(this).x(1F, -(CLOSE_SIZE + CLOSE_GAP + RIGHT_GAP)).y(0.5F).w(CLOSE_SIZE).h(CLOSE_SIZE).anchor(0, 0.5F);
 
         this.add(this.close);
@@ -58,26 +58,26 @@ public class UIFilmTabElement extends UIClickable<UIFilmTabElement>
         return TEXT_X + font.getWidth(label.get()) + CLOSE_ZONE + RIGHT_GAP;
     }
 
-    public void setTab(int index, IKey label, Icon icon)
+    public void setTab(FilmTab tab, IKey label, Icon icon)
     {
-        this.index = index;
+        this.tab = tab;
         this.label = label;
         this.icon = icon;
     }
 
     private void closeOtherTabs()
     {
-        this.panel.closeOtherTabs(this.index);
+        this.panel.closeOtherTabs(this.tab);
     }
 
     private void closeTabsLeft()
     {
-        this.panel.closeTabsLeft(this.index);
+        this.panel.closeTabsLeft(this.tab);
     }
 
     private void closeTabsRight()
     {
-        this.panel.closeTabsRight(this.index);
+        this.panel.closeTabsRight(this.tab);
     }
 
     @Override
@@ -91,7 +91,7 @@ public class UIFilmTabElement extends UIClickable<UIFilmTabElement>
     {
         if (this.area.isInside(context) && context.mouseButton == 2)
         {
-            this.panel.closeTab(this.index);
+            this.panel.closeTab(this.tab);
 
             return true;
         }
@@ -102,7 +102,7 @@ public class UIFilmTabElement extends UIClickable<UIFilmTabElement>
     @Override
     protected void renderSkin(UIContext context)
     {
-        boolean active = this.panel.currentTab == this.index;
+        boolean active = this.tab != null && this.tab == this.panel.getCurrentTab();
         boolean hover = this.hover;
 
         boolean showClose = active || hover;

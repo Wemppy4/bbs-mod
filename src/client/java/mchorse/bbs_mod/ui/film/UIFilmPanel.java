@@ -62,6 +62,7 @@ import mchorse.bbs_mod.ui.utils.context.ContextMenuManager;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.presets.UICopyPasteController;
 import mchorse.bbs_mod.utils.CollectionUtils;
+import mchorse.bbs_mod.utils.DataPath;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.PlayerUtils;
@@ -86,8 +87,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSupported, IUIOrbitKeysHandler, ICursor
@@ -382,25 +385,232 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         return this.layoutLocked ? 0 : EDIT_PANEL_TOP_OFFSET_PX;
     }
 
+    public FilmTab getCurrentTab()
+    {
+        return this.currentTab >= 0 && this.currentTab < this.tabs.size() ? this.tabs.get(this.currentTab) : null;
+    }
+
+    public boolean isNewTab(FilmTab tab)
+    {
+        return tab != null && tab.filmId == null;
+    }
+
+    public int findNewTabIndex()
+    {
+        for (int i = 0, c = this.tabs.size(); i < c; i++)
+        {
+            if (this.isNewTab(this.tabs.get(i)))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public boolean hasNewTab()
+    {
+        return this.findNewTabIndex() >= 0;
+    }
+
+    public boolean canAddNewTab()
+    {
+        return !this.hasNewTab();
+    }
+
     public void addTab()
     {
+        int index = this.findNewTabIndex();
+
+        if (index >= 0)
+        {
+            this.switchTab(index);
+
+            return;
+        }
+        
         this.tabs.add(new FilmTab(null));
         this.switchTab(this.tabs.size() - 1);
+    }
+
+    public void renameFilmId(String from, String to)
+    {
+        if (from == null || to == null || from.equals(to))
+        {
+            return;
+        }
+
+        if (this.data != null && from.equals(this.data.getId()))
+        {
+            this.data.setId(to);
+        }
+
+        boolean changed = false;
+
+        for (FilmTab tab : this.tabs)
+        {
+            if (from.equals(tab.filmId))
+            {
+                tab.filmId = to;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            this.tabBar.sync();
+        }
+    }
+
+    public void renameFilmFolder(String fromPath, String name)
+    {
+        if (fromPath == null || name == null || name.trim().isEmpty())
+        {
+            return;
+        }
+
+        DataPath from = new DataPath(fromPath);
+        DataPath parent = from.getParent();
+        String parentPath = parent.strings.isEmpty() ? "" : parent.toString() + "/";
+
+        String oldPrefix = from.toString() + "/";
+        String newPrefix = parentPath + name + "/";
+
+        boolean changed = false;
+
+        if (this.data != null)
+        {
+            String id = this.data.getId();
+
+            if (id != null && id.startsWith(oldPrefix))
+            {
+                this.data.setId(newPrefix + id.substring(oldPrefix.length()));
+            }
+        }
+
+        for (FilmTab tab : this.tabs)
+        {
+            if (tab.filmId != null && tab.filmId.startsWith(oldPrefix))
+            {
+                tab.filmId = newPrefix + tab.filmId.substring(oldPrefix.length());
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            this.tabBar.sync();
+        }
+    }
+
+    public void deleteFilmIds(Set<String> ids)
+    {
+        if (ids == null || ids.isEmpty())
+        {
+            return;
+        }
+
+        for (FilmTab tab : this.tabs)
+        {
+            if (tab.filmId != null && ids.contains(tab.filmId))
+            {
+                tab.filmId = null;
+            }
+        }
+
+        if (this.data != null && ids.contains(this.data.getId()))
+        {
+            this.fill(null);
+            return;
+        }
+
+        this.updateTabVisibility();
+        this.tabBar.sync();
+    }
+
+    public void deleteFilmFolders(Set<String> folderPaths)
+    {
+        if (folderPaths == null || folderPaths.isEmpty())
+        {
+            return;
+        }
+
+        for (FilmTab tab : this.tabs)
+        {
+            if (tab.filmId == null)
+            {
+                continue;
+            }
+
+            for (String folder : folderPaths)
+            {
+                if (folder == null || folder.isEmpty())
+                {
+                    continue;
+                }
+
+                String prefix = folder.endsWith("/") ? folder : folder + "/";
+
+                if (tab.filmId.startsWith(prefix))
+                {
+                    tab.filmId = null;
+                    break;
+                }
+            }
+        }
+
+        if (this.data != null)
+        {
+            String id = this.data.getId();
+
+            for (String folder : folderPaths)
+            {
+                if (folder == null || folder.isEmpty())
+                {
+                    continue;
+                }
+
+                String prefix = folder.endsWith("/") ? folder : folder + "/";
+
+                if (id != null && id.startsWith(prefix))
+                {
+                    this.fill(null);
+                    return;
+                }
+            }
+        }
+
+        this.updateTabVisibility();
+        this.tabBar.sync();
+    }
+
+    public void closeTab(FilmTab tab)
+    {
+        if (tab == null)
+        {
+            return;
+        }
+
+        int index = this.tabs.indexOf(tab);
+
+        if (index >= 0)
+        {
+            this.closeTab(index);
+        }
     }
 
     public void closeTab(int index)
     {
         if (this.tabs.size() <= 1)
         {
-            // If it's the last tab, just clear it
-            if (this.currentTab == 0 && this.data != null)
+            if (this.data != null)
             {
                 this.save();
-                this.fill(null);
             }
+
             this.tabs.get(0).filmId = null;
-            this.updateTabVisibility();
-            this.tabBar.sync();
+            this.currentTab = 0;
+            this.fill(null);
             return;
         }
 
@@ -410,6 +620,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         }
 
         this.tabs.remove(index);
+        this.tabBar.sync();
 
         if (this.currentTab >= index)
         {
@@ -424,14 +635,44 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         this.closeTabsKeeping((i) -> i == index, index);
     }
 
+    public void closeOtherTabs(FilmTab tab)
+    {
+        int index = this.tabs.indexOf(tab);
+
+        if (index >= 0)
+        {
+            this.closeOtherTabs(index);
+        }
+    }
+
     public void closeTabsLeft(int index)
     {
         this.closeTabsKeeping((i) -> i >= index, index);
     }
 
+    public void closeTabsLeft(FilmTab tab)
+    {
+        int index = this.tabs.indexOf(tab);
+
+        if (index >= 0)
+        {
+            this.closeTabsLeft(index);
+        }
+    }
+
     public void closeTabsRight(int index)
     {
         this.closeTabsKeeping((i) -> i <= index, index);
+    }
+
+    public void closeTabsRight(FilmTab tab)
+    {
+        int index = this.tabs.indexOf(tab);
+
+        if (index >= 0)
+        {
+            this.closeTabsRight(index);
+        }
     }
 
     private void closeTabsKeeping(java.util.function.IntPredicate keep, int targetIndex)
@@ -465,6 +706,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
         this.tabs.clear();
         this.tabs.addAll(kept);
+        this.tabBar.sync();
 
         int newIndex = this.tabs.indexOf(target);
 
@@ -480,6 +722,21 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public void switchTab(int index)
     {
         this.switchTab(index, false);
+    }
+
+    public void switchTab(FilmTab tab)
+    {
+        if (tab == null)
+        {
+            return;
+        }
+
+        int index = this.tabs.indexOf(tab);
+
+        if (index >= 0)
+        {
+            this.switchTab(index);
+        }
     }
 
     private void switchTab(int index, boolean force)
@@ -501,8 +758,6 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         if (tab.filmId == null)
         {
             this.fill(null);
-            this.updateTabVisibility();
-            this.tabBar.sync();
         }
         else
         {
@@ -522,13 +777,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             handle.setVisible(hasFilm && !this.layoutLocked);
         }
 
-        if (!hasFilm)
-        {
-            this.overlay.namesList.setCurrentFile(null);
-        }
-
         this.selectionPanel.setVisible(!hasFilm);
-        this.tabBar.sync();
     }
 
     private void toggleLayoutLock()
@@ -1622,6 +1871,18 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         }
 
         this.updateTabVisibility();
+        this.tabBar.sync();
+    }
+
+    @Override
+    public void fillNames(Collection<String> names)
+    {
+        super.fillNames(names);
+
+        if (this.selectionPanel != null)
+        {
+            this.selectionPanel.fillNames(names);
+        }
     }
 
     public void undo()
