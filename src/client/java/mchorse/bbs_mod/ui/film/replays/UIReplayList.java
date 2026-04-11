@@ -248,6 +248,9 @@ public class UIReplayList extends UIList<ReplayListEntry>
             .label(UIKeys.SCENE_REPLAYS_CONTEXT_DUPE)
             .active(this::hasReplaySelection)
             .category(UIKeys.FILM_REPLAY_TITLE);
+        this.keys().register(Keys.REPLAYS_SELECT_ALL, this::selectAllReplays)
+            .inside()
+            .category(UIKeys.FILM_REPLAY_TITLE);
         this.keys().register(Keys.FORMS_EDIT, () ->
         {
             Replay r = this.getSelectedReplayFirst();
@@ -257,6 +260,31 @@ public class UIReplayList extends UIList<ReplayListEntry>
             }
         }).inside()
             .category(UIKeys.FILM_REPLAY_TITLE);
+    }
+
+    private void selectAllReplays()
+    {
+        if (!this.multi)
+        {
+            return;
+        }
+
+        this.current.clear();
+
+        for (int i = 0; i < this.list.size(); i++)
+        {
+            ReplayListEntry e = this.list.get(i);
+
+            if (e.isReplay())
+            {
+                this.current.add(i);
+            }
+        }
+
+        if (this.callback != null && !this.current.isEmpty())
+        {
+            this.callback.accept(this.getCurrent());
+        }
     }
 
     @Override
