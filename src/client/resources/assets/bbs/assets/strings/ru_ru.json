@@ -512,6 +512,7 @@
 	"bbs.ui.film.open_replay_editor": "Открыть редактор записей",
 	"bbs.ui.film.layout_lock": "Заблокировать раскладку",
 	"bbs.ui.film.layout_presets": "Пресеты раскладки",
+	"bbs.ui.film.layout_reset": "Сбросить раскладку",
 	"bbs.ui.film.layout_unlock": "Разблокировать раскладку",
 	"bbs.ui.film.options": "Настройки фильма",
 	"bbs.ui.film.tabs.new_tab": "Новая вкладка",

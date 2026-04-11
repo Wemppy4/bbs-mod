@@ -242,6 +242,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             UIContext ctx = this.getContext();
             this.layoutPresetsController.openPresets(ctx, ctx.mouseX, ctx.mouseY);
         });
+        this.layoutPresetsButton.context((menu) -> menu.action(Icons.REFRESH, UIKeys.FILM_LAYOUT_RESET, this::resetFilmLayout));
         this.layoutPresetsButton.tooltip(UIKeys.FILM_LAYOUT_PRESETS, Direction.LEFT);
         this.layoutPresetsButton.relative(this.iconBar).x(0).y(1F, -EDIT_PANEL_TOP_OFFSET_PX * 2).w(EDIT_PANEL_TOP_OFFSET_PX).h(EDIT_PANEL_TOP_OFFSET_PX);
 
@@ -821,6 +822,13 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             BBSSettings.editorLayoutSettings.setFilmLayoutRoot(root);
             this.setupEditorFlex(true);
         }
+    }
+
+    private void resetFilmLayout()
+    {
+        this.clearPanelDragState();
+        BBSSettings.editorLayoutSettings.setFilmLayoutRoot(EditorLayoutNode.defaultFilmLayout());
+        this.setupEditorFlex(true);
     }
 
     private void setupEditorFlex(boolean resize)

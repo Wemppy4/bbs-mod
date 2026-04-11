@@ -513,6 +513,7 @@
 	"bbs.ui.film.open_replay_editor": "Open replay editor",
 	"bbs.ui.film.layout_lock": "Lock layout",
 	"bbs.ui.film.layout_presets": "Layout presets",
+	"bbs.ui.film.layout_reset": "Reset layout",
 	"bbs.ui.film.layout_unlock": "Unlock layout",
 	"bbs.ui.film.options": "Film options",
 	"bbs.ui.film.tabs.new_tab": "New tab",
