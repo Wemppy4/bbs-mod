@@ -615,9 +615,11 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             return;
         }
 
-        if (this.currentTab == index && this.data != null)
+        boolean wasCurrent = this.currentTab == index;
+        if (wasCurrent && this.data != null)
         {
             this.save();
+            this.data = null; // Prevent switchTab from saving this data to wrong tab
         }
 
         this.tabs.remove(index);
@@ -628,7 +630,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.currentTab = Math.max(0, this.currentTab - 1);
         }
 
-        this.switchTab(this.currentTab, true);
+        if (wasCurrent)
+        {
+            this.switchTab(this.currentTab, true);
+        }
     }
 
     public void closeOtherTabs(int index)
