@@ -499,16 +499,34 @@ public class ReplayBatchProcessor
             return;
         }
 
+        double prevAngle = Double.NaN;
+
         for (int i = 0; i < keyframes.size(); i++)
         {
             Keyframe kf = (Keyframe) keyframes.get(i);
             float tick = (float) kf.getTick();
             double value = computeLookAtValue(tick, srcX, srcY, srcZ, targetX, targetY, targetZ, yaw);
+
+            if (!Double.isNaN(prevAngle))
+            {
+                double diff = (value - prevAngle) % 360D;
+                if (diff < -180D)
+                {
+                    diff += 360D;
+                }
+                else if (diff > 180D)
+                {
+                    diff -= 360D;
+                }
+                value = prevAngle + diff;
+            }
+
+            prevAngle = value;
             kf.setValue(kf.getFactory().yToValue(value));
         }
     }
 
-    private static double computeLookAtValue(float tick, KeyframeChannel srcX, KeyframeChannel srcY, KeyframeChannel srcZ, KeyframeChannel targetX, KeyframeChannel targetY, KeyframeChannel targetZ, boolean yaw)
+    private static double computeLookAtValue(float tick, KeyframeChannel srcX, KeyframeChannel srcY, KeyframeChannel srcZ, KeyframeChannel targetX, KeyframeChannel targetY, KeyframeChannel targetZ, boolean isYaw)
     {
         double sx = srcX.getFactory().getY(srcX.interpolate(tick));
         double sy = srcY.getFactory().getY(srcY.interpolate(tick));
@@ -521,32 +539,13 @@ public class ReplayBatchProcessor
         double dy = ty - sy;
         double dz = tz - sz;
 
-        if (yaw)
+        if (isYaw)
         {
-            double angle = Math.atan2(dz, dx) * (180D / Math.PI) - 90D;
-            return wrapDegrees(angle);
+            return Math.atan2(dz, dx) * (180D / Math.PI) - 90D;
         }
 
         double h = Math.sqrt(dx * dx + dz * dz);
-        double angle = -Math.atan2(dy, h) * (180D / Math.PI);
-
-        return wrapDegrees(angle);
-    }
-
-    private static double wrapDegrees(double angle)
-    {
-        angle = angle % 360D;
-
-        if (angle >= 180D)
-        {
-            angle -= 360D;
-        }
-        else if (angle < -180D)
-        {
-            angle += 360D;
-        }
-
-        return angle;
+        return -Math.atan2(dy, h) * (180D / Math.PI);
     }
 
     private static void applyDelta(Replay replay, String id, double delta)
