@@ -112,7 +112,8 @@ public class UIFilmTabElement extends UIClickable<UIFilmTabElement>
         
         if (active)
         {
-            context.batcher.box(this.area.x, this.area.y, ex, this.area.ey(), BBSSettings.primaryColor(Colors.A25));
+            int color = Colors.mulRGB(BBSSettings.primaryColor(Colors.A100), 0.2F);
+            context.batcher.box(this.area.x, this.area.y, ex, this.area.ey(), color);
         }
 
         FontRenderer font = context.batcher.getFont();

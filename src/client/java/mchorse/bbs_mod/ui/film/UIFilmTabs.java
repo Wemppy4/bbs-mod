@@ -20,7 +20,7 @@ public class UIFilmTabs extends UIElement
     private static final int TAB_HEIGHT = UIFilmPanel.FILM_TABS_HEIGHT_PX;
     private static final int TAB_MIN_WIDTH = 110;
     private static final int TAB_MAX_WIDTH = 230;
-    private static final int TABS_GAP = 6;
+    private static final int TABS_GAP = 0;
 
     public final UIFilmPanel panel;
     public final UIScrollView scroll;
@@ -34,6 +34,7 @@ public class UIFilmTabs extends UIElement
         this.scroll.scroll.scrollSpeed = 20;
         this.scroll.relative(this).x(TABS_GAP).w(1F, -TABS_GAP * 2).h(TAB_HEIGHT);
         this.scroll.column(TABS_GAP).scroll();
+        this.scroll.scroll.noScrollbar();
 
         this.add = new UIIcon(Icons.ADD, (b) -> panel.addTab());
         this.add.wh(TAB_HEIGHT, TAB_HEIGHT);
