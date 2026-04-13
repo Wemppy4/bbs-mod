@@ -5,7 +5,6 @@ import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.client.BBSShaders;
 import mchorse.bbs_mod.forms.forms.BillboardForm;
-import mchorse.bbs_mod.forms.renderers.utils.FormColorBlend;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.UIContext;
@@ -63,7 +62,7 @@ public class BillboardFormRenderer extends FormRenderer<BillboardForm>
 
         VertexFormat format = VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL;
 
-        this.renderModel(format, BBSShaders::getModel,
+        this.renderModel(format, GameRenderer::getRenderTypeEntityTranslucentProgram,
             stack,
             OverlayTexture.DEFAULT_UV, LightmapTextureManager.MAX_LIGHT_COORDINATE, Colors.WHITE,
             context.getTransition()
@@ -83,11 +82,8 @@ public class BillboardFormRenderer extends FormRenderer<BillboardForm>
         }
 
         VertexFormat format = shading ? VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL : VertexFormats.POSITION_TEXTURE_LIGHT_COLOR;
-        Supplier<ShaderProgram> normal = shading && !BBSRendering.isIrisShadersEnabled()
-            ? BBSShaders::getModel
-            : (shading ? GameRenderer::getRenderTypeEntityTranslucentProgram : GameRenderer::getPositionTexLightmapColorProgram);
         Supplier<ShaderProgram> shader = this.getShader(context,
-            normal,
+            shading ? GameRenderer::getRenderTypeEntityTranslucentProgram : GameRenderer::getPositionTexLightmapColorProgram,
             shading ? BBSShaders::getPickerBillboardProgram : BBSShaders::getPickerBillboardNoShadingProgram
         );
 
@@ -173,11 +169,11 @@ public class BillboardFormRenderer extends FormRenderer<BillboardForm>
     private void renderQuad(VertexFormat format, Texture texture, Supplier<ShaderProgram> shader, MatrixStack matrices, int overlay, int light, int overlayColor, float transition)
     {
         BufferBuilder builder = Tessellator.getInstance().getBuffer();
-        Color color = new Color().set(overlayColor, true);
+        Color color = this.form.color.get().copy();
         Matrix4f matrix = matrices.peek().getPositionMatrix();
         Matrix3f normal = matrices.peek().getNormalMatrix();
 
-        FormColorBlend.blend(color, this.form.color.get(), false);
+        color.mul(overlayColor);
 
         if (this.form.billboard.get())
         {
@@ -200,10 +196,8 @@ public class BillboardFormRenderer extends FormRenderer<BillboardForm>
         gameRenderer.getLightmapTextureManager().enable();
         gameRenderer.getOverlayTexture().setupOverlayColor();
 
-        ShaderProgram finalShader = shader.get();
-
         BBSModClient.getTextures().bindTexture(texture);
-        RenderSystem.setShader(() -> finalShader);
+        RenderSystem.setShader(shader);
 
         texture.bind();
         texture.setFilterMipmap(this.form.linear.get(), this.form.mipmap.get());

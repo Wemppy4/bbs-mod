@@ -437,7 +437,6 @@ public class UIKeys
     public static final IKey FORMS_EDITORS_LABEL_TITLE = L10n.lang("bbs.ui.forms.editors.label.title");
     public static final IKey FORMS_EDITORS_MOB_TITLE = L10n.lang("bbs.ui.forms.editors.mob.title");
     public static final IKey FORMS_EDITORS_MODEL_ACTIONS = L10n.lang("bbs.ui.forms.editors.model.actions");
-    public static final IKey FORMS_EDITORS_MODEL_ADDITIVE_COLOR = L10n.lang("bbs.ui.forms.editors.model.additive_color");
     public static final IKey FORMS_EDITORS_MODEL_POSE = L10n.lang("bbs.ui.forms.editors.model.pose");
     public static final IKey FORMS_EDITORS_TRAIL_LENGTH = L10n.lang("bbs.ui.forms.editors.trail.length");
     public static final IKey FORMS_EDITORS_TRAIL_LOOP = L10n.lang("bbs.ui.forms.editors.trail.loop");

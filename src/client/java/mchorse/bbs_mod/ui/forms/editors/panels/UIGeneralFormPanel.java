@@ -132,7 +132,5 @@ public class UIGeneralFormPanel extends UIFormPanel
         this.hp.setValue(form.hp.get());
         this.speed.setValue(form.speed.get());
         this.stepHeight.setValue(form.stepHeight.get());
-
-        this.options.resize();
     }
 }
