@@ -705,6 +705,7 @@
 	"bbs.ui.forms.editors.label.title": "Label options",
 	"bbs.ui.forms.editors.mob.title": "Mob",
 	"bbs.ui.forms.editors.model.actions": "Actions",
+	"bbs.ui.forms.editors.model.additive_color": "Additive color (black base)",
 	"bbs.ui.forms.editors.model.pose": "Pose",
 	"bbs.ui.forms.editors.trail.length": "Length",
 	"bbs.ui.forms.editors.trail.loop": "Loop",

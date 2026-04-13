@@ -23,6 +23,7 @@ import mchorse.bbs_mod.forms.entities.StubEntity;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.forms.ModelForm;
+import mchorse.bbs_mod.forms.renderers.utils.FormColorBlend;
 import mchorse.bbs_mod.forms.renderers.utils.MatrixCache;
 import mchorse.bbs_mod.forms.renderers.utils.MatrixCacheEntry;
 import mchorse.bbs_mod.resources.Link;
@@ -249,7 +250,8 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
             Link link = this.form.texture.get();
             Link texture = link == null ? model.texture : link;
-            Color color = this.form.color.get();
+            Color contextColor = Color.white();
+            Color formColor = this.form.color.get();
             float scale = this.form.uiScale.get() * model.uiScale;
 
             model.model.resetPose();
@@ -267,7 +269,8 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                 ? GameRenderer::getRenderTypeEntityTranslucentCullProgram
                 : BBSShaders::getModel;
 
-            this.renderModel(this.entity, mainShader, stack, model, LightmapTextureManager.pack(15, 15), OverlayTexture.DEFAULT_UV, color, true, null, context.getTransition());
+            boolean additive = this.form.additiveColor.get();
+            this.renderModel(this.entity, mainShader, stack, model, LightmapTextureManager.pack(15, 15), OverlayTexture.DEFAULT_UV, contextColor, formColor, additive, true, null, context.getTransition());
 
             /* Render body parts */
             stack.push();
@@ -285,8 +288,11 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
         }
     }
 
-    private void renderModel(IEntity target, Supplier<ShaderProgram> program, MatrixStack stack, ModelInstance model, int light, int overlay, Color color, boolean ui, StencilMap stencilMap, float transition)
+    private void renderModel(IEntity target, Supplier<ShaderProgram> program, MatrixStack stack, ModelInstance model, int light, int overlay, Color contextColor, Color formColor, boolean additive, boolean ui, StencilMap stencilMap, float transition)
     {
+        Color finalColor = contextColor.copy();
+        FormColorBlend.blend(finalColor, formColor, additive);
+
         if (!model.culling)
         {
             RenderSystem.disableCull();
@@ -310,7 +316,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
             newStack.peek().getNormalMatrix().scale(1F / Vectors.EMPTY_3F.x, -1F / Vectors.EMPTY_3F.y, 1F / Vectors.EMPTY_3F.z);
         }
 
-        model.render(newStack, program, color, light, overlay, stencilMap, this.form.shapeKeys.get());
+        model.render(newStack, program, finalColor, light, overlay, stencilMap, this.form.shapeKeys.get());
 
         gameRenderer.getLightmapTextureManager().disable();
         gameRenderer.getOverlayTexture().teardownOverlayColor();
@@ -326,12 +332,12 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
         if (stencilMap == null)
         {
-            this.renderItems(target, model, stack, EquipmentSlot.MAINHAND, ModelTransformationMode.THIRD_PERSON_RIGHT_HAND, model.itemsMain, color, overlay, light);
-            this.renderItems(target, model, stack, EquipmentSlot.OFFHAND, ModelTransformationMode.THIRD_PERSON_LEFT_HAND, model.itemsOff, color, overlay, light);
+            this.renderItems(target, model, stack, EquipmentSlot.MAINHAND, ModelTransformationMode.THIRD_PERSON_RIGHT_HAND, model.itemsMain, finalColor, overlay, light);
+            this.renderItems(target, model, stack, EquipmentSlot.OFFHAND, ModelTransformationMode.THIRD_PERSON_LEFT_HAND, model.itemsOff, finalColor, overlay, light);
 
             for (Map.Entry<ArmorType, ArmorSlot> entry : model.armorSlots.entrySet())
             {
-                this.renderArmor(target, stack, entry.getKey(), entry.getValue(), color, overlay, light);
+                this.renderArmor(target, stack, entry.getKey(), entry.getValue(), finalColor, overlay, light);
             }
         }
     }
@@ -432,7 +438,8 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
 
             Link link = this.form.texture.get();
             Link texture = link == null ? model.texture : link;
-            Color color = this.form.color.get().copy();
+            Color contextColor = Color.white();
+            Color formColor = this.form.color.get();
 
             for (ModelGroup group : model.getModel().getAllGroups())
             {
@@ -469,7 +476,8 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
             RenderSystem.enableDepthTest();
             RenderSystem.enableBlend();
 
-            this.renderModel(this.entity, mainShader, matrices, model, light, OverlayTexture.DEFAULT_UV, color, false, null, 0F);
+            boolean additive = this.form.additiveColor.get();
+            this.renderModel(this.entity, mainShader, matrices, model, light, OverlayTexture.DEFAULT_UV, contextColor, formColor, additive, false, null, 0F);
 
             for (ModelGroup group : model.getModel().getAllGroups())
             {
@@ -495,9 +503,16 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
         {
             Link link = this.form.texture.get();
             Link texture = link == null ? model.texture : link;
-            Color color = this.form.color.get().copy();
+            Color contextColor = new Color().set(context.color, true);
+            Color formColor = this.form.color.get();
+            boolean additive = this.form.additiveColor.get();
 
-            color.mul(context.color);
+            if (context.isPicking())
+            {
+                contextColor.mul(formColor);
+                formColor = Color.white();
+                additive = false;
+            }
             model.model.resetPose();
 
             this.animator.applyActions(context.entity, model, context.getTransition());
@@ -512,7 +527,7 @@ public class ModelFormRenderer extends FormRenderer<ModelForm> implements ITicka
                 : BBSShaders::getModel;
             Supplier<ShaderProgram> shader = this.getShader(context, mainShader, BBSShaders::getPickerModelsProgram);
 
-            this.renderModel(context.entity, shader, context.stack, model, context.light, context.overlay, color, false, context.stencilMap, context.getTransition());
+            this.renderModel(context.entity, shader, context.stack, model, context.light, context.overlay, contextColor, formColor, additive, false, context.stencilMap, context.getTransition());
         }
     }
 

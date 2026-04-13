@@ -704,6 +704,7 @@
 	"bbs.ui.forms.editors.label.title": "Настройки текста",
 	"bbs.ui.forms.editors.mob.title": "Моб",
 	"bbs.ui.forms.editors.model.actions": "Действия",
+	"bbs.ui.forms.editors.model.additive_color": "Аддитивный цвет (черная база)",
 	"bbs.ui.forms.editors.model.pose": "Поза",
 	"bbs.ui.forms.editors.trail.length": "Длинна",
 	"bbs.ui.forms.editors.trail.loop": "Зацикливание",
