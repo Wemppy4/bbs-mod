@@ -11,7 +11,6 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.IUIElement;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
-import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
@@ -19,6 +18,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
+import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.StringUtils;
@@ -63,22 +63,9 @@ public class UITexturePainter extends UIElement
     public UIIcon resizeIcon;
     public UIIcon extractIcon;
 
-    private UIElement tabsContainer;
-    private UIIcon addTabButton;
+    private UITextureTabs tabs;
     private UIElement content;
     private Consumer<Link> saveCallback;
-
-    private static void setupButtonColors(UIButton tabButton, int index, int primary)
-    {
-        if (index == currentIndex)
-        {
-            tabButton.color(Colors.mulRGB(primary, 0.25F), Colors.mulRGB(primary, 0.35F));
-        }
-        else
-        {
-            tabButton.color(0, 0);
-        }
-    }
 
     public UITexturePainter(Consumer<Link> saveCallback)
     {
@@ -94,15 +81,11 @@ public class UITexturePainter extends UIElement
         this.brushSize.tooltip(UIKeys.TEXTURES_BRUSH_SIZE, Direction.TOP);
         this.brushSize.relative(this).x(1F, -10).y(1F, -40).w(130).anchor(1F, 1F);
 
-        this.addTabButton = new UIIcon(Icons.ADD, (b) -> this.openNewTab());
-        this.addTabButton.wh(UIConstants.CONTROL_HEIGHT, UIConstants.CONTROL_HEIGHT);
-
-        this.tabsContainer = new UIElement();
-        this.tabsContainer.relative(this).w(1F).h(UIConstants.CONTROL_HEIGHT + UIConstants.MARGIN * 2).row(UIConstants.MARGIN).height(UIConstants.CONTROL_HEIGHT).padding(UIConstants.MARGIN);
-        this.tabsContainer.add(this.addTabButton);
+        this.tabs = new UITextureTabs(this);
+        this.tabs.relative(this).w(1F).h(UITextureTabs.TABS_HEIGHT_PX);
 
         this.content = new UIElement();
-        this.content.relative(this.tabsContainer).y(1F).w(1F).hTo(this.area, 1F);
+        this.content.relative(this.tabs).y(1F).w(1F).hTo(this.area, 1F);
 
         this.savebar = new UIElement();
         this.savebar.relative(this.content).h(UIConstants.CONTROL_HEIGHT + UIConstants.MARGIN * 2).row(UIConstants.MARGIN).resize().height(UIConstants.CONTROL_HEIGHT).padding(UIConstants.MARGIN);
@@ -152,10 +135,10 @@ public class UITexturePainter extends UIElement
 
         this.savebar.add(this.primary, this.secondary, this.undoIcon, this.redoIcon, this.saveIcon, this.resizeIcon, this.extractIcon);
         this.content.add(this.savebar);
-        this.add(this.tabsContainer, this.content);
+        this.add(this.tabs, this.content);
         this.add(this.brightness, this.brushSize);
 
-        this.rebuildTabButtons();
+        this.syncTabs();
         this.showCurrentEditor();
 
         IKey category = UIKeys.TEXTURES_KEYS_CATEGORY;
@@ -188,18 +171,51 @@ public class UITexturePainter extends UIElement
             return;
         }
 
-        currentIndex = MathUtils.cycler(currentIndex + (Window.isShiftPressed() ? -1 : 1), documents);
-        this.showCurrentEditor();
-
-        int primary = BBSSettings.primaryColor.get() | Colors.A100;
-        List<UIButton> children = this.tabsContainer.getChildren(UIButton.class);
-
-        for (int j = 0; j < children.size(); j++)
-        {
-            setupButtonColors(children.get(j), j, primary);
-        }
+        this.switchTab(MathUtils.cycler(currentIndex + (Window.isShiftPressed() ? -1 : 1), documents));
 
         UIUtils.playClick();
+    }
+
+    public int getTabCount()
+    {
+        return documents.size();
+    }
+
+    public int getCurrentTabIndex()
+    {
+        return currentIndex;
+    }
+
+    public IKey getTabLabel(int index)
+    {
+        return IKey.raw(StringUtils.fileName(documents.get(index).link.path));
+    }
+
+    public IKey getTabTooltip(int index)
+    {
+        return IKey.raw(documents.get(index).link.path);
+    }
+
+    public Icon getTabIcon(int index)
+    {
+        return Icons.MATERIAL;
+    }
+
+    public boolean canCloseTab(int index)
+    {
+        return documents.size() > 1 && index >= 0 && index < documents.size();
+    }
+
+    public void switchTab(int index)
+    {
+        if (index < 0 || index >= documents.size() || currentIndex == index)
+        {
+            return;
+        }
+
+        currentIndex = index;
+        this.showCurrentEditor();
+        this.syncTabs();
     }
 
     private UITextureEditor createEditor(Link link, Pixels pixels)
@@ -244,13 +260,6 @@ public class UITexturePainter extends UIElement
             : documents.get(currentIndex).editor;
     }
 
-    private void openNewTab()
-    {
-        UITextureEditor current = this.getCurrentEditor();
-        Link currentLink = current != null ? current.getTexture() : null;
-        UITexturePicker.findAllTextures(this.getContext(), currentLink, this::addTabFromPath);
-    }
-
     private void addTabFromPath(String path)
     {
         Link link = Link.create(path);
@@ -259,9 +268,7 @@ public class UITexturePainter extends UIElement
         {
             if (documents.get(i).link.toString().equals(path))
             {
-                currentIndex = i;
-                this.rebuildTabButtons();
-                this.showCurrentEditor();
+                this.switchTab(i);
                 return;
             }
         }
@@ -278,70 +285,119 @@ public class UITexturePainter extends UIElement
         Document doc = new Document(link, pixels, editor);
 
         documents.add(doc);
-        currentIndex = documents.size() - 1;
-
-        this.rebuildTabButtons();
-        this.showCurrentEditor();
+        this.switchTab(documents.size() - 1);
     }
 
-    private void closeTab(int index)
+    public void closeTab(int index)
     {
-        if (documents.size() <= 1)
+        if (!this.canCloseTab(index))
         {
             return;
         }
 
-        Document doc = documents.get(index);
+        this.removeTab(index);
+        this.finishTabMutation();
+    }
+
+    public void closeOtherTabs(int index)
+    {
+        if (index < 0 || index >= documents.size() || documents.size() <= 1)
+        {
+            return;
+        }
+
+        for (int i = documents.size() - 1; i >= 0; i--)
+        {
+            if (i != index)
+            {
+                this.removeTab(i);
+            }
+        }
+
+        this.finishTabMutation();
+    }
+
+    public void closeTabsLeft(int index)
+    {
+        if (index <= 0 || index >= documents.size())
+        {
+            return;
+        }
+
+        for (int i = index - 1; i >= 0; i--)
+        {
+            this.removeTab(i);
+        }
+
+        this.finishTabMutation();
+    }
+
+    public void closeTabsRight(int index)
+    {
+        if (index < 0 || index >= documents.size() - 1)
+        {
+            return;
+        }
+
+        for (int i = documents.size() - 1; i > index; i--)
+        {
+            this.removeTab(i);
+        }
+
+        this.finishTabMutation();
+    }
+
+    public void openNewTab()
+    {
+        UITextureEditor current = this.getCurrentEditor();
+        Link currentLink = current != null ? current.getTexture() : null;
+
+        UITexturePicker.findAllTextures(this.getContext(), currentLink, this::addTabFromPath);
+    }
+
+    private void removeTab(int index)
+    {
+        if (index < 0 || index >= documents.size())
+        {
+            return;
+        }
+
+        Document doc = documents.remove(index);
 
         doc.editor.removeFromParent();
         doc.pixels.delete();
         doc.editor.deleteTexture();
-        documents.remove(index);
 
-        currentIndex = MathUtils.clamp(currentIndex - 1, 0, documents.size());
-
-        this.rebuildTabButtons();
-        this.showCurrentEditor();
+        if (documents.isEmpty())
+        {
+            currentIndex = -1;
+        }
+        else if (index < currentIndex)
+        {
+            currentIndex -= 1;
+        }
+        else if (currentIndex >= documents.size())
+        {
+            currentIndex = documents.size() - 1;
+        }
     }
 
-    private void rebuildTabButtons()
+    private void finishTabMutation()
     {
-        int primary = BBSSettings.primaryColor.get() | Colors.A100;
-
-        this.tabsContainer.removeAll();
-
-        for (int i = 0; i < documents.size(); i++)
+        if (currentIndex >= 0 && currentIndex < documents.size())
         {
-            Document doc = documents.get(i);
-            final int index = i;
-
-            UIButton tab = new UIButton(IKey.raw(StringUtils.fileName(doc.link.path)), (b) ->
-            {
-                currentIndex = index;
-
-                this.showCurrentEditor();
-
-                List<UIButton> children = this.tabsContainer.getChildren(UIButton.class);
-
-                for (int j = 0; j < children.size(); j++)
-                {
-                    setupButtonColors(children.get(j), j, primary);
-                }
-            });
-
-            tab.tooltip(IKey.raw(doc.link.path), Direction.BOTTOM);
-
-            setupButtonColors(tab, i, primary);
-            tab.context((menu) ->
-            {
-                if (documents.size() > 1) menu.action(Icons.REMOVE, UIKeys.GENERAL_REMOVE, () -> this.closeTab(index));
-            });
-
-            this.tabsContainer.add(tab);
+            this.showCurrentEditor();
         }
 
-        this.tabsContainer.add(this.addTabButton);
-        this.resize();
+        this.syncTabs();
+    }
+
+    private void syncTabs()
+    {
+        if (this.tabs != null)
+        {
+            this.tabs.sync();
+        }
     }
 
     private void swapColors()
@@ -414,9 +470,7 @@ public class UITexturePainter extends UIElement
             {
                 UITextureEditor editor = this.createEditor(current, pixels);
                 documents.add(new Document(current, pixels, editor));
-                currentIndex = 0;
-                this.rebuildTabButtons();
-                this.showCurrentEditor();
+                this.switchTab(0);
                 editor.setEditing(true);
             }
 
@@ -427,9 +481,7 @@ public class UITexturePainter extends UIElement
         {
             if (documents.get(i).link.toString().equals(path))
             {
-                currentIndex = i;
-                this.rebuildTabButtons();
-                this.showCurrentEditor();
+                this.switchTab(i);
                 this.getCurrentEditor().setEditing(true);
                 return;
             }
@@ -442,9 +494,7 @@ public class UITexturePainter extends UIElement
         {
             UITextureEditor editor = this.createEditor(current, pixels);
             documents.add(new Document(current, pixels, editor));
-            currentIndex = documents.size() - 1;
-            this.rebuildTabButtons();
-            this.showCurrentEditor();
+            this.switchTab(documents.size() - 1);
             editor.setEditing(true);
         }
     }
@@ -452,10 +502,6 @@ public class UITexturePainter extends UIElement
     @Override
     public void render(UIContext context)
     {
-        int primary = BBSSettings.primaryColor.get();
-
-        this.tabsContainer.area.render(context.batcher, Colors.mulRGB(primary | Colors.A100, 0.1F));
-
         super.render(context);
 
         UITextureEditor editor = this.getCurrentEditor();
