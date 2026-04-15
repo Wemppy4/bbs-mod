@@ -529,6 +529,11 @@ public abstract class UIDataDashboardPanel <T extends ValueGroup> extends UICRUD
 
         this.fillData(data);
 
+        if (data != null && data.getId() != null)
+        {
+            this.overlay.namesList.setCurrentFile(data.getId());
+        }
+
         if (this.tabsEnabled && this.tabBar != null)
         {
             this.tabBar.sync();
@@ -557,8 +562,27 @@ public abstract class UIDataDashboardPanel <T extends ValueGroup> extends UICRUD
             value = this.data == null ? null : this.data.getId();
         }
 
+        if (value == null && this.data != null)
+        {
+            value = this.data.getId();
+
+            if (this.tabsEnabled)
+            {
+                DataTab tab = this.getCurrentDataTab();
+
+                if (tab != null && tab.dataId == null)
+                {
+                    tab.dataId = value;
+                }
+            }
+        }
+
         this.overlay.namesList.fill(names);
-        this.overlay.namesList.setCurrentFile(value);
+
+        if (value != null)
+        {
+            this.overlay.namesList.setCurrentFile(value);
+        }
     }
 
     @Override
