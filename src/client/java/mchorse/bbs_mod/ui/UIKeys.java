@@ -666,7 +666,12 @@ public class UIKeys
     public static final IKey PANELS_CONTEXT_OPEN = L10n.lang("bbs.ui.panels.context.open");
     public static final IKey PANELS_CONTEXT_PASTE = L10n.lang("bbs.ui.panels.context.paste");
     public static final IKey PANELS_KEYS_OPEN_DATA_MANAGER = L10n.lang("bbs.ui.panels.keys.open_data_list");
+    public static final IKey PANELS_KEYS_OPEN_NEW_TAB = L10n.lang("bbs.ui.panels.keys.open_new_tab");
     public static final IKey PANELS_KEYS_TOGGLE_CHALKBOARD = L10n.lang("bbs.ui.panels.keys.toggle_chalkboard");
+    public static final IKey PANELS_TABS_NEW_TAB = L10n.lang("bbs.ui.panels.tabs.new_tab");
+    public static final IKey PANELS_TABS_CONTEXT_CLOSE_OTHERS = L10n.lang("bbs.ui.panels.tabs.context.close_others");
+    public static final IKey PANELS_TABS_CONTEXT_CLOSE_LEFT = L10n.lang("bbs.ui.panels.tabs.context.close_left");
+    public static final IKey PANELS_TABS_CONTEXT_CLOSE_RIGHT = L10n.lang("bbs.ui.panels.tabs.context.close_right");
     public static final IKey PANELS_MODALS_ADD = L10n.lang("bbs.ui.panels.modals.add");
     public static final IKey PANELS_MODALS_ADD_FOLDER = L10n.lang("bbs.ui.panels.modals.add_folder");
     public static final IKey PANELS_MODALS_ADD_FOLDER_TITLE = L10n.lang("bbs.ui.panels.modals.add_folder-title");

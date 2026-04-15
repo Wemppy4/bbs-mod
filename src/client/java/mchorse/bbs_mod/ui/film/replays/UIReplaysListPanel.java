@@ -84,7 +84,7 @@ public class UIReplaysListPanel extends UIElement
     public void render(UIContext context)
     {
         int panelBg = Colors.mulRGB(BBSSettings.primaryColor(Colors.A100), 0.1F);
-        int barBg = Colors.mulRGB(BBSSettings.primaryColor(Colors.A100), 0.3F);
+        int barBg = Colors.mulRGB(BBSSettings.primaryColor(Colors.A100), 0.2F);
 
         this.area.render(context.batcher, panelBg);
         this.updateButtonsState();

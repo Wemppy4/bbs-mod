@@ -13,6 +13,8 @@ import mchorse.bbs_mod.ui.ContentType;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.dashboard.UIDashboard;
 import mchorse.bbs_mod.ui.dashboard.panels.UIDataDashboardPanel;
+import mchorse.bbs_mod.ui.dashboard.panels.tabs.DataTab;
+import mchorse.bbs_mod.ui.dashboard.panels.tabs.UIDataTabs;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
@@ -34,12 +36,15 @@ import mchorse.bbs_mod.ui.particles.sections.UIParticleSchemeShapeSection;
 import mchorse.bbs_mod.ui.particles.sections.UIParticleSchemeSpaceSection;
 import mchorse.bbs_mod.ui.particles.utils.MolangSyntaxHighlighter;
 import mchorse.bbs_mod.ui.utils.UI;
+import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.IOUtils;
+import mchorse.bbs_mod.utils.colors.Colors;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -53,6 +58,7 @@ public class UIParticleSchemePanel extends UIDataDashboardPanel<ParticleScheme>
     public UITextEditor textEditor;
     public UIParticleSchemeRenderer renderer;
     public UIScrollView sectionsView;
+    public UIParticleSelectionPanel selectionPanel;
 
     public List<UIParticleSchemeSection> sections = new ArrayList<>();
 
@@ -61,6 +67,7 @@ public class UIParticleSchemePanel extends UIDataDashboardPanel<ParticleScheme>
     public UIParticleSchemePanel(UIDashboard dashboard)
     {
         super(dashboard);
+        this.enableTabs();
 
         this.renderer = new UIParticleSchemeRenderer();
         this.renderer.relative(this).wTo(this.iconBar.getFlex()).h(1F);
@@ -74,6 +81,10 @@ public class UIParticleSchemePanel extends UIDataDashboardPanel<ParticleScheme>
         this.prepend(new UIRenderable(this::drawOverlay));
         this.prepend(this.renderer);
         this.editor.add(this.textEditor, this.sectionsView);
+
+        this.selectionPanel = new UIParticleSelectionPanel(this);
+        this.selectionPanel.relative(this).y(UIDataTabs.TABS_HEIGHT_PX).wTo(this.iconBar.area).h(1F, -UIDataTabs.TABS_HEIGHT_PX);
+        this.add(this.selectionPanel);
 
         UIIcon close = new UIIcon(Icons.CLOSE, (b) -> this.editMoLang(null, null, null));
 
@@ -136,6 +147,12 @@ public class UIParticleSchemePanel extends UIDataDashboardPanel<ParticleScheme>
         return ContentType.PARTICLES;
     }
 
+    @Override
+    public Icon getTabIcon(DataTab tab)
+    {
+        return tab != null && tab.dataId == null ? Icons.SEARCH : Icons.PARTICLE;
+    }
+
     public void dirty()
     {
         this.renderer.emitter.setupVariables();
@@ -152,6 +169,9 @@ public class UIParticleSchemePanel extends UIDataDashboardPanel<ParticleScheme>
     {
         this.editMoLang(null, null, null);
 
+        this.renderer.setVisible(data != null);
+        this.selectionPanel.setVisible(data == null);
+
         if (this.data != null)
         {
             this.renderer.setScheme(this.data);
@@ -162,6 +182,21 @@ public class UIParticleSchemePanel extends UIDataDashboardPanel<ParticleScheme>
             }
 
             this.sectionsView.resize();
+        }
+        else
+        {
+            this.renderer.setScheme(null);
+        }
+    }
+
+    @Override
+    public void fillNames(Collection<String> names)
+    {
+        super.fillNames(names);
+
+        if (this.selectionPanel != null)
+        {
+            this.selectionPanel.fillNames(names);
         }
     }
 
@@ -197,6 +232,12 @@ public class UIParticleSchemePanel extends UIDataDashboardPanel<ParticleScheme>
     }
 
     @Override
+    protected boolean shouldAutoOpenListOnFirstResize()
+    {
+        return false;
+    }
+
+    @Override
     public void close()
     {
         if (this.renderer.emitter != null)
@@ -213,6 +254,18 @@ public class UIParticleSchemePanel extends UIDataDashboardPanel<ParticleScheme>
         /* Renderer needs to be resized again because iconBar is in front, and wTo() doesn't
          * work earlier for some reason... */
         this.renderer.resize();
+    }
+
+    @Override
+    protected void renderBackground(UIContext context)
+    {
+        if (this.iconBar.isVisible())
+        {
+            int bg = this.selectionPanel != null && this.selectionPanel.isVisible() ? Colors.A100 : Colors.A50;
+
+            this.iconBar.area.render(context.batcher, bg);
+            context.batcher.gradientHBox(this.iconBar.area.x - 6, this.iconBar.area.y, this.iconBar.area.x, this.iconBar.area.ey(), 0, 0x29000000);
+        }
     }
 
     private void drawOverlay(UIContext context)

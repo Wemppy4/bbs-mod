@@ -37,6 +37,8 @@ import mchorse.bbs_mod.ui.dashboard.panels.IFlightSupported;
 import mchorse.bbs_mod.ui.dashboard.panels.UIDashboardPanels;
 import mchorse.bbs_mod.ui.dashboard.panels.UIDataDashboardPanel;
 import mchorse.bbs_mod.ui.dashboard.panels.overlay.UICRUDOverlayPanel;
+import mchorse.bbs_mod.ui.dashboard.panels.tabs.DataTab;
+import mchorse.bbs_mod.ui.dashboard.panels.tabs.UIDataTabs;
 import mchorse.bbs_mod.ui.dashboard.utils.IUIOrbitKeysHandler;
 import mchorse.bbs_mod.ui.film.audio.UIAudioRecorder;
 import mchorse.bbs_mod.ui.film.controller.UIFilmController;
@@ -63,7 +65,6 @@ import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.presets.UICopyPasteController;
 import mchorse.bbs_mod.utils.CollectionUtils;
-import mchorse.bbs_mod.utils.DataPath;
 import mchorse.bbs_mod.utils.Direction;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.PlayerUtils;
@@ -107,9 +108,6 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private final Position position = new Position(0, 0, 0, 0, 0);
     private final Position lastPosition = new Position(0, 0, 0, 0, 0);
 
-    public List<FilmTab> tabs = new ArrayList<>();
-    public int currentTab = -1;
-    public UIFilmTabs tabBar;
     public UIFilmSelectionPanel selectionPanel;
 
     public UIElement main;
@@ -179,8 +177,6 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     private static final String PANEL_REPLAY_PROPS_ID = "replayProps";
     /** Top offset (px) for parameters panels when layout is unlocked (space for drag icon). Used for lock button size too. */
     public static final int EDIT_PANEL_TOP_OFFSET_PX = 20;
-    public static final int FILM_TABS_HEIGHT_PX = 18;
-
     private final List<UIDockStackTabs> dockStackTabs = new ArrayList<>();
     private final Map<String, DockStackInfo> dockStackByPanelId = new HashMap<>();
     private UIElement selectedMainEditorPanel;
@@ -351,6 +347,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
     public UIFilmPanel(UIDashboard dashboard)
     {
         super(dashboard);
+        this.enableTabs();
         this.playerToCamera = BBSSettings.editorPlayerFollowsCamera.get();
 
         this.runner = new RunnerCameraController(this, (playing) ->
@@ -481,7 +478,6 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             }
         }).active(active).category(editor);
 
-        this.tabBar = new UIFilmTabs(this);
         this.selectionPanel = new UIFilmSelectionPanel(this);
 
         this.fill(null);
@@ -534,35 +530,8 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         BBSSettings.editorPreviewCustomHeight.postCallback(refreshPreviewOnVideoResolution);
         BBSSettings.editorPreviewResolutionScale.postCallback(refreshPreviewOnVideoResolution);
 
-        if (this.openOverlay != null)
-        {
-            this.openOverlay.removeFromParent();
-        }
-
-        this.overrideOpenDataManagerKeybind();
-
-        this.iconBar.relative(this).x(1F, -20).y(FILM_TABS_HEIGHT_PX).w(20).h(1F, -FILM_TABS_HEIGHT_PX).column(0).stretch();
-        this.editor.relative(this).y(FILM_TABS_HEIGHT_PX).wTo(this.iconBar.area).h(1F, -FILM_TABS_HEIGHT_PX);
-
-        this.tabBar.relative(this).w(1F).h(FILM_TABS_HEIGHT_PX);
-        this.selectionPanel.relative(this).y(FILM_TABS_HEIGHT_PX).wTo(this.iconBar.area).h(1F, -FILM_TABS_HEIGHT_PX);
-
-        this.add(this.tabBar);
+        this.selectionPanel.relative(this).y(UIDataTabs.TABS_HEIGHT_PX).wTo(this.iconBar.area).h(1F, -UIDataTabs.TABS_HEIGHT_PX);
         this.add(this.selectionPanel);
-
-        this.addTab();
-    }
-
-    private void overrideOpenDataManagerKeybind()
-    {
-        for (mchorse.bbs_mod.ui.utils.keys.Keybind keybind : this.keys().keybinds)
-        {
-            if (keybind.getLabel() == UIKeys.PANELS_KEYS_OPEN_DATA_MANAGER)
-            {
-                keybind.callback = this::addTab;
-                break;
-            }
-        }
     }
 
     public boolean isLayoutLocked()
@@ -576,52 +545,16 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
         return this.layoutLocked ? 0 : EDIT_PANEL_TOP_OFFSET_PX;
     }
 
-    public FilmTab getCurrentTab()
+    @Override
+    public IKey getNewTabLabel()
     {
-        return this.currentTab >= 0 && this.currentTab < this.tabs.size() ? this.tabs.get(this.currentTab) : null;
+        return UIKeys.FILM_TABS_NEW_TAB;
     }
 
-    public boolean isNewTab(FilmTab tab)
+    @Override
+    public Icon getTabIcon(DataTab tab)
     {
-        return tab != null && tab.filmId == null;
-    }
-
-    public int findNewTabIndex()
-    {
-        for (int i = 0, c = this.tabs.size(); i < c; i++)
-        {
-            if (this.isNewTab(this.tabs.get(i)))
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    public boolean hasNewTab()
-    {
-        return this.findNewTabIndex() >= 0;
-    }
-
-    public boolean canAddNewTab()
-    {
-        return !this.hasNewTab();
-    }
-
-    public void addTab()
-    {
-        int index = this.findNewTabIndex();
-
-        if (index >= 0)
-        {
-            this.switchTab(index);
-
-            return;
-        }
-        
-        this.tabs.add(new FilmTab(null));
-        this.switchTab(this.tabs.size() - 1);
+        return tab != null && tab.dataId == null ? Icons.SEARCH : Icons.FILM;
     }
 
     public void renameFilmId(String from, String to)
@@ -636,21 +569,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.data.setId(to);
         }
 
-        boolean changed = false;
-
-        for (FilmTab tab : this.tabs)
-        {
-            if (from.equals(tab.filmId))
-            {
-                tab.filmId = to;
-                changed = true;
-            }
-        }
-
-        if (changed)
-        {
-            this.tabBar.sync();
-        }
+        this.onDataRenamed(from, to);
     }
 
     public void renameFilmFolder(String fromPath, String name)
@@ -660,14 +579,10 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             return;
         }
 
-        DataPath from = new DataPath(fromPath);
-        DataPath parent = from.getParent();
-        String parentPath = parent.strings.isEmpty() ? "" : parent.toString() + "/";
-
-        String oldPrefix = from.toString() + "/";
+        String oldPrefix = fromPath + "/";
+        int slash = fromPath.lastIndexOf('/');
+        String parentPath = slash >= 0 ? fromPath.substring(0, slash + 1) : "";
         String newPrefix = parentPath + name + "/";
-
-        boolean changed = false;
 
         if (this.data != null)
         {
@@ -679,19 +594,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             }
         }
 
-        for (FilmTab tab : this.tabs)
-        {
-            if (tab.filmId != null && tab.filmId.startsWith(oldPrefix))
-            {
-                tab.filmId = newPrefix + tab.filmId.substring(oldPrefix.length());
-                changed = true;
-            }
-        }
-
-        if (changed)
-        {
-            this.tabBar.sync();
-        }
+        this.onDataFolderRenamed(fromPath, name);
     }
 
     public void deleteFilmIds(Set<String> ids)
@@ -701,22 +604,12 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             return;
         }
 
-        for (FilmTab tab : this.tabs)
+        for (String id : ids)
         {
-            if (tab.filmId != null && ids.contains(tab.filmId))
-            {
-                tab.filmId = null;
-            }
-        }
-
-        if (this.data != null && ids.contains(this.data.getId()))
-        {
-            this.fill(null);
-            return;
+            this.onDataRemoved(id);
         }
 
         this.updateTabVisibility();
-        this.tabBar.sync();
     }
 
     public void deleteFilmFolders(Set<String> folderPaths)
@@ -726,240 +619,15 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             return;
         }
 
-        for (FilmTab tab : this.tabs)
+        for (String folder : folderPaths)
         {
-            if (tab.filmId == null)
+            if (folder != null && !folder.isEmpty())
             {
-                continue;
-            }
-
-            for (String folder : folderPaths)
-            {
-                if (folder == null || folder.isEmpty())
-                {
-                    continue;
-                }
-
-                String prefix = folder.endsWith("/") ? folder : folder + "/";
-
-                if (tab.filmId.startsWith(prefix))
-                {
-                    tab.filmId = null;
-                    break;
-                }
-            }
-        }
-
-        if (this.data != null)
-        {
-            String id = this.data.getId();
-
-            for (String folder : folderPaths)
-            {
-                if (folder == null || folder.isEmpty())
-                {
-                    continue;
-                }
-
-                String prefix = folder.endsWith("/") ? folder : folder + "/";
-
-                if (id != null && id.startsWith(prefix))
-                {
-                    this.fill(null);
-                    return;
-                }
+                this.onDataFolderRemoved(folder);
             }
         }
 
         this.updateTabVisibility();
-        this.tabBar.sync();
-    }
-
-    public void closeTab(FilmTab tab)
-    {
-        if (tab == null)
-        {
-            return;
-        }
-
-        int index = this.tabs.indexOf(tab);
-
-        if (index >= 0)
-        {
-            this.closeTab(index);
-        }
-    }
-
-    public void closeTab(int index)
-    {
-        if (this.tabs.size() <= 1)
-        {
-            if (this.data != null)
-            {
-                this.save();
-            }
-
-            this.tabs.get(0).filmId = null;
-            this.currentTab = 0;
-            this.fill(null);
-            return;
-        }
-
-        boolean wasCurrent = this.currentTab == index;
-        if (wasCurrent && this.data != null)
-        {
-            this.save();
-            this.data = null; // Prevent switchTab from saving this data to wrong tab
-        }
-
-        this.tabs.remove(index);
-        this.tabBar.sync();
-
-        if (this.currentTab >= index)
-        {
-            this.currentTab = Math.max(0, this.currentTab - 1);
-        }
-
-        if (wasCurrent)
-        {
-            this.switchTab(this.currentTab, true);
-        }
-    }
-
-    public void closeOtherTabs(int index)
-    {
-        this.closeTabsKeeping((i) -> i == index, index);
-    }
-
-    public void closeOtherTabs(FilmTab tab)
-    {
-        int index = this.tabs.indexOf(tab);
-
-        if (index >= 0)
-        {
-            this.closeOtherTabs(index);
-        }
-    }
-
-    public void closeTabsLeft(int index)
-    {
-        this.closeTabsKeeping((i) -> i >= index, index);
-    }
-
-    public void closeTabsLeft(FilmTab tab)
-    {
-        int index = this.tabs.indexOf(tab);
-
-        if (index >= 0)
-        {
-            this.closeTabsLeft(index);
-        }
-    }
-
-    public void closeTabsRight(int index)
-    {
-        this.closeTabsKeeping((i) -> i <= index, index);
-    }
-
-    public void closeTabsRight(FilmTab tab)
-    {
-        int index = this.tabs.indexOf(tab);
-
-        if (index >= 0)
-        {
-            this.closeTabsRight(index);
-        }
-    }
-
-    private void closeTabsKeeping(java.util.function.IntPredicate keep, int targetIndex)
-    {
-        if (this.tabs.size() <= 1 || targetIndex < 0 || targetIndex >= this.tabs.size())
-        {
-            return;
-        }
-
-        if (this.data != null)
-        {
-            this.save();
-        }
-
-        FilmTab target = this.tabs.get(targetIndex);
-
-        java.util.ArrayList<FilmTab> kept = new java.util.ArrayList<>();
-
-        for (int i = 0; i < this.tabs.size(); i++)
-        {
-            if (keep.test(i))
-            {
-                kept.add(this.tabs.get(i));
-            }
-        }
-
-        if (kept.isEmpty())
-        {
-            kept.add(target);
-        }
-
-        this.tabs.clear();
-        this.tabs.addAll(kept);
-        this.tabBar.sync();
-
-        int newIndex = this.tabs.indexOf(target);
-
-        if (newIndex < 0)
-        {
-            newIndex = 0;
-        }
-
-        this.currentTab = -1;
-        this.switchTab(newIndex, true);
-    }
-
-    public void switchTab(int index)
-    {
-        this.switchTab(index, false);
-    }
-
-    public void switchTab(FilmTab tab)
-    {
-        if (tab == null)
-        {
-            return;
-        }
-
-        int index = this.tabs.indexOf(tab);
-
-        if (index >= 0)
-        {
-            this.switchTab(index);
-        }
-    }
-
-    private void switchTab(int index, boolean force)
-    {
-        if (!force && this.currentTab == index)
-        {
-            return;
-        }
-
-        if (this.currentTab >= 0 && this.currentTab < this.tabs.size() && this.data != null)
-        {
-            this.save();
-            this.tabs.get(this.currentTab).filmId = this.data.getId();
-        }
-
-        this.currentTab = index;
-        FilmTab tab = this.tabs.get(index);
-
-        if (tab.filmId == null)
-        {
-            this.fill(null);
-        }
-        else
-        {
-            this.requestData(tab.filmId);
-            // requestData calls fill() which we will hook into to update visibility
-        }
     }
 
     public void updateTabVisibility()
@@ -1003,7 +671,9 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
 
     private boolean hasFilmInCurrentTab()
     {
-        return this.currentTab >= 0 && this.currentTab < this.tabs.size() && this.tabs.get(this.currentTab).filmId != null;
+        DataTab tab = this.getCurrentDataTab();
+
+        return tab != null && tab.dataId != null;
     }
 
     private boolean isDockPanelActive(String panelId)
@@ -2132,64 +1802,116 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.save();
             this.overlay.namesList.addFile(name);
 
-            Film data = new Film();
-            Position position = new Position();
-            IdleClip idle = new IdleClip();
-            int tick = this.getCursor();
-
-            position.set(this.getCamera());
-            idle.duration.set(BBSSettings.getDefaultDuration());
-            idle.position.set(position);
-            data.camera.addClip(idle);
-            data.setId(name);
-            data.stampCreationTimeNow();
-
-            for (Replay replay : this.data.replays.getList())
-            {
-                Replay copy = new Replay(replay.getId());
-
-                copy.form.set(FormUtils.copy(replay.form.get()));
-
-                for (KeyframeChannel<?> channel : replay.keyframes.getChannels())
-                {
-                    if (!channel.isEmpty())
-                    {
-                        KeyframeChannel newChannel = (KeyframeChannel) copy.keyframes.get(channel.getId());
-
-                        newChannel.insert(0, channel.interpolate(tick));
-                    }
-                }
-
-                for (Map.Entry<String, KeyframeChannel> entry : replay.properties.properties.entrySet())
-                {
-                    KeyframeChannel channel = entry.getValue();
-
-                    if (channel.isEmpty())
-                    {
-                        continue;
-                    }
-
-                    KeyframeChannel newChannel = new KeyframeChannel(channel.getId(), channel.getFactory());
-                    KeyframeSegment segment = channel.find(tick);
-
-                    if (segment != null)
-                    {
-                        newChannel.insert(0, segment.createInterpolated());
-                    }
-
-                    if (!newChannel.isEmpty())
-                    {
-                        copy.properties.properties.put(newChannel.getId(), newChannel);
-                        copy.properties.add(newChannel);
-                    }
-                }
-
-                data.replays.add(copy);
-            }
+            Film data = this.createDuplicateFilm(name, this.data);
 
             this.fill(data);
             this.save();
         }
+    }
+
+    public void dupeCurrentFilmTo(String name)
+    {
+        this.dupeData(name);
+    }
+
+    public void dupeFilmTo(String sourceId, String name)
+    {
+        if (name == null || name.trim().isEmpty())
+        {
+            return;
+        }
+
+        Film current = this.getData();
+
+        if (current != null && (sourceId == null || sourceId.equals(current.getId())))
+        {
+            this.dupeData(name);
+
+            return;
+        }
+
+        if (sourceId == null || sourceId.trim().isEmpty() || this.overlay.namesList.hasInHierarchy(name))
+        {
+            return;
+        }
+
+        this.save();
+
+        this.getType().getRepository().load(sourceId, (loaded) ->
+        {
+            Film source = (Film) loaded;
+
+            if (source == null)
+            {
+                return;
+            }
+
+            Film duplicated = this.createDuplicateFilm(name, source);
+
+            this.fill(duplicated);
+            this.save();
+            this.requestNames();
+        });
+    }
+
+    private Film createDuplicateFilm(String name, Film source)
+    {
+        Film data = new Film();
+        Position position = new Position();
+        IdleClip idle = new IdleClip();
+        int tick = this.getCursor();
+
+        position.set(this.getCamera());
+        idle.duration.set(BBSSettings.getDefaultDuration());
+        idle.position.set(position);
+        data.camera.addClip(idle);
+        data.setId(name);
+        data.stampCreationTimeNow();
+
+        for (Replay replay : source.replays.getList())
+        {
+            Replay copy = new Replay(replay.getId());
+
+            copy.form.set(FormUtils.copy(replay.form.get()));
+
+            for (KeyframeChannel<?> channel : replay.keyframes.getChannels())
+            {
+                if (!channel.isEmpty())
+                {
+                    KeyframeChannel newChannel = (KeyframeChannel) copy.keyframes.get(channel.getId());
+
+                    newChannel.insert(0, channel.interpolate(tick));
+                }
+            }
+
+            for (Map.Entry<String, KeyframeChannel> entry : replay.properties.properties.entrySet())
+            {
+                KeyframeChannel channel = entry.getValue();
+
+                if (channel.isEmpty())
+                {
+                    continue;
+                }
+
+                KeyframeChannel newChannel = new KeyframeChannel(channel.getId(), channel.getFactory());
+                KeyframeSegment segment = channel.find(tick);
+
+                if (segment != null)
+                {
+                    newChannel.insert(0, segment.createInterpolated());
+                }
+
+                if (!newChannel.isEmpty())
+                {
+                    copy.properties.properties.put(newChannel.getId(), newChannel);
+                    copy.properties.add(newChannel);
+                }
+            }
+
+            data.replays.add(copy);
+        }
+
+        return data;
     }
 
     @Override
@@ -2435,13 +2157,7 @@ public class UIFilmPanel extends UIDataDashboardPanel<Film> implements IFlightSu
             this.filmUserActivity.reset();
         }
 
-        if (this.currentTab >= 0 && this.currentTab < this.tabs.size())
-        {
-            this.tabs.get(this.currentTab).filmId = data == null ? null : data.getId();
-        }
-
         this.updateTabVisibility();
-        this.tabBar.sync();
     }
 
     @Override
