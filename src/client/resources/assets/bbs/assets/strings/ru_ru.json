@@ -198,6 +198,8 @@
 	"bbs.config.video.encoder_path-comment": "Для записи видео необходимо указать здесь путь к ffmpeg (к файлу ffmpeg или ffmpeg.exe, в зависимости от ОС)",
 	"bbs.config.video.log": "Лог кодировщика",
 	"bbs.config.video.log-comment": "Если выключено, то тогда лог не будет сгенерирован в папке экспорта видео (вместо этого лог пойдёт в папке settings/video.log).",
+	"bbs.config.video.world_export_resize_window": "Менять размер окна при экспорте в мире",
+	"bbs.config.video.world_export_resize_window-comment": "Если включено, экспорт из мира через F4/F6 временно меняет размер окна Minecraft на разрешение экспорта и восстанавливает размер после остановки экспорта.",
 	"bbs.config.video.title": "Захват видео",
 	"bbs.config.video.tooltip": "Параметры захвата видео",
 	"bbs.keystrokes_position.auto": "Авто",

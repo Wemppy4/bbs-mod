@@ -63,6 +63,7 @@ public class BBSSettings {
 
 	public static ValueString videoEncoderPath;
 	public static ValueBoolean videoEncoderLog;
+	public static ValueBoolean worldExportResizeWindow;
 	public static ValueVideoSettings videoSettings;
 
 	public static ValueFloat editorCameraSpeed;
@@ -222,6 +223,7 @@ public class BBSSettings {
 		builder.category("video");
 		videoEncoderPath = builder.getString("encoder_path", "ffmpeg");
 		videoEncoderLog = builder.getBoolean("log", true);
+		worldExportResizeWindow = builder.getBoolean("world_export_resize_window", false);
 		builder.register(videoSettings = new ValueVideoSettings("settings"));
 
 		/* Camera editor */

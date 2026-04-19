@@ -56,6 +56,7 @@ import mchorse.bbs_mod.ui.utils.keys.KeybindSettings;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.ScreenshotRecorder;
 import mchorse.bbs_mod.utils.VideoRecorder;
+import mchorse.bbs_mod.utils.WorldExportWindowSession;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.resources.MinecraftSourcePack;
@@ -132,6 +133,7 @@ public class BBSModClient implements ClientModInitializer
     private static long pendingVideoExportStartAtMs;
     private static int pendingVideoExportWidth;
     private static int pendingVideoExportHeight;
+    private static final WorldExportWindowSession worldExportWindowSession = new WorldExportWindowSession();
 
     private static float originalFramebufferScale;
 
@@ -141,6 +143,18 @@ public class BBSModClient implements ClientModInitializer
         VIDEO_DELAY,
         FILM_WAIT_FIRST_TICK,
         FILM_DELAY_PAUSED
+    }
+
+    private static class VideoSize
+    {
+        private final int width;
+        private final int height;
+
+        private VideoSize(int width, int height)
+        {
+            this.width = width;
+            this.height = height;
+        }
     }
 
     public static TextureManager getTextures()
@@ -499,8 +513,8 @@ public class BBSModClient implements ClientModInitializer
         {
             dashboard = null;
             films = new Films();
+            this.stopVideoRecording();
             playFilmAndRecordFilmId = null;
-            this.clearPendingVideoRecording();
 
             ClientNetwork.resetHandshake();
             films.reset();
@@ -545,18 +559,16 @@ public class BBSModClient implements ClientModInitializer
 
             if (playFilmAndRecordFilmId != null && this.hasPendingPlayFilmAndRecord() && !films.has(playFilmAndRecordFilmId))
             {
-                this.clearPendingVideoRecording();
-                this.getFilms().clearStopVideoRecordingWhenFilmFinished();
-                BBSRendering.setCustomSize(false, 0, 0);
-                playFilmAndRecordFilmId = null;
+                this.stopVideoRecording();
+                this.clearPlayFilmAndRecordSessionState();
             }
 
             this.updatePendingVideoRecording();
 
             if (playFilmAndRecordFilmId != null && !videoRecorder.isRecording() && !this.hasPendingPlayFilmAndRecord())
             {
-                this.getFilms().clearStopVideoRecordingWhenFilmFinished();
-                playFilmAndRecordFilmId = null;
+                this.restoreWorldExportWindowSize();
+                this.clearPlayFilmAndRecordSessionState();
             }
 
             while (keyDashboard.wasPressed()) UIScreen.open(getDashboard());
@@ -671,14 +683,13 @@ public class BBSModClient implements ClientModInitializer
     {
         if (this.hasPendingVideoRecording())
         {
-            boolean pendingPlayFilmAndRecord = this.hasPendingPlayFilmAndRecord() || playFilmAndRecordFilmId != null;
-
-            this.clearPendingVideoRecording();
-            BBSRendering.setCustomSize(false, 0, 0);
-
-            if (pendingPlayFilmAndRecord)
+            if (this.hasPendingPlayFilmAndRecord() || playFilmAndRecordFilmId != null)
             {
                 this.stopPlayFilmAndRecordSession(true);
+            }
+            else
+            {
+                this.stopVideoRecording();
             }
 
             return;
@@ -686,17 +697,16 @@ public class BBSModClient implements ClientModInitializer
 
         if (videoRecorder.isRecording())
         {
-            videoRecorder.stopRecording();
-            BBSRendering.setCustomSize(false, 0, 0);
+            this.stopVideoRecording();
 
             return;
         }
 
         Window window = mc.getWindow();
-        int width = this.getEvenVideoDimension(window.getWidth());
-        int height = this.getEvenVideoDimension(window.getHeight());
+        VideoSize videoSize = this.getWorldExportVideoSize(window);
 
-        this.startVideoRecording(width, height, false);
+        this.applyWorldExportWindowSize(videoSize);
+        this.startVideoRecording(videoSize.width, videoSize.height, false);
     }
 
     private KeyBinding createKey(String id, int key)
@@ -782,12 +792,12 @@ public class BBSModClient implements ClientModInitializer
         }
 
         Window window = MinecraftClient.getInstance().getWindow();
-        int width = this.getEvenVideoDimension(window.getWidth());
-        int height = this.getEvenVideoDimension(window.getHeight());
+        VideoSize videoSize = this.getWorldExportVideoSize(window);
 
         playFilmAndRecordFilmId = film.getId();
 
-        this.startVideoRecording(width, height, true);
+        this.applyWorldExportWindowSize(videoSize);
+        this.startVideoRecording(videoSize.width, videoSize.height, true);
 
         Films.playFilm(film.getId(), false);
         getFilms().setStopVideoRecordingWhenFilmFinished(film.getId());
@@ -916,6 +926,39 @@ public class BBSModClient implements ClientModInitializer
         return value % 2 == 0 ? value : value - 1;
     }
 
+    private VideoSize getWorldExportVideoSize(Window window)
+    {
+        if (BBSSettings.worldExportResizeWindow.get())
+        {
+            int width = this.getEvenVideoDimension(BBSSettings.videoSettings.width.get());
+            int height = this.getEvenVideoDimension(BBSSettings.videoSettings.height.get());
+
+            return new VideoSize(width, height);
+        }
+
+        int width = this.getEvenVideoDimension(window.getWidth());
+        int height = this.getEvenVideoDimension(window.getHeight());
+
+        return new VideoSize(width, height);
+    }
+
+    private void applyWorldExportWindowSize(VideoSize videoSize)
+    {
+        if (BBSSettings.worldExportResizeWindow.get())
+        {
+            worldExportWindowSession.begin(videoSize.width, videoSize.height);
+
+            return;
+        }
+
+        worldExportWindowSession.clear();
+    }
+
+    private void restoreWorldExportWindowSize()
+    {
+        worldExportWindowSession.restore();
+    }
+
     private boolean hasPendingVideoRecording()
     {
         return pendingVideoExportState != PendingVideoExportState.NONE;
@@ -937,13 +980,17 @@ public class BBSModClient implements ClientModInitializer
     private void stopPlayFilmAndRecordSession(boolean stopFilm)
     {
         this.stopVideoRecording();
-        BBSRendering.setCustomSize(false, 0, 0);
 
         if (stopFilm && playFilmAndRecordFilmId != null && films.has(playFilmAndRecordFilmId))
         {
             Films.playFilm(playFilmAndRecordFilmId, false);
         }
 
+        this.clearPlayFilmAndRecordSessionState();
+    }
+
+    private void clearPlayFilmAndRecordSessionState()
+    {
         this.getFilms().clearStopVideoRecordingWhenFilmFinished();
         playFilmAndRecordFilmId = null;
     }
@@ -956,6 +1003,9 @@ public class BBSModClient implements ClientModInitializer
         {
             videoRecorder.stopRecording();
         }
+
+        BBSRendering.setCustomSize(false, 0, 0);
+        this.restoreWorldExportWindowSize();
     }
 
     private void keyPauseFilm()

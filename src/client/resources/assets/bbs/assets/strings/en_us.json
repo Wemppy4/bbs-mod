@@ -198,6 +198,8 @@
 	"bbs.config.video.encoder_path-comment": "To record a video, you need to specify here a path to ffmpeg's binary (to ffmpeg or ffmpeg.exe file, depending on OS)",
 	"bbs.config.video.log": "Encoder log",
 	"bbs.config.video.log-comment": "If disabled, it will not generate the log in the video export folder (instead it will go into BBS mod's settings/video.log)",
+	"bbs.config.video.world_export_resize_window": "Change window size when exporting from world",
+	"bbs.config.video.world_export_resize_window-comment": "When enabled, exporting from world with F4/F6 temporarily changes Minecraft window size to export resolution and restores the size after stopping export.",
 	"bbs.config.video.title": "Video recording",
 	"bbs.config.video.tooltip": "This category provides options for recording video in the film editor",
 	"bbs.keystrokes_position.auto": "Auto",
