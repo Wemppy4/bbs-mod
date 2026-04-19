@@ -423,22 +423,38 @@ public class BBSRendering
 
         BBSModClient.getFilms().renderHud(batcher2D, tickDelta);
 
-        if (videoRecorder.isRecording() && BBSSettings.recordingOverlays.get() && UIScreen.getCurrentMenu() == null)
+        if (BBSSettings.recordingOverlays.get() && UIScreen.getCurrentMenu() == null)
         {
-            int count = videoRecorder.getCounter();
-            String label = UIKeys.FILM_VIDEO_RECORDING.format(
-                count,
-                BBSModClient.getKeyRecordVideo().getBoundKeyLocalizedText().getString()
-            ).get();
+            if (BBSModClient.isVideoExportDelayPending())
+            {
+                int countdown = Math.max(0, (int) Math.ceil(BBSModClient.getVideoExportDelayRemainingMs() / 50D));
 
-            int x = 5;
-            int y = 5;
-            int w = batcher2D.getFont().getWidth(label);
+                renderRecordingTimerOverlay(batcher2D, String.valueOf(countdown / 20F));
+            }
+            else if (videoRecorder.isRecording())
+            {
+                int count = videoRecorder.getCounter();
+                String label = UIKeys.FILM_VIDEO_RECORDING.format(
+                    count,
+                    BBSModClient.getKeyRecordVideo().getBoundKeyLocalizedText().getString()
+                ).get();
 
-            batcher2D.box(x, y, x + 18 + w + 3, y + 16, Colors.A50);
-            batcher2D.icon(Icons.SPHERE, Colors.RED | Colors.A100, x, y);
-            batcher2D.textShadow(label, x + 18, y + 4);
+                renderRecordingTimerOverlay(batcher2D, label);
+            }
         }
+    }
+
+    public static void renderRecordingTimerOverlay(Batcher2D batcher2D, String label)
+    {
+        renderRecordingTimerOverlay(batcher2D, label, 5, 5);
+    }
+
+    public static void renderRecordingTimerOverlay(Batcher2D batcher2D, String label, int x, int y)
+    {
+        int iconX = x + 16;
+
+        batcher2D.icon(Icons.SPHERE, Colors.RED | Colors.A100, iconX, y, 1F, 0F);
+        batcher2D.textCard(label, iconX + 3, y + 4, Colors.WHITE, Colors.A50);
     }
 
     public static void renderCoolStuff(WorldRenderContext worldRenderContext)

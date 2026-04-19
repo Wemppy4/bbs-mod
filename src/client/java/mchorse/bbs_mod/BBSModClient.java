@@ -218,6 +218,21 @@ public class BBSModClient implements ClientModInitializer
         return keyRecordVideo;
     }
 
+    public static boolean isVideoExportDelayPending()
+    {
+        return pendingVideoExportState != PendingVideoExportState.NONE;
+    }
+
+    public static long getVideoExportDelayRemainingMs()
+    {
+        if (!isVideoExportDelayPending())
+        {
+            return 0L;
+        }
+
+        return Math.max(0L, pendingVideoExportStartAtMs - System.currentTimeMillis());
+    }
+
     /** Returns the dashboard without creating it. Used to avoid creating UI when handling keys (e.g. F6) before user has opened BBS. */
     public static UIDashboard getDashboardIfCreated()
     {

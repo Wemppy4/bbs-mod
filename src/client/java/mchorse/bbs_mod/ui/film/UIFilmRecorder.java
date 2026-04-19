@@ -14,6 +14,7 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIMessageOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
+import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.utils.StringUtils;
 import mchorse.bbs_mod.utils.VideoRecorder;
@@ -232,6 +233,17 @@ public class UIFilmRecorder extends UIElement
 
         if (this.preparing)
         {
+            if (BBSSettings.recordingOverlays.get())
+            {
+                long remainingMs = Math.max(0L, this.startRecordingAtMs - System.currentTimeMillis());
+                int countdown = Math.max(0, (int) Math.ceil(remainingMs / 50D));
+                Area previewArea = this.editor.preview.getViewport();
+                int x = previewArea.x + 5;
+                int y = previewArea.y + 5;
+
+                BBSRendering.renderRecordingTimerOverlay(context.batcher, String.valueOf(TimeUtils.toSeconds(countdown)), x, y);
+            }
+
             if (System.currentTimeMillis() >= this.startRecordingAtMs)
             {
                 this.preparing = false;
