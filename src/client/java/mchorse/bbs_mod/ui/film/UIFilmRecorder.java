@@ -151,10 +151,9 @@ public class UIFilmRecorder extends UIElement
 
         if (delayMs > 0)
         {
-            this.editor.getController().setPaused(true);
-
             this.preparing = true;
             this.startRecordingAtMs = System.currentTimeMillis() + delayMs;
+            this.editor.getController().setPaused(true);
         }
         else
         {
@@ -183,7 +182,11 @@ public class UIFilmRecorder extends UIElement
         }
 
         this.editor.getController().setPaused(false);
-        this.editor.togglePlayback();
+
+        if (!this.isRunning())
+        {
+            this.editor.togglePlayback();
+        }
     }
 
     public void stop()
