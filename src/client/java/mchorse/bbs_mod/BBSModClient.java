@@ -1,6 +1,7 @@
 package mchorse.bbs_mod;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import mchorse.bbs_mod.actions.ActionState;
 import mchorse.bbs_mod.audio.SoundManager;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
 import mchorse.bbs_mod.camera.clips.ClipFactoryData;
@@ -18,6 +19,7 @@ import mchorse.bbs_mod.cubic.model.ModelManager;
 import mchorse.bbs_mod.events.register.RegisterClientSettingsEvent;
 import mchorse.bbs_mod.events.register.RegisterL10nEvent;
 import mchorse.bbs_mod.film.Film;
+import mchorse.bbs_mod.film.BaseFilmController;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.film.Recorder;
 import mchorse.bbs_mod.film.replays.Replay;
@@ -126,7 +128,20 @@ public class BBSModClient implements ClientModInitializer
     private static GunZoom gunZoom;
     private static String playFilmAndRecordFilmId;
 
+    private static PendingVideoExportState pendingVideoExportState = PendingVideoExportState.NONE;
+    private static long pendingVideoExportStartAtMs;
+    private static int pendingVideoExportWidth;
+    private static int pendingVideoExportHeight;
+
     private static float originalFramebufferScale;
+
+    private enum PendingVideoExportState
+    {
+        NONE,
+        VIDEO_DELAY,
+        FILM_WAIT_FIRST_TICK,
+        FILM_DELAY_PAUSED
+    }
 
     public static TextureManager getTextures()
     {
@@ -470,6 +485,7 @@ public class BBSModClient implements ClientModInitializer
             dashboard = null;
             films = new Films();
             playFilmAndRecordFilmId = null;
+            this.clearPendingVideoRecording();
 
             ClientNetwork.resetHandshake();
             films.reset();
@@ -512,8 +528,19 @@ public class BBSModClient implements ClientModInitializer
                 textures.update();
             }
 
-            if (playFilmAndRecordFilmId != null && !videoRecorder.isRecording())
+            if (playFilmAndRecordFilmId != null && this.hasPendingPlayFilmAndRecord() && !films.has(playFilmAndRecordFilmId))
             {
+                this.clearPendingVideoRecording();
+                this.getFilms().clearStopVideoRecordingWhenFilmFinished();
+                BBSRendering.setCustomSize(false, 0, 0);
+                playFilmAndRecordFilmId = null;
+            }
+
+            this.updatePendingVideoRecording();
+
+            if (playFilmAndRecordFilmId != null && !videoRecorder.isRecording() && !this.hasPendingPlayFilmAndRecord())
+            {
+                this.getFilms().clearStopVideoRecordingWhenFilmFinished();
                 playFilmAndRecordFilmId = null;
             }
 
@@ -522,18 +549,7 @@ public class BBSModClient implements ClientModInitializer
             while (keyPlayFilm.wasPressed()) this.keyPlayFilm();
             while (keyPauseFilm.wasPressed()) this.keyPauseFilm();
             while (keyRecordReplay.wasPressed()) this.keyRecordReplay();
-            while (keyRecordVideo.wasPressed())
-            {
-                Window window = mc.getWindow();
-                int width = Math.max(window.getWidth(), 2);
-                int height = Math.max(window.getHeight(), 2);
-
-                if (width % 2 == 1) width -= width % 2;
-                if (height % 2 == 1) height -= height % 2;
-
-                videoRecorder.toggleRecording(BBSRendering.getTexture().id, width, height);
-                BBSRendering.setCustomSize(videoRecorder.isRecording(), width, height);
-            }
+            while (keyRecordVideo.wasPressed()) this.keyRecordVideo(mc);
             while (keyPlayFilmAndRecord.wasPressed()) this.keyPlayFilmAndRecord();
             while (keyOpenReplays.wasPressed()) this.keyOpenReplays();
             while (keyOpenMorphing.wasPressed())
@@ -636,6 +652,38 @@ public class BBSModClient implements ClientModInitializer
         }
     }
 
+    private void keyRecordVideo(MinecraftClient mc)
+    {
+        if (this.hasPendingVideoRecording())
+        {
+            boolean pendingPlayFilmAndRecord = this.hasPendingPlayFilmAndRecord() || playFilmAndRecordFilmId != null;
+
+            this.clearPendingVideoRecording();
+            BBSRendering.setCustomSize(false, 0, 0);
+
+            if (pendingPlayFilmAndRecord)
+            {
+                this.stopPlayFilmAndRecordSession(true);
+            }
+
+            return;
+        }
+
+        if (videoRecorder.isRecording())
+        {
+            videoRecorder.stopRecording();
+            BBSRendering.setCustomSize(false, 0, 0);
+
+            return;
+        }
+
+        Window window = mc.getWindow();
+        int width = this.getEvenVideoDimension(window.getWidth());
+        int height = this.getEvenVideoDimension(window.getHeight());
+
+        this.startVideoRecording(width, height, false);
+    }
+
     private KeyBinding createKey(String id, int key)
     {
         return KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -706,35 +754,193 @@ public class BBSModClient implements ClientModInitializer
         Film film = panel.getData();
         boolean sameComboSession = film.getId().equals(playFilmAndRecordFilmId);
 
-        if (sameComboSession && videoRecorder.isRecording())
+        if (sameComboSession && (videoRecorder.isRecording() || this.hasPendingPlayFilmAndRecord()))
         {
-            videoRecorder.stopRecording();
-            BBSRendering.setCustomSize(false, 0, 0);
-            Films.playFilm(film.getId(), false);
-            getFilms().clearStopVideoRecordingWhenFilmFinished();
-            playFilmAndRecordFilmId = null;
+            this.stopPlayFilmAndRecordSession(true);
 
             return;
         }
 
-        if (videoRecorder.isRecording())
+        if (videoRecorder.isRecording() || this.hasPendingVideoRecording() || playFilmAndRecordFilmId != null)
         {
             return;
         }
 
         Window window = MinecraftClient.getInstance().getWindow();
-        int width = Math.max(window.getWidth(), 2);
-        int height = Math.max(window.getHeight(), 2);
+        int width = this.getEvenVideoDimension(window.getWidth());
+        int height = this.getEvenVideoDimension(window.getHeight());
 
-        if (width % 2 == 1) width -= width % 2;
-        if (height % 2 == 1) height -= height % 2;
+        playFilmAndRecordFilmId = film.getId();
 
-        videoRecorder.toggleRecording(BBSRendering.getTexture().id, width, height);
-        BBSRendering.setCustomSize(videoRecorder.isRecording(), width, height);
+        this.startVideoRecording(width, height, true);
 
         Films.playFilm(film.getId(), false);
         getFilms().setStopVideoRecordingWhenFilmFinished(film.getId());
-        playFilmAndRecordFilmId = film.getId();
+    }
+
+    private boolean startVideoRecording(int width, int height, boolean playFilmAndRecord)
+    {
+        float delaySeconds = Math.max(0F, BBSSettings.videoSettings.delay.get());
+        long delayMs = (long) (delaySeconds * 1000F);
+
+        if (delayMs <= 0L)
+        {
+            videoRecorder.startRecording(null, BBSRendering.getTexture().id, width, height);
+            BBSRendering.setCustomSize(videoRecorder.isRecording(), width, height);
+
+            return false;
+        }
+
+        this.clearPendingVideoRecording();
+
+        pendingVideoExportState = playFilmAndRecord ? PendingVideoExportState.FILM_WAIT_FIRST_TICK : PendingVideoExportState.VIDEO_DELAY;
+        pendingVideoExportStartAtMs = System.currentTimeMillis() + delayMs;
+        pendingVideoExportWidth = width;
+        pendingVideoExportHeight = height;
+
+        /* Keep export resolution during warmup so first captured frame is already settled. */
+        BBSRendering.setCustomSize(true, width, height);
+
+        return true;
+    }
+
+    private void updatePendingVideoRecording()
+    {
+        if (!this.hasPendingVideoRecording())
+        {
+            return;
+        }
+
+        if (pendingVideoExportState == PendingVideoExportState.FILM_WAIT_FIRST_TICK)
+        {
+            if (!this.pausePlayFilmAndRecordAfterFirstTick())
+            {
+                return;
+            }
+
+            pendingVideoExportState = PendingVideoExportState.FILM_DELAY_PAUSED;
+        }
+
+        if (System.currentTimeMillis() < pendingVideoExportStartAtMs)
+        {
+            return;
+        }
+
+        int width = pendingVideoExportWidth;
+        int height = pendingVideoExportHeight;
+        PendingVideoExportState previousState = pendingVideoExportState;
+
+        this.clearPendingVideoRecording();
+
+        if (previousState == PendingVideoExportState.FILM_DELAY_PAUSED)
+        {
+            this.resumePlayFilmAndRecordAfterDelay();
+        }
+
+        videoRecorder.startRecording(null, BBSRendering.getTexture().id, width, height);
+        BBSRendering.setCustomSize(videoRecorder.isRecording(), width, height);
+    }
+
+    private boolean pausePlayFilmAndRecordAfterFirstTick()
+    {
+        if (playFilmAndRecordFilmId == null)
+        {
+            return true;
+        }
+
+        BaseFilmController controller = films.getController(playFilmAndRecordFilmId);
+
+        if (controller == null || controller.getTick() < 1)
+        {
+            return false;
+        }
+
+        if (!controller.paused)
+        {
+            controller.togglePause();
+        }
+
+        if (ClientNetwork.isIsBBSModOnServer())
+        {
+            ClientNetwork.sendActionState(playFilmAndRecordFilmId, ActionState.PAUSE, controller.getTick());
+        }
+
+        return true;
+    }
+
+    private void resumePlayFilmAndRecordAfterDelay()
+    {
+        if (playFilmAndRecordFilmId == null)
+        {
+            return;
+        }
+
+        BaseFilmController controller = this.getFilms().getController(playFilmAndRecordFilmId);
+        int tick = 0;
+
+        if (controller != null)
+        {
+            tick = Math.max(controller.getTick(), 0);
+
+            if (controller.paused)
+            {
+                controller.togglePause();
+            }
+        }
+
+        if (ClientNetwork.isIsBBSModOnServer())
+        {
+            ClientNetwork.sendActionState(playFilmAndRecordFilmId, ActionState.PLAY, tick);
+        }
+    }
+
+    private int getEvenVideoDimension(int value)
+    {
+        value = Math.max(value, 2);
+
+        return value % 2 == 0 ? value : value - 1;
+    }
+
+    private boolean hasPendingVideoRecording()
+    {
+        return pendingVideoExportState != PendingVideoExportState.NONE;
+    }
+
+    private boolean hasPendingPlayFilmAndRecord()
+    {
+        return pendingVideoExportState == PendingVideoExportState.FILM_WAIT_FIRST_TICK || pendingVideoExportState == PendingVideoExportState.FILM_DELAY_PAUSED;
+    }
+
+    private void clearPendingVideoRecording()
+    {
+        pendingVideoExportState = PendingVideoExportState.NONE;
+        pendingVideoExportStartAtMs = 0L;
+        pendingVideoExportWidth = 0;
+        pendingVideoExportHeight = 0;
+    }
+
+    private void stopPlayFilmAndRecordSession(boolean stopFilm)
+    {
+        this.stopVideoRecording();
+        BBSRendering.setCustomSize(false, 0, 0);
+
+        if (stopFilm && playFilmAndRecordFilmId != null && films.has(playFilmAndRecordFilmId))
+        {
+            Films.playFilm(playFilmAndRecordFilmId, false);
+        }
+
+        this.getFilms().clearStopVideoRecordingWhenFilmFinished();
+        playFilmAndRecordFilmId = null;
+    }
+
+    private void stopVideoRecording()
+    {
+        this.clearPendingVideoRecording();
+
+        if (videoRecorder.isRecording())
+        {
+            videoRecorder.stopRecording();
+        }
     }
 
     private void keyPauseFilm()
