@@ -27,6 +27,7 @@ public class UITextureEditor extends UIPixelsEditor
     private boolean dirty;
 
     private Consumer<Link> saveCallback;
+    private Consumer<Link> renameCallback;
 
     public UITextureEditor()
     {
@@ -79,6 +80,17 @@ public class UITextureEditor extends UIPixelsEditor
     public UITextureEditor saveCallback(Consumer<Link> saveCallback)
     {
         this.saveCallback = saveCallback;
+
+        return this;
+    }
+
+    /**
+     * Invoked when a successful save changes the active document's path (Save As),
+     * so the owning tab container can update its link and drop any duplicate tab.
+     */
+    public UITextureEditor renameCallback(Consumer<Link> renameCallback)
+    {
+        this.renameCallback = renameCallback;
 
         return this;
     }
@@ -226,6 +238,16 @@ public class UITextureEditor extends UIPixelsEditor
             UIOverlay.addOverlay(this.getContext(), panel);
 
             this.setDirty(false);
+
+            if (!link.equals(this.texture))
+            {
+                this.texture = link;
+
+                if (this.renameCallback != null)
+                {
+                    this.renameCallback.accept(link);
+                }
+            }
 
             if (this.saveCallback != null)
             {

@@ -38,7 +38,7 @@ public class UITexturePainter extends UIElement
 
     public static final class Document
     {
-        public final Link link;
+        public Link link;
         public final Pixels pixels;
         public final UITextureEditor editor;
 
@@ -221,12 +221,56 @@ public class UITexturePainter extends UIElement
     private UITextureEditor createEditor(Link link, Pixels pixels)
     {
         UITextureEditor editor = new UITextureEditor().saveCallback(this.saveCallback);
+        editor.renameCallback((newLink) -> this.renameDocument(editor, newLink));
         editor.colorSupplier(() -> this.primary.picker.color);
         editor.backgroundSupplier(() -> (float) this.brightness.getValue());
         editor.setBrushSize((int) this.brushSize.getValue());
         editor.setDocument(link, pixels);
         editor.full(this.content);
         return editor;
+    }
+
+    /**
+     * Reassigns {@code editor}'s document to {@code newLink} after a Save As, closing any
+     * pre-existing tab that already referenced {@code newLink} (its contents are discarded
+     * since the file on disk was just overwritten).
+     */
+    private void renameDocument(UITextureEditor editor, Link newLink)
+    {
+        int editorIndex = -1;
+        int duplicateIndex = -1;
+
+        for (int i = 0; i < documents.size(); i++)
+        {
+            Document doc = documents.get(i);
+
+            if (doc.editor == editor)
+            {
+                editorIndex = i;
+            }
+            else if (doc.link.equals(newLink))
+            {
+                duplicateIndex = i;
+            }
+        }
+
+        if (editorIndex < 0)
+        {
+            return;
+        }
+
+        if (duplicateIndex >= 0)
+        {
+            this.removeTab(duplicateIndex);
+
+            if (duplicateIndex < editorIndex)
+            {
+                editorIndex -= 1;
+            }
+        }
+
+        documents.get(editorIndex).link = newLink;
+        this.finishTabMutation();
     }
 
     private void showCurrentEditor()
