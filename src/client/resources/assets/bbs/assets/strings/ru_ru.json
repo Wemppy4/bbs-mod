@@ -789,6 +789,7 @@
 	"bbs.ui.importer.old_skin": "64x32 скин в 64x64 скин",
 	"bbs.ui.importer.success-notification": "Скинутые файлы были успешно обработаны через %s!",
 	"bbs.ui.importer.webp": "WEBP в PNG",
+	"bbs.ui.item_stack.context.give": "Выдать игроку",
 	"bbs.ui.item_stack.context.hotbar": "Вставить из слотов...",
 	"bbs.ui.item_stack.context.paste": "Вставить основной предмет игрока",
 	"bbs.ui.item_stack.context.reset": "Сбросить предмет",
