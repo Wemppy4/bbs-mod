@@ -11,8 +11,12 @@ import mchorse.bbs_mod.ui.utils.UIConstants;
 import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.colors.Colors;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 
 import java.util.function.Consumer;
 
@@ -38,6 +42,11 @@ public class UIItemStack extends UIElement
 
                 this.setStack(ItemStack.EMPTY);
             });
+
+            if (!this.stack.isEmpty())
+            {
+                menu.action(Icons.PLAYER, UIKeys.ITEM_STACK_CONTEXT_GIVE, () -> giveToPlayer(this.stack));
+            }
         });
 
         this.h(UIConstants.CONTROL_HEIGHT);
@@ -96,5 +105,39 @@ public class UIItemStack extends UIElement
         }
 
         super.render(context);
+    }
+
+    /**
+     * Delivers {@code stack} to the local player via the vanilla {@code /give} command,
+     * preserving count and NBT (custom name, enchantments, etc.). Silently ignored if the
+     * stack is empty or the player has no active network connection. Requires the player
+     * to have sufficient permissions for {@code /give}.
+     */
+    static void giveToPlayer(ItemStack stack)
+    {
+        if (stack == null || stack.isEmpty())
+        {
+            return;
+        }
+
+        MinecraftClient mc = MinecraftClient.getInstance();
+
+        if (mc.player == null || mc.player.networkHandler == null)
+        {
+            return;
+        }
+
+        Identifier id = Registries.ITEM.getId(stack.getItem());
+        StringBuilder command = new StringBuilder("give @s ").append(id);
+        NbtCompound tag = stack.getNbt();
+
+        if (tag != null && !tag.isEmpty())
+        {
+            command.append(tag);
+        }
+
+        command.append(' ').append(stack.getCount());
+
+        mc.player.networkHandler.sendChatCommand(command.toString());
     }
 }

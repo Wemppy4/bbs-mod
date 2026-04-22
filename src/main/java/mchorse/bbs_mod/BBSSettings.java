@@ -16,6 +16,7 @@ import mchorse.bbs_mod.settings.values.ui.ValueStringKeys;
 import mchorse.bbs_mod.settings.values.ui.ValueVideoSettings;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
+import mchorse.bbs_mod.utils.keyframes.KeyframeShape;
 
 public class BBSSettings {
 
@@ -63,6 +64,7 @@ public class BBSSettings {
 
 	public static ValueString videoEncoderPath;
 	public static ValueBoolean videoEncoderLog;
+	public static ValueBoolean worldExportResizeWindow;
 	public static ValueVideoSettings videoSettings;
 
 	public static ValueFloat editorCameraSpeed;
@@ -87,6 +89,7 @@ public class BBSSettings {
 	public static ValueBoolean editorHorizontalClipEditor;
 	public static ValueBoolean editorMinutesBackup;
 	public static ValueInt editorTrackWidth;
+	public static ValueInt keyframeDefaultShape;
 	public static ValueInt editorPreviewSizeMode;
 	public static ValueInt editorPreviewCustomWidth;
 	public static ValueInt editorPreviewCustomHeight;
@@ -143,6 +146,22 @@ public class BBSSettings {
 		return editorHorizontalClipEditor.get();
 	}
 
+	/**
+	 * Returns the user-configured default shape for newly created keyframes. Falls back to
+	 * {@link KeyframeShape#SQUARE} before settings are registered or if the stored ordinal
+	 * is out of range (e.g. after the enum shrinks in a future version).
+	 */
+	public static KeyframeShape getDefaultKeyframeShape() {
+		if (keyframeDefaultShape == null) {
+			return KeyframeShape.SQUARE;
+		}
+
+		int index = keyframeDefaultShape.get();
+		KeyframeShape[] values = KeyframeShape.values();
+
+		return index >= 0 && index < values.length ? values[index] : KeyframeShape.SQUARE;
+	}
+
 	public static void register(SettingsBuilder builder) {
 		HashSet<String> defaultFilters = new HashSet<>();
 
@@ -183,6 +202,7 @@ public class BBSSettings {
 		gizmos = builder.getBoolean("gizmos", true);
 		transformLocalDefault = builder.getBoolean("transform_local_default", false);
 		editorTrackWidth = builder.getInt("track_width", 2, 1, 10);
+		keyframeDefaultShape = builder.getInt("keyframe_default_shape", 0, 0, KeyframeShape.values().length - 1);
 		favoriteColors = new ValueColors("favorite_colors");
 		recentColors = new ValueColors("recent_colors");
 		disabledSheets = new ValueStringKeys("disabled_sheets");
@@ -222,6 +242,7 @@ public class BBSSettings {
 		builder.category("video");
 		videoEncoderPath = builder.getString("encoder_path", "ffmpeg");
 		videoEncoderLog = builder.getBoolean("log", true);
+		worldExportResizeWindow = builder.getBoolean("world_export_resize_window", false);
 		builder.register(videoSettings = new ValueVideoSettings("settings"));
 
 		/* Camera editor */
@@ -247,7 +268,7 @@ public class BBSSettings {
 		editorRewind = builder.getBoolean("rewind", true);
 		editorHorizontalClipEditor = builder.getBoolean("horizontal_clip_editor", true);
 		editorMinutesBackup = builder.getBoolean("minutes_backup", true);
-		editorPreviewSizeMode = builder.getInt("preview_size_mode", 2, 0, 2);
+		editorPreviewSizeMode = builder.getInt("preview_size_mode", 0, 0, 2);
 		editorPreviewCustomWidth = builder.getInt("preview_custom_width", 1280, 2, 16384);
 		editorPreviewCustomHeight = builder.getInt("preview_custom_height", 720, 2, 16384);
 		editorPreviewResolutionScale = builder.getFloat("preview_resolution_scale", 2F, 1F, 3F);

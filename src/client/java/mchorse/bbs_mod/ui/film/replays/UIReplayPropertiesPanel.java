@@ -1,31 +1,27 @@
-package mchorse.bbs_mod.ui.film.replays.overlays;
+package mchorse.bbs_mod.ui.film.replays;
 
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.film.replays.Replay;
+import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
-import mchorse.bbs_mod.graphics.window.Window;
-import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.ui.Keys;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
-import mchorse.bbs_mod.ui.film.replays.UIReplayList;
-import mchorse.bbs_mod.ui.forms.UINestedEdit;
 import mchorse.bbs_mod.ui.framework.UIContext;
+import mchorse.bbs_mod.ui.forms.UINestedEdit;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIAnchorKeyframeFactory;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
-import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlayPanel;
 import mchorse.bbs_mod.ui.utils.UI;
-import mchorse.bbs_mod.ui.utils.UIDataUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 
 import java.util.function.Consumer;
 
-public class UIReplaysOverlayPanel extends UIOverlayPanel
+public class UIReplayPropertiesPanel extends UIElement
 {
-    public UIReplayList replays;
+    private final UIFilmPanel filmPanel;
 
     public UIElement properties;
     public UINestedEdit pickEdit;
@@ -44,37 +40,24 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
     public UIToggle axesPreview;
     public UIButton pickAxesPreviewBone;
 
-    private Consumer<Replay> callback;
+    private UIReplayList list;
 
-    public UIReplaysOverlayPanel(UIFilmPanel filmPanel, Consumer<Replay> callback)
+    public UIReplayPropertiesPanel(UIFilmPanel filmPanel)
     {
-        super(UIKeys.FILM_REPLAY_TITLE);
-
-        this.callback = callback;
-        this.replays = new UIReplayList((l) -> this.callback.accept(l.isEmpty() ? null : l.get(0)), null, filmPanel);
-
-        this.keys().register(Keys.DELETE, () -> this.replays.removeReplay())
-            .label(UIKeys.SCENE_REPLAYS_CONTEXT_REMOVE)
-            .active(() -> this.replays.hasReplaySelection());
-        this.keys().register(Keys.COPY, this.replays::copyReplay)
-            .label(UIKeys.SCENE_REPLAYS_CONTEXT_COPY)
-            .active(() -> this.replays.hasReplaySelection());
-        this.keys().register(Keys.PASTE, () ->
-        {
-            MapType data = Window.getClipboardMap("_CopyReplay");
-            if (data != null) this.replays.pasteReplay(data);
-        }).label(UIKeys.SCENE_REPLAYS_CONTEXT_PASTE).active(() -> Window.getClipboardMap("_CopyReplay") != null);
-        this.keys().register(Keys.REPLAYS_DUPE, () -> this.replays.dupeReplay())
-            .label(UIKeys.SCENE_REPLAYS_CONTEXT_DUPE)
-            .active(() -> this.replays.hasReplaySelection());
+        this.filmPanel = filmPanel;
 
         this.pickEdit = new UINestedEdit((editing) ->
         {
-            Replay r = this.replays.getSelectedReplayFirst();
+            if (this.list == null)
+            {
+                return;
+            }
+
+            Replay r = this.list.getSelectedReplayFirst();
 
             if (r != null)
             {
-                this.replays.openFormEditor(r.form, editing, this.pickEdit::setForm);
+                this.list.openFormEditor(r.form, editing, this.pickEdit::setForm);
             }
         });
         this.pickEdit.pick.tooltip(UIKeys.SCENE_REPLAYS_CONTEXT_PICK_FORM);
@@ -108,7 +91,7 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
                 }
             }
 
-            Replay first = this.replays.getSelectedReplayFirst();
+            Replay first = this.list == null ? null : this.list.getSelectedReplayFirst();
 
             if (first != null)
             {
@@ -120,20 +103,18 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
         this.relativeOffsetX = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().x = v)));
         this.relativeOffsetY = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().y = v)));
         this.relativeOffsetZ = new UITrackpad((v) -> this.edit((replay) -> BaseValue.edit(replay.relativeOffset, (value) -> value.get().z = v)));
-        this.axesPreview = new UIToggle(UIKeys.FILM_REPLAY_AXES_PREVIEW, (b) ->
-        {
-            this.edit((replay) -> replay.axesPreview.set(b.getValue()));
-        });
+        this.axesPreview = new UIToggle(UIKeys.FILM_REPLAY_AXES_PREVIEW, (b) -> this.edit((replay) -> replay.axesPreview.set(b.getValue())));
         this.pickAxesPreviewBone = new UIButton(UIKeys.FILM_REPLAY_PICK_AXES_PREVIEW, (b) ->
         {
             Replay replay = filmPanel.replayEditor.getReplay();
 
-            if (replay == null || filmPanel.getData() == null)
+            if (replay != null && filmPanel.getData() != null)
             {
-                return;
+                UIAnchorKeyframeFactory.displayAttachments(filmPanel, filmPanel.getData().replays.getList().indexOf(replay), replay.axesPreviewBone.get(), (s) ->
+                {
+                    this.edit((r) -> r.axesPreviewBone.set(s));
+                });
             }
-
-            UIAnchorKeyframeFactory.displayAttachments(filmPanel, filmPanel.getData().replays.getList().indexOf(replay), replay.axesPreviewBone.get(), (s) -> this.edit((r) -> r.axesPreviewBone.set(s)));
         });
 
         this.properties = UI.scrollView(5, 6,
@@ -146,23 +127,34 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
             this.relative, UI.row(this.relativeOffsetX, this.relativeOffsetY, this.relativeOffsetZ),
             this.axesPreview, this.pickAxesPreviewBone
         );
-        this.properties.relative(this.replays).x(1F).wTo(this.icons.area).h(1F);
-        this.replays.relative(this.content).w(0.5F).h(1F);
+        this.refreshEditPanelOffset();
 
-        this.content.add(this.replays, this.properties);
+        this.add(this.properties);
+        this.setReplay(null);
     }
 
-    @Override
-    public void resize()
+    public void refreshEditPanelOffset()
     {
-        super.resize();
+        int top = this.filmPanel.getEditPanelTopOffsetPx();
+        this.properties.relative(this).x(0).y(0, top).w(1F).h(1F, -top);
+        this.resize();
+    }
+
+    public void attachReplayList(UIReplayList list)
+    {
+        this.list = list;
+    }
+
+    public Consumer<Form> getFormConsumer()
+    {
+        return this.pickEdit::setForm;
     }
 
     private void edit(Consumer<Replay> consumer)
     {
-        if (consumer != null)
+        if (consumer != null && this.list != null)
         {
-            for (Replay replay : this.replays.getSelectedReplays())
+            for (Replay replay : this.list.getSelectedReplays())
             {
                 consumer.accept(replay);
             }
@@ -195,19 +187,9 @@ public class UIReplaysOverlayPanel extends UIOverlayPanel
     @Override
     public void render(UIContext context)
     {
+        int panelBg = Colors.mulRGB(BBSSettings.primaryColor(Colors.A100), 0.2F);
+
+        this.area.render(context.batcher, panelBg);
         super.render(context);
-    }
-
-    @Override
-    protected void renderBackground(UIContext context)
-    {
-        super.renderBackground(context);
-
-        this.content.area.render(context.batcher, Colors.A100);
-
-        if (this.replays.getList().size() < 3)
-        {
-            UIDataUtils.renderRightClickHere(context, this.replays.area);
-        }
     }
 }

@@ -202,7 +202,7 @@ public class UIPickableFormRenderer extends UIFormRenderer
     {
         super.update();
 
-        if (this.update && this.target != null)
+        if (this.update && this.form != null)
         {
             this.form.update(this.entity);
         }

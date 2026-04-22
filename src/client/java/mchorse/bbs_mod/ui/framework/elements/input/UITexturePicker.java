@@ -469,7 +469,6 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
         }
         else
         {
-            this.pixelEditor.fillTexture(null);
             this.pixelEditor.removeFromParent();
             this.pixelEditor = null;
         }
@@ -730,7 +729,14 @@ public class UITexturePicker extends UIElement implements IImportPathProvider
         }
         else if (context.isPressed(GLFW.GLFW_KEY_ESCAPE) && this.canBeClosed)
         {
-            this.close();
+            if (this.pixelEditor != null)
+            {
+                this.togglePixelEditor();
+            }
+            else
+            {
+                this.close();
+            }
 
             return true;
         }

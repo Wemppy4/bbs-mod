@@ -25,6 +25,7 @@ public class UIVideoSettingsOverlayPanel extends UIOverlayPanel
     private UITrackpad frameRate;
     private UITrackpad motionBlur;
     private UITrackpad heldFrames;
+    private UITrackpad delay;
     private UITextbox path;
     private UIToggle openFolderAfterExport;
     private UIToggle playSoundAfterExport;
@@ -63,6 +64,9 @@ public class UIVideoSettingsOverlayPanel extends UIOverlayPanel
         this.heldFrames = new UITrackpad((v) -> this.value.heldFrames.set(v.intValue()));
         this.heldFrames.limit(this.value.heldFrames.getMin(), this.value.heldFrames.getMax(), true);
         this.heldFrames.tooltip(UIKeys.VIDEO_SETTINGS_HELD_FRAMES_TOOLTIP);
+        this.delay = new UITrackpad((v) -> this.value.delay.set(v.floatValue()));
+        this.delay.limit(this.value.delay.getMin(), this.value.delay.getMax(), false);
+        this.delay.tooltip(UIKeys.VIDEO_SETTINGS_DELAY_TOOLTIP);
         this.path = new UITextbox(1024, (s) -> this.value.path.set(s));
         this.openFolderAfterExport = new UIToggle(UIKeys.VIDEO_SETTINGS_OPEN_FOLDER_AFTER_EXPORT, (b) -> this.value.openFolderAfterExport.set(b.getValue()));
         this.openFolderAfterExport.tooltip(UIKeys.VIDEO_SETTINGS_OPEN_FOLDER_AFTER_EXPORT_TOOLTIP);
@@ -84,6 +88,8 @@ public class UIVideoSettingsOverlayPanel extends UIOverlayPanel
             this.motionBlur,
             UI.label(UIKeys.VIDEO_SETTINGS_HELD_FRAMES).marginTop(6),
             this.heldFrames,
+            UI.label(UIKeys.VIDEO_SETTINGS_DELAY).marginTop(6),
+            this.delay,
             UI.label(UIKeys.VIDEO_SETTINGS_PATH).marginTop(6),
             this.path
         );
@@ -126,6 +132,7 @@ public class UIVideoSettingsOverlayPanel extends UIOverlayPanel
         this.frameRate.setValue(this.value.frameRate.get());
         this.motionBlur.setValue(this.value.motionBlur.get());
         this.heldFrames.setValue(this.value.heldFrames.get());
+        this.delay.setValue(this.value.delay.get());
         this.path.setText(this.value.path.get());
         this.openFolderAfterExport.setValue(this.value.openFolderAfterExport.get());
         this.playSoundAfterExport.setValue(this.value.playSoundAfterExport.get());

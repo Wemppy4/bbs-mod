@@ -40,7 +40,6 @@ import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.clips.renderer.IUIClipRenderer;
 import mchorse.bbs_mod.ui.film.replays.overlays.UIAnimationToPoseOverlayPanel;
 import mchorse.bbs_mod.ui.film.replays.overlays.UIKeyframeSheetFilterOverlayPanel;
-import mchorse.bbs_mod.ui.film.replays.overlays.UIReplaysOverlayPanel;
 import mchorse.bbs_mod.ui.film.utils.keyframes.UIFilmKeyframes;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
@@ -83,7 +82,8 @@ public class UIReplaysEditor extends UIElement {
     private static String lastFilm = "";
     private static int lastReplay;
 
-    public UIReplaysOverlayPanel replays;
+    public UIReplaysListPanel replaysList;
+    public UIReplayPropertiesPanel replayProperties;
 
     public UIElement iconBar;
     public Map<ReplayCategory, UIIcon> tabButtons = new HashMap<>();
@@ -96,6 +96,8 @@ public class UIReplaysEditor extends UIElement {
     private UIFilmPanel filmPanel;
     private Film film;
     private Replay replay;
+    private boolean timelineVisible = true;
+    private boolean propertiesVisible = true;
     private Set<String> keys = new LinkedHashSet<>();
     private final Map<String, Set<String>> expandedPoseTabsByReplay = new HashMap<>();
 
@@ -294,9 +296,9 @@ public class UIReplaysEditor extends UIElement {
 
     public UIReplaysEditor(UIFilmPanel filmPanel) {
         this.filmPanel = filmPanel;
-        this.replays = new UIReplaysOverlayPanel(filmPanel, replay
-                -> this.setReplay(replay, false, false)
-        );
+        this.replayProperties = new UIReplayPropertiesPanel(filmPanel);
+        this.replaysList = new UIReplaysListPanel(filmPanel, (l) -> this.setReplay(l.isEmpty() ? null : l.get(0), false, false), this.replayProperties.getFormConsumer());
+        this.replayProperties.attachReplayList(this.replaysList.replays);
 
         this.iconBar = new UIElement();
         this.iconBar.relative(this).x(0).y(0).h(20).row(0).resize();
@@ -394,7 +396,7 @@ public class UIReplaysEditor extends UIElement {
                 index = 0;
             }
 
-            this.replays.replays.refreshReplayList();
+            this.replaysList.replays.refreshReplayList();
             this.setReplay(replays.isEmpty() ? null : replays.get(index), true, false);
         }
     }
@@ -422,12 +424,12 @@ public class UIReplaysEditor extends UIElement {
             this.filmPanel.getController().orbit.restoreReplayState(replay, true);
         }
 
-        this.replays.setReplay(replay);
+        this.replayProperties.setReplay(replay);
         this.filmPanel.actionEditor.setClips(replay == null ? null : replay.actions);
         this.updateChannelsList();
 
         if (select && replay != null) {
-            this.replays.replays.scrollToReplay(replay);
+            this.replaysList.replays.scrollToReplay(replay);
         }
     }
 
@@ -552,6 +554,8 @@ public class UIReplaysEditor extends UIElement {
                     .editPanelTopOffset(this.filmPanel::getEditPanelTopOffsetPx);
             this.keyframeEditor.relative(this).x(0).y(0).w(1F).h(1F);
             this.keyframeEditor.setUndoId("replay_keyframe_editor");
+            this.keyframeEditor.setTimelineVisible(this.timelineVisible);
+            this.keyframeEditor.setPropertiesVisible(this.propertiesVisible);
 
             /* Update iconBar width to match label width */
             int labelWidth = this.keyframeEditor.view.getLabelWidth();
@@ -776,6 +780,36 @@ public class UIReplaysEditor extends UIElement {
         if (this.keyframeEditor != null) {
             this.keyframeEditor.refreshEditPanelOffset();
         }
+
+        if (this.replaysList != null)
+        {
+            this.replaysList.refreshEditPanelOffset();
+        }
+
+        if (this.replayProperties != null)
+        {
+            this.replayProperties.refreshEditPanelOffset();
+        }
+    }
+
+    public void setTimelineVisible(boolean visible)
+    {
+        this.timelineVisible = visible;
+
+        if (this.keyframeEditor != null)
+        {
+            this.keyframeEditor.setTimelineVisible(visible);
+        }
+    }
+
+    public void setPropertiesVisible(boolean visible)
+    {
+        this.propertiesVisible = visible;
+
+        if (this.keyframeEditor != null)
+        {
+            this.keyframeEditor.setPropertiesVisible(visible);
+        }
     }
 
     public void pickForm(Form form, String bone) {
@@ -926,7 +960,7 @@ public class UIReplaysEditor extends UIElement {
                     float yaw = MathUtils.toDeg(camera.rotation.y);
 
                     menu.action(Icons.ADD, UIKeys.FILM_REPLAY_CONTEXT_ADD, ()
-                            -> this.replays.replays.addReplay(finalVec, pitch, yaw)
+                            -> this.replaysList.replays.addReplay(finalVec, pitch, yaw)
                     );
                     menu.action(Icons.POINTER, UIKeys.FILM_REPLAY_CONTEXT_MOVE_HERE, ()
                             -> this.moveReplay(finalVec.x, finalVec.y, finalVec.z)
@@ -985,7 +1019,8 @@ public class UIReplaysEditor extends UIElement {
     public void render(UIContext context) {
         /* Hide category bar when tabs are disabled or "edit track" overlay is open */
         this.iconBar.setVisible(
-                BBSSettings.editorReplayTabs.get()
+            this.timelineVisible
+            && BBSSettings.editorReplayTabs.get()
                 && (this.keyframeEditor == null || !this.keyframeEditor.view.isEditing())
         );
 
@@ -1008,7 +1043,7 @@ public class UIReplaysEditor extends UIElement {
         super.applyUndoData(data);
 
         List<Integer> selection = DataStorageUtils.intListFromData(data.getList("selection"));
-        List<Integer> currentIndices = this.replays.replays.getCurrentIndices();
+        List<Integer> currentIndices = this.replaysList.replays.getCurrentIndices();
 
         this.setReplay(
                 CollectionUtils.getSafe(this.film.replays.getList(), data.getInt("replay")),
@@ -1018,7 +1053,7 @@ public class UIReplaysEditor extends UIElement {
 
         currentIndices.clear();
         currentIndices.addAll(selection);
-        this.replays.replays.update();
+        this.replaysList.replays.update();
     }
 
     @Override
@@ -1030,7 +1065,7 @@ public class UIReplaysEditor extends UIElement {
         data.putInt("replay", index);
         data.put(
                 "selection",
-                DataStorageUtils.intListToData(this.replays.replays.getCurrentIndices())
+                DataStorageUtils.intListToData(this.replaysList.replays.getCurrentIndices())
         );
     }
 }

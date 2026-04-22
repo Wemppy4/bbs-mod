@@ -19,6 +19,7 @@ public class UIButton extends UIClickable<UIButton> implements ITextColoring
 
     public boolean custom;
     public int customColor;
+    public int customHighlightColor;
     public boolean background = true;
 
     public UIButton(IKey label, Consumer<UIButton> callback)
@@ -33,6 +34,16 @@ public class UIButton extends UIClickable<UIButton> implements ITextColoring
     {
         this.custom = true;
         this.customColor = color & Colors.RGB;
+        this.customHighlightColor = this.customColor;
+
+        return this;
+    }
+
+    public UIButton color(int color, int highlightColor)
+    {
+        this.custom = true;
+        this.customColor = color;
+        this.customHighlightColor = highlightColor;
 
         return this;
     }
@@ -68,11 +79,11 @@ public class UIButton extends UIClickable<UIButton> implements ITextColoring
     @Override
     protected void renderSkin(UIContext context)
     {
-        int color = Colors.A100 + (this.custom ? this.customColor : BBSSettings.primaryColor.get());
+        int color = (this.custom ? this.customColor : BBSSettings.primaryColor.get() | Colors.A100);
 
         if (this.hover)
         {
-            color = Colors.mulRGB(color, 0.85F);
+            color = this.custom ? this.customHighlightColor : Colors.mulRGB(color, 0.85F);
         }
 
         if (this.background)

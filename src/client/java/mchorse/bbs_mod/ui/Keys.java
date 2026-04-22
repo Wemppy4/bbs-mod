@@ -67,6 +67,7 @@ public class Keys
     /* Dashboard */
     public static final KeyCombo OPEN_UTILITY_PANEL = new KeyCombo("utility_panel", UIKeys.UTILITY_TITLE, GLFW.GLFW_KEY_F6).categoryKey("dashboard");
     public static final KeyCombo OPEN_DATA_MANAGER = new KeyCombo("data_manager", UIKeys.PANELS_KEYS_OPEN_DATA_MANAGER, GLFW.GLFW_KEY_N).categoryKey("dashboard");
+    public static final KeyCombo OPEN_NEW_TAB = new KeyCombo("new_tab", UIKeys.PANELS_KEYS_OPEN_NEW_TAB, GLFW.GLFW_KEY_N, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("dashboard");
     public static final KeyCombo TOGGLE_VISIBILITY = new KeyCombo("toggle", UIKeys.DASHBOARD_CONTEXT_TOGGLE_VISIBILITY, GLFW.GLFW_KEY_F1).categoryKey("dashboard");
 
     /* Forms */
@@ -127,6 +128,8 @@ public class Keys
     public static final KeyCombo FILM_CONTROLLER_TOGGLE_ONION_SKIN = new KeyCombo("toggle_onion_skin", UIKeys.FILM_CONTROLLER_ONION_SKIN_KEYS_TOGGLE, GLFW.GLFW_KEY_O).categoryKey("film_controller");
     public static final KeyCombo FILM_CONTROLLER_OPEN_REPLAYS = new KeyCombo("toggle_replays", UIKeys.FILM_CONTROLLER_KEYS_OPEN_REPLAYS, GLFW.GLFW_KEY_RIGHT_SHIFT).categoryKey("film_controller");
     public static final KeyCombo FILM_CONTROLLER_CYCLE_EDITORS = new KeyCombo("cycle_editors", UIKeys.FILM_CONTROLLER_KEYS_CYCLE_EDITORS, GLFW.GLFW_KEY_GRAVE_ACCENT).categoryKey("film_controller");
+    public static final KeyCombo FILM_CONTROLLER_NEXT_DOCK_TAB = new KeyCombo("next_dock_tab", UIKeys.FILM_CONTROLLER_KEYS_CYCLE_EDITORS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("film_controller");
+    public static final KeyCombo FILM_CONTROLLER_PREV_DOCK_TAB = new KeyCombo("prev_dock_tab", UIKeys.FILM_CONTROLLER_KEYS_CYCLE_EDITORS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("film_controller");
     public static final KeyCombo FILM_CONTROLLER_PREV_REPLAY = new KeyCombo("prev_replay", UIKeys.FILM_CONTROLLER_KEYS_PREV_REPLAY, GLFW.GLFW_KEY_PAGE_UP).categoryKey("film_controller");
     public static final KeyCombo FILM_CONTROLLER_NEXT_REPLAY = new KeyCombo("next_replay", UIKeys.FILM_CONTROLLER_KEYS_NEXT_REPLAY, GLFW.GLFW_KEY_PAGE_DOWN).categoryKey("film_controller");
 
@@ -135,6 +138,7 @@ public class Keys
     public static final KeyCombo REPLAYS_TAB_2 = new KeyCombo("tab_2", UIKeys.FILM_REPLAY_TAB_2, GLFW.GLFW_KEY_2).categoryKey("replays_editor");
     public static final KeyCombo REPLAYS_TAB_3 = new KeyCombo("tab_3", UIKeys.FILM_REPLAY_TAB_3, GLFW.GLFW_KEY_3).categoryKey("replays_editor");
     public static final KeyCombo REPLAYS_DUPE = new KeyCombo("replays_dupe", UIKeys.SCENE_REPLAYS_CONTEXT_DUPE, GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("replays_editor");
+    public static final KeyCombo REPLAYS_SELECT_ALL = new KeyCombo("replays_select_all", UIKeys.KEYFRAMES_CONTEXT_SELECT_ALL, GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT_CONTROL).categoryKey("replays_editor");
 
     /* Recording groups */
     public static final KeyCombo RECORDING_GROUP_ALL = new KeyCombo("all", UIKeys.FILM_GROUPS_ALL, GLFW.GLFW_KEY_1).categoryKey("recording_groups");

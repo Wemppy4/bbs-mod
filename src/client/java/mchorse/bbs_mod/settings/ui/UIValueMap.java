@@ -17,11 +17,14 @@ import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UICirculate;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.UIColor;
 import mchorse.bbs_mod.ui.framework.elements.input.UIKeybind;
 import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.IKeyframeShapeRenderer;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.shapes.KeyframeShapeRenderers;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UILabelOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
@@ -32,6 +35,7 @@ import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.FFMpegUtils;
 import mchorse.bbs_mod.utils.OS;
+import mchorse.bbs_mod.utils.keyframes.KeyframeShape;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -104,6 +108,33 @@ public class UIValueMap
                 color.w(90);
 
                 return Arrays.asList(UIValueFactory.column(color, value));
+            }
+            else if (value == BBSSettings.keyframeDefaultShape)
+            {
+                UIIcon button = new UIIcon(() ->
+                {
+                    IKeyframeShapeRenderer r = KeyframeShapeRenderers.SHAPES.get(shapeAt(value.get()));
+
+                    return r != null ? r.getIcon() : Icons.SHAPES;
+                }, (b) -> b.getContext().replaceContextMenu((menu) ->
+                {
+                    KeyframeShape current = shapeAt(value.get());
+
+                    for (KeyframeShape shape : KeyframeShape.values())
+                    {
+                        IKeyframeShapeRenderer renderer = KeyframeShapeRenderers.SHAPES.get(shape);
+
+                        if (renderer == null)
+                        {
+                            continue;
+                        }
+
+                        menu.action(renderer.getIcon(), renderer.getLabel(), shape == current, () -> value.set(shape.ordinal()));
+                    }
+                }));
+                button.tooltip(shapeButtonLabel(value.get()));
+
+                return Arrays.asList(UIValueFactory.column(button, value));
             }
             else if (value.getSubtype() == ValueInt.Subtype.MODES)
             {
@@ -215,6 +246,20 @@ public class UIValueMap
 
             return Arrays.asList(button);
         });
+    }
+
+    private static KeyframeShape shapeAt(int ordinal)
+    {
+        KeyframeShape[] values = KeyframeShape.values();
+
+        return ordinal >= 0 && ordinal < values.length ? values[ordinal] : KeyframeShape.SQUARE;
+    }
+
+    private static IKey shapeButtonLabel(int ordinal)
+    {
+        IKeyframeShapeRenderer renderer = KeyframeShapeRenderers.SHAPES.get(shapeAt(ordinal));
+
+        return renderer != null ? renderer.getLabel() : UIKeys.KEYFRAMES_SHAPES_SQUARE;
     }
 
     public static <T extends BaseValue> void register(Class<T> clazz, IUIValueFactory<T> factory)
