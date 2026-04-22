@@ -37,6 +37,8 @@
 	"bbs.config.appearance.dark_mode-comment": "Изменяет цвет фона дорожек ключевых кадров на тёмно-серый",
 	"bbs.config.appearance.track_width": "Толщина дорожки",
 	"bbs.config.appearance.track_width-comment": "Толщина полоски дорожки кейфреймов",
+	"bbs.config.appearance.keyframe_default_shape": "Форма кейфрейма по умолчанию",
+	"bbs.config.appearance.keyframe_default_shape-comment": "Форма, присваиваемая новым кейфреймам. Уже созданные кейфреймы не меняются.",
 	"bbs.config.appearance.clip_auto_name": "Авто название клипов",
 	"bbs.config.appearance.clip_auto_name-comment": "Вкл: при пустом названии показывается тип или имя ресурса (например файла аудио). Выкл: отображается только введённое вами название.",
 	"bbs.config.audio.title": "Аудио",

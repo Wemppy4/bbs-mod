@@ -37,6 +37,8 @@
 	"bbs.config.appearance.dark_mode-comment": "Changes the background color of keyframe tracks to dark gray",
 	"bbs.config.appearance.track_width": "Keyframe track thickness",
 	"bbs.config.appearance.track_width-comment": "The thickness of the keyframe track strip in the dope sheet view",
+	"bbs.config.appearance.keyframe_default_shape": "Default keyframe shape",
+	"bbs.config.appearance.keyframe_default_shape-comment": "Shape assigned to newly created keyframes. Existing keyframes are not affected.",
 	"bbs.config.appearance.clip_auto_name": "Auto clip name",
 	"bbs.config.appearance.clip_auto_name-comment": "When on: empty clip title shows type or resource name (e.g. audio filename). When off: only your custom title is shown.",
 	"bbs.config.audio.title": "Audio",

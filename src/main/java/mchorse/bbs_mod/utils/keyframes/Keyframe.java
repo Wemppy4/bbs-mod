@@ -1,5 +1,6 @@
 package mchorse.bbs_mod.utils.keyframes;
 
+import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.ListType;
 import mchorse.bbs_mod.data.types.MapType;
@@ -28,7 +29,7 @@ public class Keyframe <T> extends BaseValue
     public List<Float> rx_m;
     public List<Float> ry_m;
 
-    private KeyframeShape shape = KeyframeShape.SQUARE;
+    private KeyframeShape shape = BBSSettings.getDefaultKeyframeShape();
     private Color color;
 
     /**
